@@ -1,0 +1,104 @@
+#!/bin/bash
+# AKIOS Docker wrapper - supports help command caching
+set -euo pipefail
+
+PROJECT_DIR="$(pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HELP_CACHE_FILE="$SCRIPT_DIR/.akios_help_cache"
+HELP_CACHE_MAX_AGE=60  # 1 minute in seconds (for development)
+
+# Check if this is a help command that can be cached
+is_help_command() {
+    for arg in "$@"; do
+        case "$arg" in
+            --help|-h)
+                return 0
+                ;;
+        esac
+    done
+    return 1
+}
+
+# Get cached help if available and fresh
+get_cached_help() {
+    if [[ -f "$HELP_CACHE_FILE" ]]; then
+        local cache_age
+        cache_age=$(($(date +%s) - $(stat -f %m "$HELP_CACHE_FILE" 2>/dev/null || stat -c %Y "$HELP_CACHE_FILE" 2>/dev/null || echo 0)))
+        if [[ $cache_age -lt $HELP_CACHE_MAX_AGE ]]; then
+            cat "$HELP_CACHE_FILE"
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Cache help output for future use
+cache_help_output() {
+    local help_output="$1"
+    echo "$help_output" > "$HELP_CACHE_FILE"
+}
+
+# Handle help commands with local caching
+if is_help_command "$@"; then
+        if get_cached_help; then
+            # Serve cached help output for improved responsiveness
+            exit 0
+    fi
+fi
+
+# Load optional .env file if it exists
+AKIOS_ENV_FILE="$PROJECT_DIR/.env"
+if [[ -f "$AKIOS_ENV_FILE" ]]; then
+    echo "📄 Loading configuration from .env" >&2
+    set -a  # Automatically export all variables
+    source "$AKIOS_ENV_FILE"
+    set +a
+    # Explicitly export key variables that might not be inherited
+    export AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}"
+fi
+
+# Pass wrapper path for auto-copy during init
+AKIOS_WRAPPER_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
+
+# Always run in Docker (simplified - no auto-detection)
+echo "🐳 Using Docker for cross-platform security" >&2
+
+# Capture help output for caching if this is a help command
+if is_help_command "$@"; then
+    help_output=$(docker run --rm --pull always \
+        -v "$PROJECT_DIR:/app" \
+        -v type=tmpfs,target=/app/audit \
+        -w /app \
+        -e AKIOS_WRAPPER_PATH="$AKIOS_WRAPPER_PATH" \
+        -e AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}" \
+        -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
+        -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
+        -e XAI_API_KEY="${XAI_API_KEY:-}" \
+        -e GROK_API_KEY="${GROK_API_KEY:-}" \
+        -e MISTRAL_API_KEY="${MISTRAL_API_KEY:-}" \
+        -e GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
+        -e AKIOS_LLM_PROVIDER="${AKIOS_LLM_PROVIDER:-}" \
+        -e AKIOS_LLM_MODEL="${AKIOS_LLM_MODEL:-}" \
+        akiosai/akios:v1.0.0 \
+        "$@")
+    echo "$help_output"
+    cache_help_output "$help_output"
+else
+    # Regular command execution
+    exec docker run --rm --pull always \
+        -v "$PROJECT_DIR:/app" \
+        -v type=tmpfs,target=/app/audit \
+        -w /app \
+        -e AKIOS_WRAPPER_PATH="$AKIOS_WRAPPER_PATH" \
+        -e AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}" \
+        -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
+        -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
+        -e XAI_API_KEY="${XAI_API_KEY:-}" \
+        -e GROK_API_KEY="${GROK_API_KEY:-}" \
+        -e MISTRAL_API_KEY="${MISTRAL_API_KEY:-}" \
+        -e GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
+        -e AKIOS_LLM_PROVIDER="${AKIOS_LLM_PROVIDER:-}" \
+        -e AKIOS_LLM_MODEL="${AKIOS_LLM_MODEL:-}" \
+        akiosai/akios:v1.0.0 \
+        "$@"
+fi
