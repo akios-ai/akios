@@ -63,9 +63,24 @@ AKIOS_WRAPPER_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 # Always run in Docker (simplified - no auto-detection)
 echo "🐳 Using Docker for cross-platform security" >&2
 
+# Check if image exists locally (avoid unnecessary pulls)
+check_image_cached() {
+    docker image inspect akiosai/akios:v1.0.0 &>/dev/null
+}
+
+# Show progress message if pulling
+pull_if_needed() {
+    if ! check_image_cached; then
+        echo "🐳 Pulling AKIOS Docker image..." >&2
+        docker pull akiosai/akios:v1.0.0
+        echo "✅ Docker image ready!" >&2
+    fi
+}
+
 # Capture help output for caching if this is a help command
 if is_help_command "$@"; then
-    help_output=$(docker run --rm --pull always \
+    pull_if_needed
+    help_output=$(docker run --rm \
         -v "$PROJECT_DIR:/app" \
         -v type=tmpfs,target=/app/audit \
         -w /app \
@@ -85,7 +100,8 @@ if is_help_command "$@"; then
     cache_help_output "$help_output"
 else
     # Regular command execution
-    exec docker run --rm --pull always \
+    pull_if_needed
+    exec docker run --rm \
         -v "$PROJECT_DIR:/app" \
         -v type=tmpfs,target=/app/audit \
         -w /app \
