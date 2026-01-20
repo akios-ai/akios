@@ -2,8 +2,6 @@
 # AKIOS Docker wrapper - supports help command caching
 set -euo pipefail
 
-echo "DEBUG: Script started with args: $*" >&2
-
 PROJECT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HELP_CACHE_FILE="$SCRIPT_DIR/.akios_help_cache"
@@ -58,7 +56,6 @@ if [[ -f "$AKIOS_ENV_FILE" ]]; then
     # Explicitly export key variables that might not be inherited
     export AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}"
 fi
-
 
 # Pass wrapper path for auto-copy during init
 AKIOS_WRAPPER_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
