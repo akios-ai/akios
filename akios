@@ -38,14 +38,6 @@ cache_help_output() {
     echo "$help_output" > "$HELP_CACHE_FILE"
 }
 
-# Handle help commands with local caching
-if is_help_command "$@"; then
-        if get_cached_help; then
-            # Serve cached help output for improved responsiveness
-            exit 0
-    fi
-fi
-
 # Load optional .env file if it exists
 AKIOS_ENV_FILE="$PROJECT_DIR/.env"
 if [[ -f "$AKIOS_ENV_FILE" ]]; then
@@ -55,6 +47,14 @@ if [[ -f "$AKIOS_ENV_FILE" ]]; then
     set +a
     # Explicitly export key variables that might not be inherited
     export AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}"
+fi
+
+# Handle help commands with local caching
+if is_help_command "$@"; then
+    if [[ "${AKIOS_FORCE_PULL:-0}" != "1" ]] && get_cached_help; then
+        # Serve cached help output for improved responsiveness
+        exit 0
+    fi
 fi
 
 # Pass wrapper path for auto-copy during init
@@ -70,7 +70,12 @@ check_image_cached() {
 
 # Show progress message if pulling
 pull_if_needed() {
-    if ! check_image_cached; then
+    # Allow developers to force fresh pulls during testing
+    if [[ "${AKIOS_FORCE_PULL:-0}" == "1" ]]; then
+        echo "🐳 Force-pulling AKIOS Docker image (dev mode)..." >&2
+        docker pull akiosai/akios:v1.0.0
+        echo "✅ Docker image updated!" >&2
+    elif ! check_image_cached; then
         echo "🐳 Pulling AKIOS Docker image..." >&2
         docker pull akiosai/akios:v1.0.0
         echo "✅ Docker image ready!" >&2
