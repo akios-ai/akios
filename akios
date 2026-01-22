@@ -63,6 +63,19 @@ AKIOS_WRAPPER_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 # Always run in Docker (simplified - no auto-detection)
 echo "🐳 Using Docker for cross-platform security" >&2
 
+# Enable TTY for interactive commands only (setup, init --wizard)
+DOCKER_TTY_FLAGS=""
+if [[ "$1" == "setup" ]]; then
+    DOCKER_TTY_FLAGS="-it"
+elif [[ "$1" == "init" ]]; then
+    for arg in "$@"; do
+        if [[ "$arg" == "--wizard" ]]; then
+            DOCKER_TTY_FLAGS="-it"
+            break
+        fi
+    done
+fi
+
 # Check if image exists locally (avoid unnecessary pulls)
 check_image_cached() {
     docker image inspect akiosai/akios:v1.0.0 &>/dev/null
@@ -91,6 +104,9 @@ if is_help_command "$@"; then
         -w /app \
         -e AKIOS_WRAPPER_PATH="$AKIOS_WRAPPER_PATH" \
         -e AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}" \
+        -e AKIOS_BUDGET_LIMIT_PER_RUN="${AKIOS_BUDGET_LIMIT_PER_RUN:-}" \
+        -e AKIOS_MAX_TOKENS_PER_CALL="${AKIOS_MAX_TOKENS_PER_CALL:-}" \
+        -e AKIOS_NETWORK_ACCESS_ALLOWED="${AKIOS_NETWORK_ACCESS_ALLOWED:-}" \
         -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
         -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
         -e XAI_API_KEY="${XAI_API_KEY:-}" \
@@ -107,11 +123,15 @@ else
     # Regular command execution
     pull_if_needed
     exec docker run --rm \
+        $DOCKER_TTY_FLAGS \
         -v "$PROJECT_DIR:/app" \
         -v type=tmpfs,target=/app/audit \
         -w /app \
         -e AKIOS_WRAPPER_PATH="$AKIOS_WRAPPER_PATH" \
         -e AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}" \
+        -e AKIOS_BUDGET_LIMIT_PER_RUN="${AKIOS_BUDGET_LIMIT_PER_RUN:-}" \
+        -e AKIOS_MAX_TOKENS_PER_CALL="${AKIOS_MAX_TOKENS_PER_CALL:-}" \
+        -e AKIOS_NETWORK_ACCESS_ALLOWED="${AKIOS_NETWORK_ACCESS_ALLOWED:-}" \
         -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
         -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
         -e XAI_API_KEY="${XAI_API_KEY:-}" \
