@@ -6,6 +6,7 @@ PROJECT_DIR="$(pwd)"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HELP_CACHE_FILE="$SCRIPT_DIR/.akios_help_cache"
 HELP_CACHE_MAX_AGE=60  # 1 minute in seconds (for development)
+DOCKER_ENV_ARGS=()
 
 # Check if this is a help command that can be cached
 is_help_command() {
@@ -41,7 +42,9 @@ cache_help_output() {
 # Load optional .env file if it exists
 AKIOS_ENV_FILE="$PROJECT_DIR/.env"
 if [[ -f "$AKIOS_ENV_FILE" ]]; then
-    echo "📄 Loading configuration from .env" >&2
+    if [[ "${AKIOS_DEBUG_ENABLED:-0}" == "1" ]]; then
+        echo "📄 Loading configuration from .env" >&2
+    fi
     set -a  # Automatically export all variables
     source "$AKIOS_ENV_FILE"
     set +a
@@ -61,7 +64,9 @@ fi
 AKIOS_WRAPPER_PATH="$SCRIPT_DIR/$(basename "${BASH_SOURCE[0]}")"
 
 # Always run in Docker (simplified - no auto-detection)
-echo "🐳 Using Docker for cross-platform security" >&2
+if [[ "${AKIOS_DEBUG_ENABLED:-0}" == "1" ]]; then
+    echo "🐳 Using Docker for cross-platform security" >&2
+fi
 
 # Enable TTY for interactive commands only (setup, init --wizard)
 DOCKER_TTY_FLAGS=""
@@ -75,6 +80,15 @@ elif [[ "$1" == "init" ]]; then
         fi
     done
 fi
+
+# Only pass optional settings when explicitly set to avoid type parse errors
+add_env_if_set() {
+    local name="$1"
+    local value="${!name-}"
+    if [[ -n "$value" ]]; then
+        DOCKER_ENV_ARGS+=(-e "${name}=${value}")
+    fi
+}
 
 # Check if image exists locally (avoid unnecessary pulls)
 check_image_cached() {
@@ -98,15 +112,17 @@ pull_if_needed() {
 # Capture help output for caching if this is a help command
 if is_help_command "$@"; then
     pull_if_needed
+    DOCKER_ENV_ARGS=()
+    add_env_if_set AKIOS_BUDGET_LIMIT_PER_RUN
+    add_env_if_set AKIOS_MAX_TOKENS_PER_CALL
+    add_env_if_set AKIOS_NETWORK_ACCESS_ALLOWED
     help_output=$(docker run --rm \
         -v "$PROJECT_DIR:/app" \
         -v type=tmpfs,target=/app/audit \
         -w /app \
         -e AKIOS_WRAPPER_PATH="$AKIOS_WRAPPER_PATH" \
         -e AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}" \
-        -e AKIOS_BUDGET_LIMIT_PER_RUN="${AKIOS_BUDGET_LIMIT_PER_RUN:-}" \
-        -e AKIOS_MAX_TOKENS_PER_CALL="${AKIOS_MAX_TOKENS_PER_CALL:-}" \
-        -e AKIOS_NETWORK_ACCESS_ALLOWED="${AKIOS_NETWORK_ACCESS_ALLOWED:-}" \
+        ${DOCKER_ENV_ARGS[@]+"${DOCKER_ENV_ARGS[@]}"} \
         -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
         -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
         -e XAI_API_KEY="${XAI_API_KEY:-}" \
@@ -122,6 +138,10 @@ if is_help_command "$@"; then
 else
     # Regular command execution
     pull_if_needed
+    DOCKER_ENV_ARGS=()
+    add_env_if_set AKIOS_BUDGET_LIMIT_PER_RUN
+    add_env_if_set AKIOS_MAX_TOKENS_PER_CALL
+    add_env_if_set AKIOS_NETWORK_ACCESS_ALLOWED
     exec docker run --rm \
         $DOCKER_TTY_FLAGS \
         -v "$PROJECT_DIR:/app" \
@@ -129,9 +149,7 @@ else
         -w /app \
         -e AKIOS_WRAPPER_PATH="$AKIOS_WRAPPER_PATH" \
         -e AKIOS_MOCK_LLM="${AKIOS_MOCK_LLM:-0}" \
-        -e AKIOS_BUDGET_LIMIT_PER_RUN="${AKIOS_BUDGET_LIMIT_PER_RUN:-}" \
-        -e AKIOS_MAX_TOKENS_PER_CALL="${AKIOS_MAX_TOKENS_PER_CALL:-}" \
-        -e AKIOS_NETWORK_ACCESS_ALLOWED="${AKIOS_NETWORK_ACCESS_ALLOWED:-}" \
+        ${DOCKER_ENV_ARGS[@]+"${DOCKER_ENV_ARGS[@]}"} \
         -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
         -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
         -e XAI_API_KEY="${XAI_API_KEY:-}" \
