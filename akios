@@ -125,7 +125,6 @@ if is_help_command "$@"; then
         ${DOCKER_ENV_ARGS[@]+"${DOCKER_ENV_ARGS[@]}"} \
         -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
         -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
-        -e XAI_API_KEY="${XAI_API_KEY:-}" \
         -e GROK_API_KEY="${GROK_API_KEY:-}" \
         -e MISTRAL_API_KEY="${MISTRAL_API_KEY:-}" \
         -e GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
@@ -152,7 +151,6 @@ else
         ${DOCKER_ENV_ARGS[@]+"${DOCKER_ENV_ARGS[@]}"} \
         -e OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
         -e ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-}" \
-        -e XAI_API_KEY="${XAI_API_KEY:-}" \
         -e GROK_API_KEY="${GROK_API_KEY:-}" \
         -e MISTRAL_API_KEY="${MISTRAL_API_KEY:-}" \
         -e GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
