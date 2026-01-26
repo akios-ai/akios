@@ -1,0 +1,99 @@
+[project]
+name = "akios"
+version = "1.0.0"
+description = "AKIOS runtime for secure AI agent execution"
+authors = [
+    { name = "AKIOS Team", email = "hello@akios.ai" },
+]
+license = {text = "GPL-3.0-only"}
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    # Core functionality
+    "pydantic[email]>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "click>=8.0.0",
+    "pyyaml>=6.0",
+    "jsonschema>=4.21.0",
+
+    # Agent integrations
+    "httpx>=0.25.0",
+    "requests>=2.25.0",
+
+    # Security and compliance (REQUIRED for Linux security)
+    "cryptography>=42.0.0",
+    "psutil>=5.9.0",
+
+    # LLM providers (REQUIRED for LLM agent functionality)
+    "openai>=1.0.0",
+    "anthropic>=0.30.0",
+    "google-generativeai>=0.8.0",
+    "tiktoken>=0.5.0",  # Required for accurate token counting
+
+    # Security fix: Pin protobuf to version that fixes CVE-2026-0994 (compatible with google-generativeai)
+    "protobuf>=5.29.5",
+
+    # Document processing (REQUIRED for multi-format file support)
+    "PyPDF2>=3.0.0",
+    "pdfminer.six>=20231228",
+    "python-docx>=1.1.0",
+]
+
+[project.urls]
+"Homepage" = "https://akios.ai"
+"Bug Tracker" = "https://github.com/akios-ai/akios/issues"
+"Source" = "https://github.com/akios-ai/akios"
+
+[project.scripts]
+akios = "akios.cli.main:main"
+
+[project.optional-dependencies]
+# Kernel-hard security (native Linux only)
+seccomp = [
+    "seccomp>=1.0.0",
+]
+
+# Extended functionality (beyond core security/LLM requirements)
+extended = [
+    "backoff>=2.2.0",
+    "aiohttp>=3.9.0",
+]
+
+# PII protection is implemented using rule-based detection
+# No external PII libraries required - built-in security
+
+# REST API server
+api = [
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+]
+
+# Prometheus monitoring
+monitoring = [
+    "prometheus-client>=0.17.0",
+]
+
+# Development and testing
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+    "pre-commit>=3.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["akios*"]
+
+[tool.setuptools.package-data]
+akios = ["templates/*.yml", "templates/*.md", "cli/data/samples/document_examples/sample.*", "cli/data/samples/analysis_targets/sample.*", "core/schema/*.json"]
