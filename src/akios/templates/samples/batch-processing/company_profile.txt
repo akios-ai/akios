@@ -1,0 +1,17 @@
+Company: TechCorp Solutions
+Founded: 2015
+Employees: 250
+Revenue: $45M
+Location: San Francisco, CA
+Contact: john.doe@techcorp.com
+Phone: (555) 123-4567
+
+Recent Projects:
+- AI-powered customer service platform
+- Machine learning analytics dashboard
+- Cloud infrastructure migration
+
+Key Challenges:
+- Scaling AI workloads cost-effectively
+- Ensuring data privacy compliance
+- Managing multi-cloud deployments

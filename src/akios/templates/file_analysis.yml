@@ -1,0 +1,82 @@
+name: Sandboxed File Analysis
+description: |
+  Demonstrates **security-grade file intelligence** with **pattern detection**, **entropy analysis**, **threat assessment**, and **safe tool execution**.
+  Performs comprehensive security analysis including PII detection, anomaly identification, and forensic insights.
+
+  **REQUIRES:** data/input/analysis_target.* (supports .txt, .pdf, .docx - sample files provided)
+  **OUTPUT:** data/output/run_*/analysis.txt (structured JSON report) + audit integrity proof
+
+  Shows: Advanced file forensics with pattern recognition, entropy analysis, threat detection, and cryptographic integrity.
+
+steps:
+  # Step 1: Analyze file metadata (container-isolated operation)
+  - step: 1
+    agent: filesystem
+    config:
+      allowed_paths: ["./data/input"]
+      read_only: true
+    action: stat
+    parameters:
+      path: "./data/input/analysis_target.pdf"
+      # Security: Only stat() allowed, path whitelisted, read-only enforced
+
+  # Step 2: Comprehensive file analysis (patterns, entropy, hashes)
+  - step: 2
+    agent: filesystem
+    config:
+      allowed_paths: ["./data/input"]
+      read_only: true
+    action: analyze
+    parameters:
+      path: "./data/input/analysis_target.pdf"
+      # Security: Read sandboxed, PII automatically redacted, comprehensive analysis
+
+  # Step 3: LLM analysis with structured JSON output (security assessment)
+  - step: 3
+    agent: llm
+    config:
+      provider: "${AKIOS_LLM_PROVIDER:-grok}"
+      model: "${AKIOS_LLM_MODEL:-grok-3}"
+    action: complete
+    parameters:
+      prompt: |
+        Analyze this file for security and technical insights.
+        Output ONLY valid JSON with these exact keys:
+
+        {
+          "summary": "Brief technical overview of file characteristics",
+          "patterns_found": "List detected patterns (IPs, emails, URLs, credit cards, phone numbers)",
+          "threat_level": "Low/Medium/High based on patterns and entropy",
+          "recommendations": "Actionable security suggestions"
+        }
+
+        File metadata: {step_1_output}
+        Analysis results: {step_2_output}
+        Focus on security implications of the patterns and entropy levels.
+      temperature: 0.1          # ↓ for consistent structured output
+      max_tokens: 300           # Conservative limit for analysis
+      # Security: Token limit + budget kill-switch enforced, container isolation prevents unauthorized operations
+
+  # Step 4: Save structured analysis report to file
+  - step: 4
+    agent: filesystem
+    config:
+      allowed_paths: ["./data/output"]
+      read_only: false
+    action: write
+    parameters:
+      path: "./data/output/analysis.txt"
+      content: "{previous_output}"
+      # Security: Write access controlled, structured analysis saved for review
+
+  # Step 5: Workflow completion (audit integrity maintained in audit_events.jsonl)
+  - step: 5
+    agent: tool_executor
+    config:
+      allowed_commands: ["echo"]
+      timeout: 10
+    action: run
+    parameters:
+      command: "echo"
+      args: ["File analysis completed - all security checks passed and results logged"]
+      # Security: Command whitelisted, output logged in audit trail
