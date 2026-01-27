@@ -1,0 +1,70 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+.archive/
+
+# Development test projects (keep root directory clean)
+.dev/
+test-project-*/
+**/test-project-*/
+
+# Local caches and dev-only files
+.akios_help_cache/
+.akios_help_cache
+.env
+.env.*
+.github/scripts/docker/.env
+
+# Test artifacts and coverage reports
+.pytest_cache/
+htmlcov/
+htmlcov_integration/
+htmlcov_e2e/
+.coverage
+coverage.xml
+.tox/
+
+# Internal documentation and scripts (committed to private repo, excluded from public release)
+# Note: .github/internal/ and .github/scripts/ are intentionally committed to akios-dev
+# but automatically stripped during release to akios public repo
+docs_internal/
+
+# Testing artifacts
+**/testing/logs/
+comprehensive-testing/test-gemini/

@@ -103,7 +103,7 @@ def create_parser() -> argparse.ArgumentParser:
     """
     parser = argparse.ArgumentParser(
         prog="akios",
-        description="AKIOS V1.0 - Security-first AI agent runtime",
+        description="AKIOS v1.0.0 - Security-first AI agent runtime",
         formatter_class=CustomHelpFormatter,
         epilog="""
 Examples:

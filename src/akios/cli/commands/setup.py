@@ -1,3 +1,18 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Setup Command - Guided first-run configuration
 
@@ -20,8 +35,8 @@ def register_setup_command(subparsers: argparse._SubParsersAction) -> None:
     """
     parser = subparsers.add_parser(
         'setup',
-        help='Interactive setup wizard for first-time configuration',
-        description='Run the guided setup wizard to configure AKIOS for your first workflow'
+        help='Interactive or automated setup wizard for first-time configuration',
+        description='Configure AKIOS for your first workflow. Supports both interactive and automated setup modes.'
     )
 
     parser.add_argument(
@@ -34,6 +49,24 @@ def register_setup_command(subparsers: argparse._SubParsersAction) -> None:
         '--non-interactive',
         action='store_true',
         help='Skip interactive prompts (useful for automated setup)'
+    )
+
+    parser.add_argument(
+        '--defaults',
+        action='store_true',
+        help='Use recommended defaults for all setup questions (non-interactive)'
+    )
+
+    parser.add_argument(
+        '--provider',
+        choices=['openai', 'anthropic', 'grok', 'mistral', 'google'],
+        help='Pre-select AI provider (enables non-interactive setup)'
+    )
+
+    parser.add_argument(
+        '--mock-mode',
+        action='store_true',
+        help='Use mock mode instead of real API (enables non-interactive setup)'
     )
 
     parser.set_defaults(func=run_setup_command)
@@ -72,6 +105,30 @@ def run_setup_command(args: argparse.Namespace) -> int:
             # Mark setup as complete to skip future prompts
             wizard.detector._mark_setup_complete()
             return 0
+
+        # Handle defaults flag (auto-answer with recommended defaults)
+        if args.defaults:
+            print("🚀 Using recommended defaults for automated setup...")
+            success = wizard.run_defaults_setup()
+            if success:
+                print("\n🎯 Setup completed with defaults!")
+                return 0
+            else:
+                print("\n❌ Setup failed.")
+                return 1
+
+        # Handle provider selection (enables non-interactive setup)
+        if args.provider or args.mock_mode:
+            print("⚙️  Non-interactive setup with pre-selected options...")
+            provider = args.provider if args.provider else None
+            use_mock = args.mock_mode
+            success = wizard.run_configured_setup(provider=provider, use_mock=use_mock)
+            if success:
+                print("\n🎯 Setup completed successfully!")
+                return 0
+            else:
+                print("\n❌ Setup failed.")
+                return 1
 
         # Require interactive input for setup
         if not wizard.detector._is_interactive():

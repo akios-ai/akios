@@ -1,6 +1,6 @@
-# AKIOS V1.0 – Troubleshooting Guide
-**Document Version: 1.0**  
-**Date: December 31, 2025**  
+# AKIOS v1.0.0 – Troubleshooting Guide
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Common issues, error codes, and solutions for AKIOS V1.0.**
 
@@ -460,3 +460,6 @@ akios audit export --format json
 ---
 
 **Most issues are configuration-related or environment compatibility problems. The troubleshooting steps above resolve 90%+ of user issues.**
+
+*AKIOS — Where AI meets unbreakable security*  
+*Use responsibly. Your safety and compliance are your responsibility.* 🛡️

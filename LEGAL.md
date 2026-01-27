@@ -1,12 +1,14 @@
 # AKIOS Legal Information & Disclaimers
-
-**Version 1.0 - January 25, 2026**
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 ---
 
 ## ⚖️ Important Legal Notice
 
 **AKIOS is open-source software provided free of charge. By using AKIOS, you acknowledge and accept the terms below.**
+
+**Relationship to the GPL-3.0 license:** This notice is informational. The GNU GPL-3.0 license is the governing license for the AKIOS software. Nothing in this document adds restrictions beyond the GPL-3.0; in the event of any conflict, the GPL-3.0 controls.
 
 This document contains important legal information about your rights and responsibilities when using AKIOS. Please read it carefully.
 
@@ -73,7 +75,7 @@ AKIOS cannot prevent all risks associated with AI, including:
 
 ## 🛡️ Limitation of Liability
 
-**IN NO EVENT SHALL AKIOUD AI, SAS, ITS CONTRIBUTORS, OR ANY OTHER PARTY INVOLVED IN CREATING, PRODUCING, OR DELIVERING AKIOS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO YOUR USE OF AKIOS.**
+**TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, AKIOUD AI, SAS, ITS CONTRIBUTORS, OR ANY OTHER PARTY INVOLVED IN CREATING, PRODUCING, OR DELIVERING AKIOS SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING FROM OR RELATED TO YOUR USE OF AKIOS.**
 
 This **complete exclusion of liability** applies to all damages including, but not limited to:
 - **Direct damages**: Financial losses, data loss, system failures
@@ -88,7 +90,7 @@ This **complete exclusion of liability** applies to all damages including, but n
 - Our negligence or fault caused the harm
 - Any limited remedy fails its essential purpose
 
-**There are no exceptions to this limitation of liability.**
+**Carve-outs (where required by law):** This limitation does not exclude or limit liability where such exclusion is prohibited by applicable law, including for death or personal injury caused by negligence, gross negligence or willful misconduct, and any non-waivable statutory rights (e.g., certain consumer or product liability protections).
 
 ---
 
@@ -156,5 +158,15 @@ AKIOS may be subject to French and EU export control regulations. Users must com
 
 ---
 
-*AKIOS - Where AI meets unbreakable security*  
-*Use responsibly. Your safety and compliance are your responsibility.* 🛡️⚖️
+## 📦 Source Code Availability for Distributions
+
+If you distribute AKIOS in binary form (including Docker images), you must provide the complete corresponding source code (or a written offer) in accordance with GPL-3.0 §6. Publish the source alongside the binaries or provide a documented retrieval method.
+
+## 📚 Third-Party Components
+
+AKIOS includes third-party software; see `THIRD_PARTY_LICENSES.md` for notices and license terms. Comply with those licenses when redistributing.
+
+---
+
+*AKIOS — Where AI meets unbreakable security*  
+*Use responsibly. Your safety and compliance are your responsibility.* 🛡️

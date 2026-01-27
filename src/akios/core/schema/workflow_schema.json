@@ -3,7 +3,7 @@
   "$id": "https://akios.ai/schemas/workflow/v1.0",
   "version": "1.0.0",
   "title": "AKIOS Workflow Schema",
-  "description": "JSON schema for AKIOS V1.0 workflow validation",
+  "description": "JSON schema for AKIOS v1.0.0 workflow validation",
   "type": "object",
   "required": ["name", "description", "steps"],
   "properties": {

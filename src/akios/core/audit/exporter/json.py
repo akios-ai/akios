@@ -1,3 +1,18 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 JSON audit export with Merkle root and full trace.
 
@@ -56,14 +71,29 @@ def export_audit_json(output_file: Optional[str] = None, include_sensitive: bool
         if include_sensitive:
             return event_dict
 
+        # Define sensitive field names that should be redacted
+        SENSITIVE_FIELDS = {
+            'api_key', 'apikey', 'password', 'passwd', 'token', 'secret',
+            'private_key', 'access_token', 'auth_token', 'bearer_token',
+            'session_key', 'encryption_key', 'secret_key'
+        }
+
+        sanitized = event_dict.copy()
+
+        # Redact sensitive fields in metadata
+        if 'metadata' in sanitized and isinstance(sanitized['metadata'], dict):
+            metadata = sanitized['metadata'].copy()
+            for key, value in metadata.items():
+                if key.lower() in SENSITIVE_FIELDS:
+                    metadata[key] = '[REDACTED]'
+            sanitized['metadata'] = metadata
+
         # Apply comprehensive PII redaction (optional)
         try:
             from ...security.pii import apply_pii_redaction
             pii_available = True
         except ImportError:
             pii_available = False
-
-        sanitized = event_dict.copy()
 
         # Redact PII in all text fields that might contain sensitive data
         text_fields = ['workflow_id', 'agent', 'action', 'result']
