@@ -113,6 +113,10 @@ cd my-project
 AKIOS_FORCE_PULL=1 ./akios status
 ```
 
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.2). 
+> For specific versions: `pip install akios==1.0.2`. 
+> **⚠️ Avoid v1.0.0 and v1.0.1** - these releases were yanked due to missing critical files.
+
 ### Which Installation Should I Choose?
 
 | Option | Best For | Requirements | Security Level | Ease of Use |
