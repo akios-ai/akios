@@ -77,6 +77,7 @@ ALLOWED_MODELS = {
     'gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-4',
     # Anthropic models
     'claude-3.5-haiku', 'claude-3.5-sonnet', 'claude-3-opus',
+    'claude-3-haiku-20240307', 'claude-3-sonnet-20240229', 'claude-3-opus-20240229',
     # Grok models
     'grok-4.1-fast', 'grok-4.1', 'grok-4', 'grok-3',
     # Mistral models
@@ -428,7 +429,7 @@ class RuntimeEngine:
         RUNTIME ENFORCEMENT: Validate workflow structure and block forbidden features.
 
         This provides an additional layer of validation at runtime beyond parsing,
-        ensuring V1.0 sequential-only promise is enforced even if parsing is bypassed.
+        ensuring v1.0.0 sequential-only promise is enforced even if parsing is bypassed.
         """
         # Check for forbidden parallel/loop constructs
         parallel_indicators = ['parallel', 'parallel_steps', 'loop', 'for_each', 'map', 'reduce']
@@ -452,7 +453,7 @@ class RuntimeEngine:
 
             if check_forbidden(step.parameters) or check_forbidden(step.config):
                 raise RuntimeError(
-                    f"Workflow contains forbidden parallel/loop constructs (V1.0 is sequential only). "
+                    f"Workflow contains forbidden parallel/loop constructs (v1.0.0 is sequential only). "
                     f"Step {step.step_id} contains parallel execution patterns."
                 )
 
@@ -736,7 +737,7 @@ class RuntimeEngine:
         })
 
         # CRITICAL: Flush audit buffer to ensure all events are written to disk
-        # Audit logging is a core V1.0 security guarantee - events must be persisted
+        # Audit logging is a core v1.0.0 security guarantee - events must be persisted
         try:
             audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
             ledger = audit_flush()
@@ -770,7 +771,7 @@ class RuntimeEngine:
         })
 
         # CRITICAL: Flush audit buffer even on failure to ensure all events are written to disk
-        # Audit logging must work even when workflows fail - core V1.0 security requirement
+        # Audit logging must work even when workflows fail - core v1.0.0 security requirement
         try:
             audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
             ledger = audit_flush()

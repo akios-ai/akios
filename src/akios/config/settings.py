@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Pydantic settings model for AKIOS V1.0 configuration
+Pydantic settings model for AKIOS v1.0.0 configuration
 
 Defines all configurable parameters for the security cage.
 """
@@ -23,11 +23,12 @@ from typing import List
 
 from pydantic import Field, ConfigDict
 from pydantic_settings import BaseSettings
+from pathlib import Path
 
 
 class Settings(BaseSettings):
     """
-    AKIOS V1.0 Configuration Settings
+    AKIOS v1.0.0 Configuration Settings
 
     Security-first defaults with conservative values.
     """
@@ -92,7 +93,7 @@ class Settings(BaseSettings):
 
     model_config = ConfigDict(
         env_prefix="AKIOS_",
-        env_file=".env",  # Enable .env file loading for consistent native/Docker experience
+        env_file=None,  # Disable .env file loading to avoid permission issues
         extra="ignore",  # Ignore extra environment variables not defined in the model
     )
 

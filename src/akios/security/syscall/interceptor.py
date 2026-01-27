@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Syscall interceptor for AKIOS V1.0
+Syscall interceptor for AKIOS v1.0.0
 
 Intercept and control system calls based on security policy.
 Implements seccomp-bpf for true kernel-level syscall filtering.
@@ -118,7 +118,7 @@ class SyscallInterceptor:
                 from ..validation import SecurityError
                 raise SecurityError(
                     f"SECURITY FAILURE: seccomp-bpf kernel filtering failed: {e}\n"
-                    "AKIOS V1.0 REQUIRES kernel-level syscall filtering for secure operation.\n"
+                    "AKIOS v1.0.0 REQUIRES kernel-level syscall filtering for secure operation.\n"
                     "\n"
                     "For Linux native: Install system dependencies: apt-get install libseccomp-dev\n"
                     "Then install Python library: pip install seccomp\n"

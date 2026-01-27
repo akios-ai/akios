@@ -1,6 +1,8 @@
 # 🚀 AKIOS Comprehensive Quick Start Guide
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
-**Master AKIOS V1.0 - From Beginner to Advanced User**
+**Master AKIOS v1.0.0 - From Beginner to Advanced User**
 
 *Complete tutorial: 15-30 minutes*
 
@@ -193,7 +195,7 @@ The wizard guides you through:
 
 **What you'll see:**
 ```
-🎉 Welcome to AKIOS V1.0! Let's set up your first workflow.
+🎉 Welcome to AKIOS v1.0.0! Let's set up your first workflow.
 
 🚀 How would you like to use AKIOS?
 1. Try with mock data (no API key needed — instant setup)
@@ -925,6 +927,6 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 
 ---
 
-*AKIOS V1.0 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0.0 - Where AI meets unbreakable security* 🛡️🤖
 
 **Need help?** Check the audit logs, README.md, or create a GitHub issue.

@@ -1,8 +1,10 @@
-# AKIOS V1.0 CLI Reference
+# AKIOS v1.0.0 CLI Reference
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS V1.0 supports three deployment methods:
+AKIOS V1.0.O supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -114,6 +116,15 @@ akios setup --force
 
 # Non-interactive setup (for automated environments)
 akios setup --non-interactive
+
+# Automated setup with recommended defaults (CI/CD ready)
+akios setup --defaults
+
+# Pre-select AI provider (enables automated setup)
+akios setup --provider grok
+
+# Enable mock mode setup (no API keys needed)
+akios setup --mock-mode
 ```
 
 **Features:**
@@ -124,6 +135,7 @@ akios setup --non-interactive
 - **Secure Storage**: API keys stored securely in `.env` file
 - **Error Recovery**: Detects and fixes common configuration issues
 - **Container Compatible**: Works in Docker containers and native terminals
+- **CI/CD Automation**: Non-interactive flags for automated deployments
 
 **What it configures:**
 - AI provider and specific model selection
@@ -133,6 +145,12 @@ akios setup --non-interactive
 - Network access for API calls
 - Mock vs real LLM mode settings
 - Security and audit preferences
+
+**Automation Options:**
+- `--defaults`: Uses recommended defaults for instant setup
+- `--provider {openai,anthropic,grok,mistral,google}`: Pre-selects AI provider
+- `--mock-mode`: Enables mock mode without API keys
+- `--non-interactive`: Skips setup wizard entirely
 
 ## 🔍 LLM Provider/Model Validation
 

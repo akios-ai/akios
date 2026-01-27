@@ -1,4 +1,6 @@
 # API Integration Guide
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Connect AKIOS workflows with external APIs and services**
 

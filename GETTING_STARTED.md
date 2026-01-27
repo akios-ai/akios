@@ -1,4 +1,6 @@
-# 🚀 AKIOS V1.0 - Get Started in 3 Minutes
+# 🚀 AKIOS v1.0.0 - Get Started in 3 Minutes
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Secure AI workflows made simple.**
 
@@ -160,4 +162,4 @@ cp .env.example .env
 
 ---
 
-*AKIOS V1.0 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0.0 - Where AI meets unbreakable security* 🛡️🤖

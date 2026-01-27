@@ -1,3 +1,18 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Append-only ledger for audit events using filesystem storage.
 
@@ -288,6 +303,24 @@ def get_ledger() -> AuditLedger:
     if _ledger is None:
         _ledger = AuditLedger()
     return _ledger
+
+
+def reset_ledger() -> None:
+    """Reset the global ledger instance and clear audit files (for testing only)"""
+    global _ledger
+    _ledger = None
+
+    # Clear audit files for testing
+    try:
+        from ...config import get_settings
+        settings = get_settings()
+        audit_path = Path(settings.audit_storage_path)
+        ledger_file = audit_path / "audit_events.jsonl"
+        if ledger_file.exists():
+            ledger_file.unlink()  # Delete the file
+    except Exception:
+        # Ignore errors during testing cleanup
+        pass
 
 
 def append_audit_event(event_data: Dict[str, Any]) -> AuditEvent:

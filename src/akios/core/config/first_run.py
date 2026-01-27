@@ -194,7 +194,7 @@ class SetupWizard:
 
         interactive_tty = sys.stdin.isatty() and sys.stdout.isatty()
 
-        print("\n🎉 Welcome to AKIOS V1.0! Let's set up your first workflow.\n")
+        print("\n🎉 Welcome to AKIOS v1.0.0! Let's set up your first workflow.\n")
 
         interactive = self.detector._is_interactive()
 

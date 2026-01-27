@@ -1,10 +1,10 @@
-# AKIOS V1.0 Release Notes
-**Document Version: 1.0**  
-**Date: January 24, 2026**  
+# AKIOS v1.0.0 Release Notes
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
-### 🎯 AKIOS V1.0.0: The Security Cage is Here
+### 🎯 AKIOS v1.0.0: The Security Cage is Here
 
-AKIOS V1.0.0 delivers the **strongest open-source security foundation** for AI agents — a hard, minimal cage that makes them safe enough to run with real data today.
+AKIOS v1.0.0 delivers the **strongest open-source security foundation** for AI agents — a hard, minimal cage that makes them safe enough to run with real data today.
 
 This is **not** a general-purpose framework trying to compete on velocity or multi-agent complexity.  
 It is **the unbreakable cage**: kernel-level isolation, syscall control, real-time PII redaction, Merkle tamper-evident audit, and enforced cost/loop kills.

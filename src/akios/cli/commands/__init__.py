@@ -1,3 +1,18 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 CLI commands module - Registry and base classes for CLI commands.
 
@@ -66,7 +81,7 @@ def register_all_commands(subparsers: argparse._SubParsersAction) -> None:
     output_module.register_output_command(subparsers)
 
     # workflow_module = _lazy_import_command('workflow')
-    # workflow_module.register_workflow_command(subparsers)  # Removed for V1.0 minimal scope
+    # workflow_module.register_workflow_command(subparsers)  # Removed for v1.0.0 minimal scope
 
 
 def get_command_descriptions() -> Dict[str, str]:
@@ -90,7 +105,7 @@ def get_command_descriptions() -> Dict[str, str]:
         "files": "Show available input and output files",
         "compliance": "Generate compliance reports",
         "output": "Manage workflow outputs",
-        # "workflow": "Manage workflow instances"  # Removed for V1.0 minimal scope
+        # "workflow": "Manage workflow instances"  # Removed for v1.0.0 minimal scope
     }
 
 

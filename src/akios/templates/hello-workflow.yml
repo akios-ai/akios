@@ -1,6 +1,6 @@
 name: Hello World Workflow
 description: |
-  The official "Hello World" for AKIOS V1.0.
+  The official "Hello World" for AKIOS v1.0.0.
   Generates a creative greeting using real AI (your chosen LLM provider), saves it to file, and proves the cage works.
 
   **REQUIRES:** None (generates content from scratch)

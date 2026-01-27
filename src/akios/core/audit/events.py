@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Audit event definitions and serialization for AKIOS V1.0
+Audit event definitions and serialization for AKIOS v1.0.0
 
 Structured audit events with cryptographic integrity.
 """
@@ -40,14 +40,47 @@ class AuditEvent:
                  result: str,
                  metadata: Optional[Dict[str, Any]] = None,
                  timestamp: Optional[str] = None):
-        self.workflow_id = workflow_id
-        self.step = step
-        self.agent = agent
-        self.action = action
-        self.result = result
-        self.metadata = metadata or {}
-        self.timestamp = timestamp or datetime.now(timezone.utc).isoformat() + "Z"
+        self._workflow_id = workflow_id
+        self._step = step
+        self._agent = agent
+        self._action = action
+        self._result = result
+        self._metadata = metadata or {}
+        self._timestamp = timestamp or datetime.now(timezone.utc).isoformat() + "Z"
         self._hash = self._calculate_hash()
+
+    @property
+    def workflow_id(self) -> str:
+        return self._workflow_id
+
+    @property
+    def step(self) -> int:
+        return self._step
+
+    @property
+    def agent(self) -> str:
+        return self._agent
+
+    @property
+    def action(self) -> str:
+        return self._action
+
+    @property
+    def result(self) -> str:
+        return self._result
+
+    @property
+    def metadata(self) -> Dict[str, Any]:
+        return self._metadata
+
+    @property
+    def timestamp(self) -> str:
+        return self._timestamp
+
+    @property
+    def hash(self) -> str:
+        """Get the cryptographic hash of this event"""
+        return self._hash
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert event to dictionary for serialization"""
@@ -83,16 +116,27 @@ class AuditEvent:
         return self._hash
 
     def _calculate_hash(self) -> str:
-        """Calculate SHA-256 hash of event data"""
+        """Calculate SHA-256 hash of event data (excluding timestamp for equality)"""
+        # Create a safe version of metadata for hashing
+        safe_metadata = {}
+        for key, value in self._metadata.items():
+            try:
+                # Try to serialize the value to ensure it's hashable
+                json.dumps(value, sort_keys=True)
+                safe_metadata[key] = value
+            except (TypeError, ValueError):
+                # If not serializable, convert to string representation
+                safe_metadata[key] = str(value)
+        
         event_data = {
-            "workflow_id": self.workflow_id,
-            "step": self.step,
-            "agent": self.agent,
-            "action": self.action,
-            "result": self.result,
-            "metadata": self.metadata,
-            "timestamp": self.timestamp
+            "workflow_id": self._workflow_id,
+            "step": self._step,
+            "agent": self._agent,
+            "action": self._action,
+            "result": self._result,
+            "metadata": safe_metadata
         }
+        
         serialized = json.dumps(event_data, sort_keys=True).encode('utf-8')
         return hashlib.sha256(serialized).hexdigest()
 
@@ -102,7 +146,12 @@ class AuditEvent:
     def __eq__(self, other: Any) -> bool:
         if not isinstance(other, AuditEvent):
             return False
-        return self.hash == other.hash
+        return (self.workflow_id == other.workflow_id and
+                self.step == other.step and
+                self.agent == other.agent and
+                self.action == other.action and
+                self.result == other.result and
+                self.metadata == other.metadata)
 
 
 def create_audit_event(event_data: Dict[str, Any]) -> AuditEvent:

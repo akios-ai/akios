@@ -1,6 +1,6 @@
-# Security Policy
-**Document Version: 1.0**  
-**Date: December 31, 2025**  
+# AKIOS Security Policy
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 ## 🔒 Security Overview
 
@@ -37,7 +37,7 @@ Send private reports to: **hello@akios.ai**
 4. **Coordinated Disclosure**: We release fix + advisory together
 5. **Credit**: We publicly thank responsible reporters (Hall of Fame)
 
-## 🛡️ What We Protect In V1.0
+## 🛡️ What We Protect In v1.0.0
 - Security sandboxing (kernel-hard on native Linux, strong policy-based in Docker)
 - Syscall interception & resource quotas
 - Real-time PII redaction
@@ -53,3 +53,6 @@ Security issues only: **security@akioud.ai**
 General questions: **hello@akios.ai**
 
 Thank you for helping keep the cage strong.
+
+*AKIOS — Where AI meets unbreakable security*  
+*Use responsibly. Your safety and compliance are your responsibility.* 🛡️
