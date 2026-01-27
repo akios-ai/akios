@@ -1,4 +1,6 @@
 # Troubleshooting Guide
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Resolve common AKIOS issues and configuration problems**
 
@@ -49,7 +51,7 @@ Debug logs provide detailed information about:
 
 ### Hybrid Distribution Troubleshooting
 
-**AKIOS V1.0 supports three installation methods - use this guide to troubleshoot each:**
+**AKIOS v1.0.0 supports three installation methods - use this guide to troubleshoot each:**
 
 #### **Pip Package Issues**
 
@@ -731,7 +733,7 @@ AKIOS_FORCE_PULL=1 ./akios status
    ```
 
 2. **Enable Performance Optimizations:**
-   AKIOS V1.0 automatically detects Docker environments and applies performance optimizations:
+   AKIOS v1.0.0 automatically detects Docker environments and applies performance optimizations:
    - Uses container-native resource limits instead of POSIX fallbacks
    - Optimizes audit logging for containerized filesystems
    - Reduces I/O operations that can hang in virtualized environments
@@ -989,4 +991,4 @@ For critical issues:
    ./akios init fresh-project
    ```
 
-Remember: AKIOS V1.0 is designed for security-first operation. Most "issues" are actually security protections working correctly. Always verify your configuration against the security requirements before troubleshooting.
+Remember: AKIOS v1.0.0 is designed for security-first operation. Most "issues" are actually security protections working correctly. Always verify your configuration against the security requirements before troubleshooting.

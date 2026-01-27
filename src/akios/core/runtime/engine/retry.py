@@ -148,7 +148,7 @@ class RetryHandler:
             'max_attempts': self.max_attempts,
             'base_delay': self.base_delay,
             'max_delay': self.max_delay,
-            'enabled': True  # Always enabled in V1.0
+            'enabled': True  # Always enabled in v1.0.0
         }
 
 

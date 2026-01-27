@@ -1,6 +1,6 @@
 # Changelog
-**Document Version: 1.0**  
-**Date: January 24, 2026**  
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 All notable changes to AKIOS will be documented in this file.
 
@@ -122,4 +122,3 @@ Planned directions (non-binding, community-driven):
 
 This changelog is **locked** for V1.0.  
 Future entries will reflect only scope-aligned changes.
-

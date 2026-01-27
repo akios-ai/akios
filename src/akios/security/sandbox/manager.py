@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Sandbox process manager for AKIOS V1.0
+Sandbox process manager for AKIOS v1.0.0
 
 Create and manage sandboxed processes with resource quotas.
 Implements cgroups v2 + seccomp-bpf for true kernel-level isolation.

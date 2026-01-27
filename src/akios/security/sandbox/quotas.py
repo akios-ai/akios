@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Sandbox quotas enforcement for AKIOS V1.0
+Sandbox quotas enforcement for AKIOS v1.0.0
 
 Enforce hard resource limits using kernel-level cgroups v2.
 Real cgroup-based resource isolation for strong security.

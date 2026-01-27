@@ -1,3 +1,18 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Mistral LLM Provider
 
@@ -30,9 +45,9 @@ class MistralProvider(LLMProvider):
         if model not in allowed_models:
             raise ProviderError(f"Unsupported Mistral model: {model}. Supported: {allowed_models}")
 
-        # Validate API key format
-        if not api_key.startswith(('pk-', 'sk-')):
-            raise ProviderError("Mistral API key should start with 'pk-' or 'sk-'")
+        # Validate API key format (Mistral keys are typically alphanumeric)
+        if not api_key or not isinstance(api_key, str) or len(api_key.strip()) == 0:
+            raise ProviderError("Mistral API key cannot be empty")
 
         # Set API endpoint
         self.base_url = "https://api.mistral.ai/v1"

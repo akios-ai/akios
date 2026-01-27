@@ -1,3 +1,18 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 CLI init command - akios init
 
@@ -356,7 +371,7 @@ exec docker run --rm -v "$(pwd):/app" -w /app "$IMAGE" "$@"
 
 def create_default_config() -> str:
     """Create default config.yaml content"""
-    return """# AKIOS V1.0 Configuration
+    return """# AKIOS v1.0.0 Configuration
 # Security-first defaults - modify carefully
 
 # Security cage essentials
@@ -377,6 +392,7 @@ budget_limit_per_run: 1.0
 
 # Audit & paths
 audit_enabled: true
+audit_export_enabled: true
 audit_storage_path: "./audit/"
 audit_export_format: "json"
 

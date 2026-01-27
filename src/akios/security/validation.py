@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Security validation for AKIOS V1.0.
+Security validation for AKIOS v1.0.0.
 
 Validates security systems during workflow execution only.
 PII components work without validation during import time.
@@ -184,7 +184,7 @@ def _should_show_warning(warning_type: str) -> bool:
 
 def validate_all_security() -> bool:
     """
-    Validate all security components for AKIOS V1.0 compliance.
+    Validate all security components for AKIOS v1.0.0 compliance.
 
     Ensures PII functionality works with security measures while maintaining
     security integrity. Validation runs only during workflow execution,
@@ -199,7 +199,7 @@ def validate_all_security() -> bool:
     Returns:
         bool: True if validation passes or warnings are acceptable
     """
-    # CRITICAL: PII redaction is MANDATORY for V1.0 scope
+    # CRITICAL: PII redaction is MANDATORY for v1.0.0 scope
     # But we can still validate that core security libraries are available at import time
 
     try:
@@ -332,13 +332,13 @@ def validate_startup_security() -> bool:
                 return True
 
         # 2. Platform check only for native (non-container) environments
-        # AKIOS V1.0 requires Linux for kernel-hard security when running natively
+        # AKIOS v1.0.0 requires Linux for kernel-hard security when running natively
         if platform.system() != 'Linux':
             raise SecurityError(
                 "PLATFORM SECURITY FAILURE: Native AKIOS requires Linux for kernel-hard security.\n"
                 f"Current platform: {platform.system()}\n"
                 "\n"
-                "AKIOS V1.0's kernel-level sandboxing (seccomp-bpf, cgroups) is Linux-only.\n"
+                "AKIOS v1.0.0's kernel-level sandboxing (seccomp-bpf, cgroups) is Linux-only.\n"
                 "For Docker deployment on macOS/Windows, use policy-based security instead.\n"
                 "\n"
                 "SECURITY COMPROMISED: This native environment cannot run secure workflows.\n"
@@ -357,7 +357,7 @@ def validate_startup_security() -> bool:
             # Native environment - seccomp is required (container check already handled above)
             raise SecurityError(
                 "SECURITY FAILURE: seccomp-bpf not available.\n"
-                "AKIOS V1.0 REQUIRES kernel syscall filtering for secure operation.\n"
+                "AKIOS v1.0.0 REQUIRES kernel syscall filtering for secure operation.\n"
                 "\n"
                 "For Linux native: Install system dependencies: apt-get install libseccomp-dev\n"
                 "Then install Python library: pip install seccomp\n"
@@ -365,8 +365,8 @@ def validate_startup_security() -> bool:
                 "SECURITY COMPROMISED: Cannot run AKIOS without syscall filtering."
             )
 
-        # 2. Check if PII detection is available (V1.0 uses regex-based detection)
-        # Note: V1.0 uses built-in regex PII detection, not presidio/spaCy
+        # 2. Check if PII detection is available (v1.0.0 uses regex-based detection)
+        # Note: v1.0.0 uses built-in regex PII detection, not presidio/spaCy
         try:
             # Import the built-in PII detector from security module
             from akios.security.pii import PIIDetector
@@ -381,7 +381,7 @@ def validate_startup_security() -> bool:
         except Exception as e:
             raise SecurityError(
                 f"SECURITY FAILURE: PII detection not available: {e}\n"
-                "AKIOS V1.0 requires working PII detection for compliance.\n"
+                "AKIOS v1.0.0 requires working PII detection for compliance.\n"
                 "\n"
                 "COMPLIANCE VIOLATION: Cannot run AKIOS without PII protection."
             )
@@ -415,7 +415,7 @@ def validate_startup_security() -> bool:
             else:
                 raise SecurityError(
                     "SECURITY FAILURE: cgroups v2 not available for process isolation.\n"
-                    "AKIOS V1.0 requires cgroups v2 for kernel-hardened sandboxing.\n"
+                    "AKIOS v1.0.0 requires cgroups v2 for kernel-hardened sandboxing.\n"
                     "\n"
                     "Ensure cgroups v2 is mounted and accessible:\n"
                     "  - Check: mount | grep cgroup2\n"
@@ -441,7 +441,7 @@ def validate_startup_security() -> bool:
         if not llm_providers_available:
             raise SecurityError(
                 "SECURITY FAILURE: No LLM providers available.\n"
-                "AKIOS V1.0 requires at least one LLM provider for AI functionality.\n"
+                "AKIOS v1.0.0 requires at least one LLM provider for AI functionality.\n"
                 "Install with: pip install openai>=1.0.0 and/or anthropic>=0.7.0\n"
                 "\n"
                 "Cannot start AKIOS without LLM capability."
@@ -498,7 +498,7 @@ def _validate_security_requirements() -> bool:
             # Native environment - seccomp should work
             raise SecurityError(
                 "SECURITY FAILURE: Syscall filtering (seccomp-bpf) is not available.\n"
-                "AKIOS V1.0 requires Linux kernel syscall filtering for secure workflow execution.\n"
+                "AKIOS v1.0.0 requires Linux kernel syscall filtering for secure workflow execution.\n"
                 "Please run on Linux with seccomp support.\n"
                 "\n"
                 "Cannot execute workflows in this environment."
@@ -508,14 +508,14 @@ def _validate_security_requirements() -> bool:
     if not _sandbox_available():
         raise SecurityError(
             "SECURITY FAILURE: Process sandboxing (cgroups) is not available.\n"
-            "AKIOS V1.0 requires cgroups v2 for process isolation during workflow execution."
+            "AKIOS v1.0.0 requires cgroups v2 for process isolation during workflow execution."
         )
 
     # 3. Validate audit system
     if not _audit_system_available():
         raise SecurityError(
             "SECURITY FAILURE: Audit system is not functional.\n"
-            "AKIOS V1.0 requires tamper-proof audit logging for workflow execution."
+            "AKIOS v1.0.0 requires tamper-proof audit logging for workflow execution."
         )
 
     return True
@@ -535,7 +535,7 @@ def _syscall_filtering_available() -> bool:
 
 def _pii_redaction_available() -> bool:
     """Check if PII redaction is available"""
-    # For V1.0, we use regex-based PII detection (scoped)
+    # For v1.0.0, we use regex-based PII detection (scoped)
     # In future versions, this could check for ML-based detection
     return True  # Regex-based detection is always available
 

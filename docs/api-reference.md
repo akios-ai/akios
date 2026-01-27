@@ -1,4 +1,6 @@
 # Developer API Reference
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Programmatic integration with AKIOS workflows**
 
@@ -541,7 +543,7 @@ result = engine.run(
 
 ## Migration Guide
 
-### From v0.x to v1.0
+### From v0.x to v1.0.0
 
 **Breaking Changes:**
 - `WorkflowEngine` renamed to `RuntimeEngine` (alias maintained)

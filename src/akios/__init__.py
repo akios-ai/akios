@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-AKIOS V1.0 - Security-First AI Agent Runtime
+AKIOS v1.0.0 - Security-First AI Agent Runtime
 
 PII components are available for templates. Security validation occurs during workflow execution.
 """
@@ -37,7 +37,7 @@ def validate_all_security() -> bool:
     """
     Validate basic package security state.
 
-    For V1.0 scope compliance, PII functionality must work
+    For v1.0.0 scope compliance, PII functionality must work
     without blocking during package imports. Real security
     validation occurs during workflow execution.
 

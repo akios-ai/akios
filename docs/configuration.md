@@ -1,4 +1,6 @@
-# AKIOS V1.0 – Configuration Reference
+# AKIOS v1.0.0 – Configuration Reference
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Complete configuration guide for the AKIOS security cage.**
 
@@ -417,7 +419,7 @@ export AKIOS_LOG_LEVEL=DEBUG
 ## 📋 Complete Example Configuration
 
 ```yaml
-# AKIOS V1.0 Production Configuration
+# AKIOS v1.0.0 Production Configuration
 # Security-maximized settings for production workloads
 
 # Security cage - maximum protection

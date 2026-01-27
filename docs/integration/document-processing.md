@@ -1,4 +1,6 @@
 # Document Processing Integration Guide
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Process documents with AI-powered analysis and insights**
 

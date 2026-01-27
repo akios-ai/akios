@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Base agent class for AKIOS V1.0 core agents.
+Base agent class for AKIOS v1.0.0 core agents.
 
 All agents must inherit from this base class and implement the execute method.
 """
@@ -32,7 +32,7 @@ class AgentError(Exception):
 
 class BaseAgent(ABC):
     """
-    Base class for all AKIOS V1.0 agents.
+    Base class for all AKIOS v1.0.0 agents.
 
     Provides common functionality and enforces security boundaries.
     """

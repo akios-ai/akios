@@ -1,5 +1,20 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
-Configuration and environment validation for AKIOS V1.0
+Configuration and environment validation for AKIOS v1.0.0
 
 Validates settings consistency and runtime environment requirements.
 """
@@ -27,7 +42,10 @@ PROVIDER_MODELS = {
     'anthropic': [
         'claude-3.5-haiku',
         'claude-3.5-sonnet',
-        'claude-3-opus'
+        'claude-3-opus',
+        'claude-3-haiku-20240307',
+        'claude-3-sonnet-20240229',
+        'claude-3-opus-20240229'
     ],
     'grok': [
         'grok-3',
@@ -460,7 +478,7 @@ def validate_config(settings: Settings) -> None:
 
 def validate_environment():
     """
-    Validate runtime environment against V1.0 scope requirements.
+    Validate runtime environment against v1.0.0 scope requirements.
 
     Performs the 4 scope-required validations:
     1. Thorough user flows + Linux distro validation
@@ -557,7 +575,7 @@ def validate_environment():
 
     # Handle warnings (development/testing mode)
     if warnings:
-        logger.warning("Environment validation warnings (AKIOS V1.0 optimized for Linux):")
+        logger.warning("Environment validation warnings (AKIOS v1.0.0 optimized for Linux):")
         for w in warnings:
             logger.warning(f"  - {w}")
         logger.warning("Continuing execution - some features may be limited or unavailable")

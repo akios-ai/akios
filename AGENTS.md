@@ -1,6 +1,6 @@
 # AKIOS v1.0.0 – Core Agents Reference
-**Document Version: 1.0**  
-**Date: December 31, 2025**  
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **The 4 core agents that power AKIOS workflows with military-grade security.**
 

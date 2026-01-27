@@ -1,8 +1,9 @@
 # AKIOS Support & Community
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Get help with AKIOS - Your secure AI workflow platform**
 
-*Version 1.0 - January 25, 2026*
 
 ---
 
@@ -140,4 +141,5 @@ Thank you to our amazing community contributors, early adopters, and users who h
 
 *AKIOS - Where AI meets unbreakable security*
 
-
+*AKIOS — Where AI meets unbreakable security*  
+*Use responsibly. Your safety and compliance are your responsibility.* 🛡️

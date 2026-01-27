@@ -1,4 +1,6 @@
-# 📚 AKIOS V1.0 Documentation
+# 📚 AKIOS v1.0.0 - Documentation
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Complete user guide for AKIOS - Secure AI Workflow Execution**
 
@@ -32,7 +34,7 @@ Welcome to the official AKIOS documentation! This section contains all the guide
 - **[integration/document-processing.md](integration/document-processing.md)** - Document processing workflows and patterns
 - **[integration/api-integration.md](integration/api-integration.md)** - REST APIs, webhooks, and external service integration
 - **[best-practices.md](best-practices.md)** - Security, performance, and deployment best practices
-- **[migration-guide.md](migration-guide.md)** - **NEW:** Migrate to V1.0 hybrid distribution
+- **[migration-guide.md](migration-guide.md)** - **NEW:** Migrate tohybrid distribution
 
 ### For Developers
 - **Custom Workflows** - Creating your own YAML templates
@@ -58,7 +60,7 @@ All templates produce **real AI output** from live LLM providers with full audit
 |---------------------|-------------|
 | **First time setup** | [quickstart.md](quickstart.md) |
 | **Choose installation method** | [quickstart.md](quickstart.md#choose-your-installation-method) |
-| **Migrate to V1.0** | **[migration-guide.md](migration-guide.md)** |
+| **Migrate to v1.0.0** | **[migration-guide.md](migration-guide.md)** |
 | **Configure settings** | [configuration.md](configuration.md) |
 | **Run commands** | [cli-reference.md](cli-reference.md) |
 | **Process documents** | [integration/document-processing.md](integration/document-processing.md) |
@@ -85,4 +87,4 @@ All templates produce **real AI output** from live LLM providers with full audit
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS V1.0 - Where AI meets unbreakable security*
+*AKIOS v1.0.0 - Where AI meets unbreakable security*

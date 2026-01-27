@@ -1,3 +1,18 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 """
 Anthropic LLM Provider
 
@@ -35,7 +50,10 @@ class AnthropicProvider(LLMProvider):
         allowed_models = [
             "claude-3.5-haiku",
             "claude-3.5-sonnet",
-            "claude-3-opus"
+            "claude-3-opus",
+            "claude-3-haiku-20240307",
+            "claude-3-sonnet-20240229",
+            "claude-3-opus-20240229"
         ]
 
         if model not in allowed_models:
@@ -47,7 +65,7 @@ class AnthropicProvider(LLMProvider):
         except Exception as e:
             raise ProviderError(f"Failed to initialize Anthropic client: {str(e)}")
 
-    def complete(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
+    def complete(self, prompt: str, max_tokens: int = 1000, temperature: float = 0.7, frequency_penalty: float = 0.0, presence_penalty: float = 0.0, **kwargs) -> Dict[str, Any]:
         """
         Generate completion using Anthropic Claude API.
 
@@ -63,6 +81,13 @@ class AnthropicProvider(LLMProvider):
         # Validate input for safety and size limits
         self.validate_input(prompt)
 
+        # Filter kwargs to only Anthropic-supported parameters
+        supported_params = {
+            'top_p', 'top_k', 'stop_sequences', 'system', 'tools', 
+            'tool_choice', 'metadata', 'stream'
+        }
+        filtered_kwargs = {k: v for k, v in kwargs.items() if k in supported_params}
+
         try:
             response = self.client.messages.create(
                 model=self.model,
@@ -70,7 +95,7 @@ class AnthropicProvider(LLMProvider):
                 temperature=temperature,
                 messages=[{"role": "user", "content": prompt}],
                 timeout=30.0,  # 30 second timeout for consistency
-                **kwargs
+                **filtered_kwargs
             )
 
             # Extract response data
@@ -103,7 +128,7 @@ class AnthropicProvider(LLMProvider):
         except Exception as e:
             raise ProviderError(f"Anthropic request failed: {str(e)}")
 
-    def chat_complete(self, messages: List[Dict[str, str]], max_tokens: int = 1000, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
+    def chat_complete(self, messages: List[Dict[str, str]], max_tokens: int = 1000, temperature: float = 0.7, frequency_penalty: float = 0.0, presence_penalty: float = 0.0, **kwargs) -> Dict[str, Any]:
         """
         Generate chat completion using Anthropic Claude API.
 
@@ -138,13 +163,20 @@ class AnthropicProvider(LLMProvider):
                 else:
                     anthropic_messages.append({"role": role, "content": content})
 
+            # Filter kwargs to only Anthropic-supported parameters
+            supported_params = {
+                'top_p', 'top_k', 'stop_sequences', 'system', 'tools', 
+                'tool_choice', 'metadata', 'stream'
+            }
+            filtered_kwargs = {k: v for k, v in kwargs.items() if k in supported_params}
+
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 messages=anthropic_messages,
                 timeout=30.0,  # 30 second timeout for consistency
-                **kwargs
+                **filtered_kwargs
             )
 
             # Extract response data
