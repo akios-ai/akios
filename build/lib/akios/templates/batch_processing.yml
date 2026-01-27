@@ -1,0 +1,56 @@
+name: Secure Batch Processing
+description: |
+  Secure Batch Data Processing Demo — Analyze multiple files with AI aggregation, cost tracking,
+  PII redaction, and full audit trail. Demonstrates scalable local data handling without external access.
+
+  **REQUIRES:** data/input/batch/ (directory with multiple files to process)
+  **OUTPUT:** data/output/run_*/batch-summary.json (aggregated AI analysis)
+
+  Shows: Multi-file processing, cumulative cost tracking, batch PII protection, enterprise-scale local analysis.
+
+steps:
+  # Step 1: List all files in batch directory (filesystem enumeration)
+  - step: 1
+    agent: filesystem
+    config:
+      allowed_paths: ["./data/input"]
+    action: list
+    parameters:
+      path: "./data/input/batch"
+      # Security: Path whitelisted, read-only access enforced
+
+  # Step 2: AI analysis of batch content (with cost controls)
+  - step: 2
+    agent: llm
+    config:
+      provider: "${AKIOS_LLM_PROVIDER:-grok}"  # Use env var or default to grok
+      model: "${AKIOS_LLM_MODEL:-grok-3}"      # Use env var or default model
+    action: complete
+    parameters:
+      prompt: |
+        Analyze this batch of files and provide aggregated insights.
+
+        Files to analyze: {previous_output}
+
+        Provide a structured analysis covering:
+        - Total files processed and their types
+        - Key themes and patterns across all files
+        - Any sensitive information detected (will be auto-redacted)
+        - Business insights or recommendations
+
+        Output as clean JSON with these keys: summary, file_count, themes, recommendations
+      max_tokens: 800
+      temperature: 0.3  # Lower for more consistent analysis
+      # Security: Token limits prevent runaway costs, automatic kill-switches
+
+  # Step 3: Save structured batch results (controlled write access)
+  - step: 3
+    agent: filesystem
+    config:
+      allowed_paths: ["./data/output"]
+      read_only: false
+    action: write
+    parameters:
+      path: "./data/output/batch-summary.json"
+      content: "{previous_output}"
+      # Security: Write restricted to whitelisted path

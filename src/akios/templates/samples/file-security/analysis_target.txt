@@ -1,0 +1,52 @@
+# AKIOS File Security Analysis Sample
+
+This file contains various patterns that AKIOS can analyze for security insights.
+
+## File Contents Overview:
+- Configuration data
+- Log entries
+- Code snippets
+- Data patterns
+
+## Sample Configuration:
+DEBUG_MODE=true
+API_KEY=sk-test123456789
+DATABASE_URL=postgresql://user:password@localhost:5432/db
+SECRET_TOKEN=abc123def456
+
+## Sample Log Entries:
+[2026-01-15 10:30:15] INFO: User authentication successful - user_id: 12345
+[2026-01-15 10:30:16] WARNING: High memory usage detected - 85% utilization
+[2026-01-15 10:30:17] ERROR: Database connection timeout - retrying...
+[2026-01-15 10:30:18] INFO: File upload completed - size: 2.5MB
+
+## Sample Code:
+function authenticateUser(credentials) {
+    const apiKey = process.env.API_KEY;
+    const dbUrl = process.env.DATABASE_URL;
+
+    // Validate credentials
+    if (validateCredentials(credentials, apiKey)) {
+        logActivity('User authenticated', credentials.userId);
+        return createSession(credentials.userId, dbUrl);
+    }
+
+    return null;
+}
+
+## Data Patterns:
+- Email addresses: user@example.com, admin@company.org
+- IP addresses: 192.168.1.100, 10.0.0.50
+- File paths: /etc/passwd, /var/log/auth.log, C:\Windows\System32
+- URLs: https://api.example.com/v1/users, http://localhost:3000/admin
+- Phone numbers: +1-555-123-4567, (555) 987-6543
+
+## Security Analysis Points:
+1. Exposed API keys in configuration
+2. Database credentials in environment variables
+3. Log entries showing system state
+4. Code patterns that might need review
+5. Data patterns for PII detection
+
+This file is designed to test AKIOS's file analysis capabilities.
+License: MIT (sample data for security testing)

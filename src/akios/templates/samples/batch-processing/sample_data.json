@@ -1,0 +1,40 @@
+{
+  "company": "TechStart Solutions",
+  "description": "A promising startup developing AI-powered project management tools",
+  "founded": "2023",
+  "headquarters": "San Francisco, CA",
+  "team_size": 25,
+  "funding_status": "Series A",
+  "technology_stack": ["Python", "React", "PostgreSQL", "AWS"],
+  "key_products": ["TaskFlow AI", "ProjectPredict"],
+  "target_market": "Small to medium businesses",
+
+  "sample_enrichment_tasks": [
+    "Analyze company growth potential",
+    "Evaluate technology stack suitability",
+    "Assess market positioning",
+    "Generate investment recommendations",
+    "Create competitor analysis",
+    "Develop go-to-market strategy"
+  ],
+
+  "financial_data": {
+    "revenue_2024": 2500000,
+    "burn_rate": 500000,
+    "runway_months": 18,
+    "valuation": 15000000
+  },
+
+  "contact_info": {
+    "website": "https://techstart-solutions.com",
+    "linkedin": "https://linkedin.com/company/techstart-solutions",
+    "crunchbase": "https://crunchbase.com/organization/techstart-solutions"
+  },
+
+  "metadata": {
+    "source": "Sample data for AKIOS batch_processing.yml template testing",
+    "license": "MIT",
+    "created": "2026-01-15",
+    "purpose": "Demonstrate AI-powered data enrichment capabilities"
+  }
+}
