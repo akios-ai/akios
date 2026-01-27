@@ -1,9 +1,9 @@
 [project]
 name = "akios"
-version = "1.0.0"
+version = "1.0.1"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
-    { name = "AKIOS Team", email = "hello@akios.ai" },
+    { name = "AKIOS Team", email = "team@akios.ai" },
 ]
 license = {text = "GPL-3.0-only"}
 readme = "README.md"
@@ -90,6 +90,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 include-package-data = true
+license-files = ["LICENSE", "NOTICE", "TRADEMARKS.md", "DCO.md"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
