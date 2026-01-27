@@ -37,10 +37,8 @@ jobs:
           regex = '''(?i)(api[_-]?key|apikey)([\\"':=| ]{1,5})([A-Za-z0-9_-]{20,})'''
           tags = ["key", "API", "generic"]
 
-    - name: Run TruffleHog (public repo mode)
+    - name: Run TruffleHog (scan entire repo)
       uses: trufflesecurity/trufflehog@main
       with:
         path: ./
-        base: main
-        head: HEAD
-        extra_args: --only-verified --exclude-paths=.github/
+        extra_args: --only-verified --exclude-paths=.github/ --exclude-paths=docs/
