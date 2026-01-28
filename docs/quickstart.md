@@ -68,7 +68,13 @@ AKIOS supports three deployment methods - choose the best one for your use case:
 **Maximum security on native Linux:**
 
 ```bash
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
+
 akios --version
 akios init my-project
 cd my-project
@@ -83,7 +89,13 @@ akios run templates/hello-workflow.yml
 #### 🐧 **Pip Package** (For Python Developers)
 **Maximum security on native Linux:**
 ```bash
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
+
 akios --version
 akios init my-project
 cd my-project

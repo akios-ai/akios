@@ -72,7 +72,13 @@ akios run workflow.yml
 ### For **Most Users** (Recommended)
 ```bash
 # Pip Package - Maximum security on Linux
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
+
 akios init my-project
 ```
 
@@ -81,7 +87,13 @@ akios init my-project
 ### For **Python Developers**
 ```bash
 # Pip Package - Full ecosystem integration
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
+
 akios init my-project
 ```
 

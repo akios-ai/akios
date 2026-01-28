@@ -10,6 +10,11 @@ This reference covers the Python API for integrating AKIOS into your application
 
 ```bash
 # Install AKIOS
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
 
 # Or for development

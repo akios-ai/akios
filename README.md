@@ -91,7 +91,14 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 
 ```bash
 # Option 1: Pip Package (Recommended - maximum security on Linux)
+
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
+
 akios init my-project
 cd my-project
 # Setup wizard runs automatically - just follow the prompts!
@@ -125,7 +132,7 @@ AKIOS_FORCE_PULL=1 ./akios status
 
 | Option | Best For | Requirements | Security Level | Ease of Use |
 |--------|----------|--------------|----------------|-------------|
-| **Pip Package** ⭐ | Python developers, maximum security | Python 3.8+, Linux kernel 3.17+ | Full kernel-hard security | ⭐⭐⭐⭐⭐ |
+| **Pip Package** ⭐ | Python developers, maximum security | Python 3.8+, Linux kernel 3.17+<br>**Ubuntu 24.04+:** `pipx install akios` | Full kernel-hard security | ⭐⭐⭐⭐⭐ |
 | **Docker** | Cross-platform teams, development environments | Docker installed | Strong policy-based security | ⭐⭐⭐⭐ |
 | **Direct Docker** | Emergency fallback when wrapper fails | Docker installed | Strong policy-based security | ⭐⭐⭐ |
 
