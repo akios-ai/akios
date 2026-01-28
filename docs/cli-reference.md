@@ -8,7 +8,13 @@ AKIOS V1.0.O supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
+
 akios init
 akios run templates/hello-workflow.yml
 ```
@@ -475,6 +481,11 @@ akios output export --format json --output outputs.json
 ### Native Linux Installation
 ```bash
 # Install AKIOS
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
 
 # 1. Initialize a new project

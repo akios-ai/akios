@@ -146,6 +146,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 
 3. **Reinstall if needed:**
    ```bash
+   # Ubuntu 24.04+ users: Use pipx
+   pipx uninstall akios
+   pipx install akios
+
+   # Ubuntu 20.04/22.04 and other systems:
    pip uninstall akios
    pip install akios
    ```
@@ -171,6 +176,10 @@ AKIOS_FORCE_PULL=1 ./akios status
 
 2. **Reinstall in virtual environment:**
    ```bash
+   # Ubuntu 24.04+ users: Use pipx (recommended)
+   pipx install akios
+
+   # Alternative: Virtual environment (works on all systems)
    python3 -m venv akios_env
    source akios_env/bin/activate
    pip install akios
