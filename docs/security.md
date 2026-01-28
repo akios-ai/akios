@@ -4,9 +4,9 @@
 
 ## 🔒 Security Overview
 
-AKIOS v1.0.0 provides **strong, policy-based security** for AI agents across all platforms. The system is built around container isolation, real-time protection, and comprehensive audit trails.
+AKIOS v1.0 provides **strong, policy-based security** for AI agents across all platforms. The system is built around container isolation, real-time protection, and comprehensive audit trails.
 
-This document describes the security features and protections available in V1.0.
+This document describes the security features and protections available in v1.0.
 
 ## 📋 Supported Versions
 
@@ -36,7 +36,7 @@ Send private reports to: **hello@akios.ai**
 4. **Coordinated Disclosure**: We release fix + advisory together
 5. **Credit**: We publicly thank responsible reporters (Hall of Fame)
 
-## 🛡️ Security Features In v1.0.0
+## 🛡️ Security Features In v1.0
 
 ### Container Isolation (All Platforms)
 - **Policy-based sandbox**: Command allowlisting and path restrictions

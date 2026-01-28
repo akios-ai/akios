@@ -41,7 +41,7 @@ def get_audit_log_path() -> str:
 
 def export_audit(task_id: str = "latest", format: str = "json", output: str = None) -> str:
     """
-    Unified audit export function matching v1.0.0 scope API.
+    Unified audit export function matching scope API.
 
     Args:
         task_id: Task identifier (currently ignored, always exports latest)

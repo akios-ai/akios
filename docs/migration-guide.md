@@ -2,7 +2,7 @@
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
-**Upgrading from Previous Versions to v1.0.0 Hybrid Distribution**
+**Upgrading from Previous Versions to v1.0 Hybrid Distribution**
 
 ## O#### Op#### Option #### Option 1: Upgrade to Pip Package (Recommended)
 ```bash
@@ -101,11 +101,11 @@ chmod +x akios
 ### For **Emergency Recovery**
 ```bash
 # Direct Docker - When wrapper download fails
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
 cd my-project
 # Create wrapper for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
 chmod +x akios
 ```
 
@@ -135,11 +135,11 @@ akios run workflow.yml
 #### Option 2: Keep Pip (No Changes Needed)
 ```bash
 # Your existing setup continues to work
-pip install --upgrade akios  # Get latest v1.0.0 features
+pip install --upgrade akios  # Get latest v1.0 features
 akios run workflow.yml       # Same commands, enhanced security
 ```
 
-**What's Different in v1.0.0:**
+**What's Different in v1.0:**
 - ✅ **Better security**: Enhanced PII redaction, improved sandboxing
 - ✅ **Performance**: Faster startup, optimized resource usage
 - ✅ **Audit**: More detailed logging, better compliance reports
@@ -167,7 +167,7 @@ curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
 ls -la akios && file akios  # Verify download (shell script)
 chmod +x akios
 
-# Enhanced v1.0.0 features automatically available
+# Enhanced v1.0 features automatically available
 ./akios run workflow.yml  # Better security, performance
 ```
 
@@ -196,7 +196,7 @@ pip install akios
 akios run workflow.yml
 ```
 
-**Docker Security in v1.0.0:**
+**Docker Security in v1.0:**
 - ✅ **Enhanced isolation**: Better container policies
 - ✅ **Improved performance**: Optimized for containerized environments
 - ✅ **Cross-platform consistency**: Same security on macOS/Windows
@@ -219,7 +219,7 @@ AKIOS_MOCK_LLM=0
 
 ### Config.yaml Updates (Optional)
 
-v1.0.0 introduces new security and performance options. Your existing config continues to work, but you can add:
+v1.0 introduces new security and performance options. Your existing config continues to work, but you can add:
 
 ```yaml
 # Enhanced security (optional additions)
@@ -234,9 +234,9 @@ memory_limit_mb: 256           # Memory limit (default: 256)
 network_access_allowed: true    # Allow external API calls
 ```
 
-### Security Defaults in v1.0.0
+### Security Defaults in v1.0
 
-| Setting | V0.x Default | v1.0.0 Default | Change |
+| Setting | V0.x Default | v1.0 Default | Change |
 |---------|--------------|--------------|--------|
 | `sandbox_enabled` | `true` | `true` | No change |
 | `pii_redaction_enabled` | `true` | `true` | No change |
@@ -257,7 +257,7 @@ All your existing YAML workflows work without changes:
 ```yaml
 # Your existing workflows work unchanged
 name: "My Existing Workflow"
-description: "Migrates automatically to v1.0.0"
+description: "Migrates automatically to v1.0"
 
 steps:
   - step: 1
@@ -270,10 +270,10 @@ steps:
 
 ### ✅ **Enhanced Features Available**
 
-v1.0.0 adds new capabilities you can optionally use:
+v1.0 adds new capabilities you can optionally use:
 
 ```yaml
-# New v1.0.0 features (optional)
+# New v1.0 features (optional)
 steps:
   - step: 1
     agent: llm
@@ -437,8 +437,8 @@ akios audit export --format json | jq length  # Should show events
 - GitHub Issues: Bug reports and feature requests
 - GitHub Discussions: Questions and migration help
 
-**Migration verified?** Your AKIOS v1.0.0 hybrid deployment is ready for production! 🛡️🤖
+**Migration verified?** Your AKIOS v1.0 hybrid deployment is ready for production! 🛡️🤖
 
 ---
 
-*AKIOS v1.0.0 Migration Guide - Zero-downtime upgrades, maximum compatibility*
+*AKIOS v1.0 Migration Guide - Zero-downtime upgrades, maximum compatibility*

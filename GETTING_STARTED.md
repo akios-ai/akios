@@ -1,4 +1,4 @@
-# 🚀 AKIOS v1.0.0 - Get Started in 3 Minutes
+# 🚀 AKIOS v1.0 - Get Started in 3 Minutes
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
@@ -50,11 +50,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 ### 🚨 **Direct Docker** (Emergency Fallback)
 **Use Docker directly when wrapper script download fails**
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
 chmod +x akios
 ./akios run templates/hello-workflow.yml
 ```
@@ -162,4 +162,4 @@ cp .env.example .env
 
 ---
 
-*AKIOS v1.0.0 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0 - Where AI meets unbreakable security* 🛡️🤖

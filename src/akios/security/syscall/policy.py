@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Syscall policy definitions for AKIOS v1.0.0
+Syscall policy definitions for AKIOS
 
 Define and load syscall policies for different agent types.
 Simplified implementation of seccomp-bpf policy functionality.

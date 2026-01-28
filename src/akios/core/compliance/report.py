@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Compliance report generator for AKIOS v1.0.0.
+Compliance report generator for AKIOS.
 
 Generates compliance reports for workflow execution and security validation.
 """

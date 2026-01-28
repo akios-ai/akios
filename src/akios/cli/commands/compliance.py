@@ -16,7 +16,7 @@
 """
 CLI compliance command - akios compliance <subcommand>
 
-Compliance reporting and status dashboard for v1.0.0 workflow isolation.
+Compliance reporting and status dashboard for workflow isolation.
 """
 
 import argparse

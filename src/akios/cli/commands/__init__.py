@@ -81,7 +81,7 @@ def register_all_commands(subparsers: argparse._SubParsersAction) -> None:
     output_module.register_output_command(subparsers)
 
     # workflow_module = _lazy_import_command('workflow')
-    # workflow_module.register_workflow_command(subparsers)  # Removed for v1.0.0 minimal scope
+    # workflow_module.register_workflow_command(subparsers)  # Removed for minimal scope
 
 
 def get_command_descriptions() -> Dict[str, str]:
@@ -105,7 +105,7 @@ def get_command_descriptions() -> Dict[str, str]:
         "files": "Show available input and output files",
         "compliance": "Generate compliance reports",
         "output": "Manage workflow outputs",
-        # "workflow": "Manage workflow instances"  # Removed for v1.0.0 minimal scope
+        # "workflow": "Manage workflow instances"  # Removed for minimal scope
     }
 
 

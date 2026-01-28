@@ -1,10 +1,10 @@
-# AKIOS v1.0.0 Release Notes
+# AKIOS v1.0 Release Notes
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
-### 🎯 AKIOS v1.0.0: The Security Cage is Here
+### 🎯 AKIOS v1.0: The Security Cage is Here
 
-AKIOS v1.0.0 delivers the **strongest open-source security foundation** for AI agents — a hard, minimal cage that makes them safe enough to run with real data today.
+AKIOS v1.0 delivers the **strongest open-source security foundation** for AI agents — a hard, minimal cage that makes them safe enough to run with real data today.
 
 This is **not** a general-purpose framework trying to compete on velocity or multi-agent complexity.  
 It is **the unbreakable cage**: kernel-level isolation, syscall control, real-time PII redaction, Merkle tamper-evident audit, and enforced cost/loop kills.
@@ -112,11 +112,11 @@ cd my-project
 #### 🚨 Direct Docker (Emergency Fallback)
 ```bash
 # Use when wrapper script download fails
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
 chmod +x akios
 ./akios run templates/hello-workflow.yml
 ```

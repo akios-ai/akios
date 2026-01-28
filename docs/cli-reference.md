@@ -1,4 +1,4 @@
-# AKIOS v1.0.0 CLI Reference
+# AKIOS v1.0 CLI Reference
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
@@ -27,11 +27,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
