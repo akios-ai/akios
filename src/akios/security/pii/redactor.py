@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-PII redactor for AKIOS v1.0.0
+PII redactor for AKIOS
 
 Replace detected personally identifiable information with safe placeholders.
 Supports configurable redaction strategies.

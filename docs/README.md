@@ -1,4 +1,4 @@
-# 📚 AKIOS v1.0.0 - Documentation
+# 📚 AKIOS v1.0 - Documentation
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
@@ -60,7 +60,7 @@ All templates produce **real AI output** from live LLM providers with full audit
 |---------------------|-------------|
 | **First time setup** | [quickstart.md](quickstart.md) |
 | **Choose installation method** | [quickstart.md](quickstart.md#choose-your-installation-method) |
-| **Migrate to v1.0.0** | **[migration-guide.md](migration-guide.md)** |
+| **Migrate to v1.0** | **[migration-guide.md](migration-guide.md)** |
 | **Configure settings** | [configuration.md](configuration.md) |
 | **Run commands** | [cli-reference.md](cli-reference.md) |
 | **Process documents** | [integration/document-processing.md](integration/document-processing.md) |
@@ -87,4 +87,4 @@ All templates produce **real AI output** from live LLM providers with full audit
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS v1.0.0 - Where AI meets unbreakable security*
+*AKIOS v1.0 - Where AI meets unbreakable security*

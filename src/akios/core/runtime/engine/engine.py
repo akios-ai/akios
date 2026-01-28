@@ -429,7 +429,7 @@ class RuntimeEngine:
         RUNTIME ENFORCEMENT: Validate workflow structure and block forbidden features.
 
         This provides an additional layer of validation at runtime beyond parsing,
-        ensuring v1.0.0 sequential-only promise is enforced even if parsing is bypassed.
+        ensuring sequential-only promise is enforced even if parsing is bypassed.
         """
         # Check for forbidden parallel/loop constructs
         parallel_indicators = ['parallel', 'parallel_steps', 'loop', 'for_each', 'map', 'reduce']
@@ -453,7 +453,7 @@ class RuntimeEngine:
 
             if check_forbidden(step.parameters) or check_forbidden(step.config):
                 raise RuntimeError(
-                    f"Workflow contains forbidden parallel/loop constructs (v1.0.0 is sequential only). "
+                    f"Workflow contains forbidden parallel/loop constructs (sequential only). "
                     f"Step {step.step_id} contains parallel execution patterns."
                 )
 
@@ -737,7 +737,7 @@ class RuntimeEngine:
         })
 
         # CRITICAL: Flush audit buffer to ensure all events are written to disk
-        # Audit logging is a core v1.0.0 security guarantee - events must be persisted
+        # Audit logging is a core security guarantee - events must be persisted
         try:
             audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
             ledger = audit_flush()
@@ -771,7 +771,7 @@ class RuntimeEngine:
         })
 
         # CRITICAL: Flush audit buffer even on failure to ensure all events are written to disk
-        # Audit logging must work even when workflows fail - core v1.0.0 security requirement
+        # Audit logging must work even when workflows fail - core security requirement
         try:
             audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
             ledger = audit_flush()

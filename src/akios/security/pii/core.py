@@ -16,7 +16,7 @@
 """
 PII Detection and Redaction Core
 
-Provides PII detection and redaction functionality for v1.0.0 templates.
+Provides PII detection and redaction functionality for templates.
 PII redaction is mandatory and cannot be disabled for compliance.
 """
 
@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 class PIIDetector:
-    """PII detector for v1.0.0 templates - detects emails, phones, SSNs"""
+    """PII detector for templates - detects emails, phones, SSNs"""
 
     def detect_pii(self, text) -> Dict[str, List[str]]:
         """
@@ -69,7 +69,7 @@ class PIIDetector:
 
 
 class PIIRedactor:
-    """PII redactor for v1.0.0 templates - redacts detected PII"""
+    """PII redactor for templates - redacts detected PII"""
 
     def __init__(self):
         self.detector = PIIDetector()

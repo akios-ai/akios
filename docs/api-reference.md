@@ -543,7 +543,7 @@ result = engine.run(
 
 ## Migration Guide
 
-### From v0.x to v1.0.0
+### From v0.x to v1.0
 
 **Breaking Changes:**
 - `WorkflowEngine` renamed to `RuntimeEngine` (alias maintained)

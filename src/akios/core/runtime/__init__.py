@@ -16,7 +16,7 @@
 """
 AKIOS Core Runtime Module
 
-Execution heart of AKIOS v1.0.0 - parses sequential YAML workflows,
+Execution heart of AKIOS - parses sequential YAML workflows,
 runs core agents (LLM, HTTP, filesystem, tool_executor), enforces cost/loop kills,
 coordinates with security/audit for secure workflow execution.
 """

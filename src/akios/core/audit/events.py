@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Audit event definitions and serialization for AKIOS v1.0.0
+Audit event definitions and serialization for AKIOS
 
 Structured audit events with cryptographic integrity.
 """

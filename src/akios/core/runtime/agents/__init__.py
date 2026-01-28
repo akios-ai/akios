@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Agents module - Registry for 4 core agents in AKIOS v1.0.0
+Agents module - Registry for 4 core agents in AKIOS
 
 Only LLM, HTTP, Filesystem, and Tool Executor agents are supported.
 """

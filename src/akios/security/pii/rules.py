@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-PII compliance rules for AKIOS v1.0.0
+PII compliance rules for AKIOS
 
 Load and apply compliance rule packs for EU AI Act and GDPR requirements.
 Provides >95% accuracy PII detection patterns.

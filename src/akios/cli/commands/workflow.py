@@ -14,8 +14,8 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Workflow commands removed for v1.0.0 to maintain minimal scope.
+Workflow commands removed to maintain minimal scope.
 
-v1.0.0 focuses on single workflow execution with direct template usage.
-Workflow instances will be considered for V1.1 with proper multi-workflow support.
+Focuses on single workflow execution with direct template usage.
+Workflow instances will be considered for future versions with proper multi-workflow support.
 """

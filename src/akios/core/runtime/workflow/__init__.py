@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Workflow module - Sequential workflow handling for AKIOS v1.0.0
+Workflow module - Sequential workflow handling for AKIOS
 
 Parses and validates simple sequential YAML workflows (no conditional/parallel/loop).
 """

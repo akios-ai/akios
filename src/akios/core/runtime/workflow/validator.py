@@ -16,7 +16,7 @@
 """
 Workflow validator - Validate steps, agents, params, fail fast on invalid YAML
 
-Strict schema validation for v1.0.0 sequential workflows.
+Strict schema validation for sequential workflows.
 """
 
 import os
@@ -30,7 +30,7 @@ try:
 except ImportError:
     SCHEMA_VALIDATION_AVAILABLE = False
 
-# Allowed agents in v1.0.0
+# Allowed agents
 ALLOWED_AGENTS = {'llm', 'http', 'filesystem', 'tool_executor'}
 
 # Agent-specific allowed actions
@@ -340,7 +340,7 @@ def _validate_parameters(parameters: Any, step_num: int) -> List[str]:
 
 
 def _check_forbidden_features(workflow_data: Dict[str, Any]) -> List[str]:
-    """Check for features forbidden in v1.0.0"""
+    """Check for features forbidden in current scope"""
     errors = []
 
     # Check for conditional logic
@@ -393,7 +393,7 @@ def _check_forbidden_features(workflow_data: Dict[str, Any]) -> List[str]:
         return False
 
     if check_workflow_structure(workflow_data):
-        errors.append("Forbidden parallel/loop construct detected (v1.0.0 is sequential only)")
+        errors.append("Forbidden parallel/loop construct detected (sequential only)")
 
     return errors
 
@@ -431,7 +431,7 @@ def _validate_agent_config(agent: str, config: Any, step_num: int) -> List[str]:
 
 
 def get_allowed_agents() -> Set[str]:
-    """Get the set of allowed agents in v1.0.0"""
+    """Get the set of allowed agents"""
     return ALLOWED_AGENTS.copy()
 
 

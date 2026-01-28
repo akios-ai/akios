@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Mode switching utilities for AKIOS v1.0.0
+Mode switching utilities for AKIOS
 
 Provides automatic configuration switching between mock and real API modes.
 Handles interactive API key setup and validation.

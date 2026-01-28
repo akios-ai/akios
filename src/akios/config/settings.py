@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Pydantic settings model for AKIOS v1.0.0 configuration
+Pydantic settings model for AKIOS configuration
 
 Defines all configurable parameters for the security cage.
 """
@@ -28,7 +28,7 @@ from pathlib import Path
 
 class Settings(BaseSettings):
     """
-    AKIOS v1.0.0 Configuration Settings
+    AKIOS Configuration Settings
 
     Security-first defaults with conservative values.
     """

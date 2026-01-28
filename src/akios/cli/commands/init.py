@@ -217,7 +217,7 @@ def create_project_structure(project_name: str = None, force: bool = False) -> d
             # Fallback: create a basic launcher
             launcher_content = '''#!/bin/bash
 set -e
-IMAGE="akiosai/akios:v1.0.0"
+IMAGE="akiosai/akios:v1.0.3"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required to run AKIOS from this project."
@@ -371,7 +371,7 @@ exec docker run --rm -v "$(pwd):/app" -w /app "$IMAGE" "$@"
 
 def create_default_config() -> str:
     """Create default config.yaml content"""
-    return """# AKIOS v1.0.0 Configuration
+    return """# AKIOS v1.0 Configuration
 # Security-first defaults - modify carefully
 
 # Security cage essentials
@@ -651,7 +651,7 @@ Welcome to your AKIOS (AI Knowledge & Intelligence Operating System) project! Th
 
    **Direct Docker (if you do not have `{get_command_prefix()}`):**
    ```bash
-   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 run templates/hello-workflow.yml
+   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 run templates/hello-workflow.yml
    ```
 
 2. **Configure for API workflows** (if using batch_processing.yml):
@@ -720,7 +720,7 @@ AKIOS comes with 4 pre-built workflow templates. Here's what each one does:
 {FILE_ANALYSIS_COMMAND}
 
 # Direct Docker (if you do not have {get_command_prefix()})
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 run templates/hello-workflow.yml
 ```
 
 ### Creating Custom Workflows

@@ -23,7 +23,7 @@ Briefly describe the changes made in this pull request.
 
 ## Scope Alignment
 
-- [ ] ✅ Changes align with AKIOS v1.0.0 scope boundaries
+- [ ] ✅ Changes align with AKIOS v1.0 scope boundaries
 - [ ] ✅ Maintains minimal cage philosophy
 - [ ] ✅ No external dependencies added
 - [ ] ✅ Security-first approach preserved

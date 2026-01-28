@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Default configuration values for AKIOS v1.0.0
+Default configuration values for AKIOS
 
 Security-conservative defaults that prioritize safety over convenience.
 """
