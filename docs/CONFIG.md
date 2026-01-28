@@ -1,4 +1,4 @@
-# AKIOS v1.0.0 – Configuration Reference
+# AKIOS v1.0 – Configuration Reference
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 

@@ -1,11 +1,15 @@
-# AKIOS v1.0.0 – The Open-Source Security Cage for AI Agents
-
-<img src="assets/logo.png" alt="AKIOS Logo" width="200" align="right"/>
-
+# AKIOS v1.0 – The Open-Source Security Cage for AI Agents
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
 **Security sandboxing · Real-time PII redaction · Merkle audit · Cost kills**
+
+
+<div align="center">
+  <img src="assets/logo.png" alt="AKIOS Logo" width="250" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+</div>
+
+
 
 AKIOS is open-source (GPL-3.0). Read the legal notices, trademarks, and security policy before use.
 
@@ -30,11 +34,11 @@ AKIOS is the **strongest open-source cage** you can put around any AI agent. Run
 
 | Environment | Security Level | Status | Notes |
 |-------------|----------------|--------|-------|
-| Docker on any platform (macOS/Linux/Windows) | Strong policy-based container isolation | ✅ v1.0.0 | Simple, reliable, cross-platform |
-| Native Linux (AWS EC2) | Full security feature set | ✅ v1.0.0 | Maximum security and performance |
+| Docker on any platform (macOS/Linux/Windows) | Strong policy-based container isolation | ✅ v1.0 | Simple, reliable, cross-platform |
+| Native Linux (AWS EC2) | Full security feature set | ✅ v1.0 | Maximum security and performance |
 | gVisor on Linux | Kernel-hard isolation | 🔮 V1.1+ | Future advanced security option |
 
-**AKIOS v1.0.0 provides strong, reliable security across all platforms.**
+**AKIOS v1.0 provides strong, reliable security across all platforms.**
 
 #### ⚠️ **Docker Security Limitations**
 **Important Security Trade-off:** Docker mode provides **strong policy-based security** but **does NOT** enforce host filesystem permissions. This is a **known limitation** of containerized deployment.
@@ -113,9 +117,9 @@ cd my-project
 AKIOS_FORCE_PULL=1 ./akios status
 ```
 
-> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.2). 
-> For specific versions: `pip install akios==1.0.2`. 
-> **⚠️ Avoid v1.0.0 and v1.0.1** - these releases were yanked due to missing critical files.
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
+> For specific versions: `pip install akios==1.0.3`. 
+
 
 ### Which Installation Should I Choose?
 
@@ -159,11 +163,11 @@ akios status
 cat data/output/run_*/hello-ai.txt
 ```
 
-## v1.0.0 UX and Value
+## v1.0 UX and Value
 
-AKIOS v1.0.0 is designed around **one workflow per project** so users can run, test, and deploy a single, focused workflow with minimal setup.
+AKIOS v1.0 is designed around **one workflow per project** so users can run, test, and deploy a single, focused workflow with minimal setup.
 
-**What users get in v1.0.0:**
+**What users get in v1.0:**
 - **Security-first execution** in Docker and native Linux (Linux provides the strongest guarantees).
 - **Ready-to-run templates** to learn fast, then adapt for real use cases.
 - **Clear outputs** in timestamped run folders under `data/output/run_*/`.
@@ -244,14 +248,14 @@ cd my-project                    # ← REQUIRED STEP
 
 ## 🔍 Audit & Compliance
 
-AKIOS v1.0.0 provides **raw, tamper-evident audit logs** (JSONL format) for every workflow execution.
+AKIOS v1.0 provides **raw, tamper-evident audit logs** (JSONL format) for every workflow execution.
 
 - `akios audit` — view recent events
 - `akios audit export --format json` — raw JSON export
 
 ## 🛡️ Security Levels by Environment
 
-AKIOS v1.0.0 uses Linux kernel features for maximum security. Security levels vary by deployment environment:
+AKIOS v1.0 uses Linux kernel features for maximum security. Security levels vary by deployment environment:
 
 ### Native Linux (Recommended for Production)
 - **Security Level**: Full (kernel-hard)
@@ -296,13 +300,13 @@ ls -la akios && file akios
 # akios: Bourne-Again shell script text executable, Unicode text, UTF-8 text
 
 # If download failed, use Direct Docker fallback:
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
 chmod +x akios
-./akios --version  # Should show "AKIOS 1.0.0"
+./akios --version  # Should show "AKIOS 1.0.3"
 ```
 
 #### Docker Installation Issues
@@ -380,25 +384,25 @@ Typical performance with AI workflows:
 - **Unbreakable containment** through kernel-level isolation
 - **Real AI functionality** - templates produce actual AI-generated content using OpenAI/Anthropic/Grok/Mistral/Gemini
 
-## 📋 Limits (v1.0.0)
+## 📋 Limits (v1.0)
 
-AKIOS v1.0.0 is **minimal by design** — focused on security fundamentals:
+AKIOS v1.0 is **minimal by design** — focused on security fundamentals:
 
 - **Linux kernel required** (5.4+ for cgroups v2 + seccomp-bpf security)
 - **Docker recommended** (provides Linux environment for macOS/Windows users)
 - **Sequential workflows only** (no parallel execution)
 - **Core agents** (filesystem, HTTP, LLM, tool executor)
 - **Basic CLI** (10 commands: init, setup, run, workflow, audit export, logs, status, templates, testing, clean)
-- **No API server** (CLI-only in v1.0.0)
+- **No API server** (CLI-only in v1.0)
 - **No monitoring dashboard** (command-line only)
 
 These limits ensure **bulletproof security**. Advanced features come in future releases.
 
 ## ⚠️ Production Security Warning
 
-**🔑 API Keys Required**: v1.0.0 requires real API keys for LLM functionality. See setup instructions below.
+**🔑 API Keys Required**: v1.0 requires real API keys for LLM functionality. See setup instructions below.
 
-AKIOS v1.0.0 provides genuine LLM API integration with OpenAI, Anthropic, Grok, Mistral, and Gemini for real workflows and audit-ready results.
+AKIOS v1.0 provides genuine LLM API integration with OpenAI, Anthropic, Grok, Mistral, and Gemini for real workflows and audit-ready results.
 
 ## 🛠️ Installation
 
@@ -568,7 +572,7 @@ steps:
 - **Anthropic**: claude-3.5-haiku, claude-3.5-sonnet
 - **Grok**: grok-3, grok-3-turbo
 
-> **🔑 API Keys Required**: v1.0.0 uses real LLM APIs - you must provide API keys.
+> **🔑 API Keys Required**: v1.0 uses real LLM APIs - you must provide API keys.
 
 Set `AKIOS_MOCK_LLM=1` to use mock responses (for testing/CI without API keys).
 
@@ -635,7 +639,7 @@ The essential files you'll need to get started:
 
 - **[GETTING_STARTED.md](./GETTING_STARTED.md)** – 3-minute try-it-now guide
 - **[AGENTS.md](./AGENTS.md)** – Core agents (LLM, HTTP, Filesystem, Tool Executor)
-- **[RELEASES.md](./RELEASES.md)** – What v1.0.0 delivers and scope limitations
+- **[RELEASES.md](./RELEASES.md)** – What v1.0 delivers and scope limitations
 - **[akios](./akios)** – Smart wrapper (Cross-platform Docker launcher)
 - **[config.yaml](./config.yaml)** – Default configuration template
 - **[Dockerfile](./Dockerfile)** – Official Docker build
@@ -657,7 +661,7 @@ The essential files you'll need to get started:
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
 
 ### 🏗️ Design & Architecture
-- **[CLI Scope & Boundaries](docs/cli-scope-boundaries.md)** - v1.0.0 CLI design constraints and limitations
+- **[CLI Scope & Boundaries](docs/cli-scope-boundaries.md)** - v1.0 CLI design constraints and limitations
 
 ### 📋 [Documentation Index](docs/README.md) - All guides in one place
 
@@ -738,7 +742,7 @@ cat data/output/run_*/batch-summary.json
 
 ## 📈 Roadmap
 
-**Current: v1.0.0** - Security cage fundamentals (Linux-only, minimal features)
+**Current: v1.0** - Security cage fundamentals (Linux-only, minimal features)
 
 **Future Releases:**
 - **Enhanced Security**: Additional compliance features, advanced monitoring

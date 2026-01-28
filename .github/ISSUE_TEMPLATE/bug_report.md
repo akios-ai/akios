@@ -29,7 +29,7 @@ What actually happened instead.
 
 ## Environment
 
-- **AKIOS Version:** [e.g., v1.0.0]
+- **AKIOS Version:** [e.g., v1.0]
 - **Python Version:** [e.g., 3.11.0]
 - **Operating System:** [e.g., Ubuntu 22.04, macOS 13.0, Windows 11]
 - **Installation Method:** [Standalone Binary, Pip Package, Docker, from source]

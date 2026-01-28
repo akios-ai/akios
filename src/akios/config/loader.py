@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Configuration loader for AKIOS v1.0.0
+Configuration loader for AKIOS
 
 Loads settings from environment variables with optional YAML/JSON file override.
 """

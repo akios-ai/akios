@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Security module - The unbreakable cage of AKIOS v1.0.0
+Security module - The unbreakable cage of AKIOS
 
 Provides kernel-level isolation, syscall interception, and real-time PII protection.
 Every execution path must pass through this module before any action is allowed.

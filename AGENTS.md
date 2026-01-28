@@ -1,4 +1,4 @@
-# AKIOS v1.0.0 – Core Agents Reference
+# AKIOS v1.0 – Core Agents Reference
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 

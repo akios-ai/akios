@@ -2,7 +2,7 @@
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
-**Master AKIOS v1.0.0 - From Beginner to Advanced User**
+**Master AKIOS v1.0 - From Beginner to Advanced User**
 
 *Complete tutorial: 15-30 minutes*
 
@@ -75,6 +75,9 @@ cd my-project
 akios run templates/hello-workflow.yml
 ```
 
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
+> For specific versions: `pip install akios==1.0.3`. 
+
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
 
 #### 🐧 **Pip Package** (For Python Developers)
@@ -86,6 +89,10 @@ akios init my-project
 cd my-project
 akios run templates/hello-workflow.yml
 ```
+
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
+> For specific versions: `pip install akios==1.0.3`. 
+> **⚠️ Avoid v1.0.0 and v1.0.1** - these releases were yanked due to missing critical files.
 
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
 
@@ -109,11 +116,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 **Emergency fallback when the wrapper script download fails:**
 ```bash
 # Use Docker directly (works even if curl/network fails)
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.0 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
 chmod +x akios
 ./akios run templates/hello-workflow.yml
 ```
@@ -195,7 +202,7 @@ The wizard guides you through:
 
 **What you'll see:**
 ```
-🎉 Welcome to AKIOS v1.0.0! Let's set up your first workflow.
+🎉 Welcome to AKIOS v1.0! Let's set up your first workflow.
 
 🚀 How would you like to use AKIOS?
 1. Try with mock data (no API key needed — instant setup)
@@ -927,6 +934,6 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 
 ---
 
-*AKIOS v1.0.0 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0 - Where AI meets unbreakable security* 🛡️🤖
 
 **Need help?** Check the audit logs, README.md, or create a GitHub issue.

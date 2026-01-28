@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-PII detector for AKIOS v1.0.0
+PII detector for AKIOS
 
 Identify personally identifiable information in text/data.
 Provides >95% accuracy using carefully crafted patterns.

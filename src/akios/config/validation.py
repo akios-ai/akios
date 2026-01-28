@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Configuration and environment validation for AKIOS v1.0.0
+Configuration and environment validation for AKIOS
 
 Validates settings consistency and runtime environment requirements.
 """
@@ -478,7 +478,7 @@ def validate_config(settings: Settings) -> None:
 
 def validate_environment():
     """
-    Validate runtime environment against v1.0.0 scope requirements.
+    Validate runtime environment against scope requirements.
 
     Performs the 4 scope-required validations:
     1. Thorough user flows + Linux distro validation
@@ -575,7 +575,7 @@ def validate_environment():
 
     # Handle warnings (development/testing mode)
     if warnings:
-        logger.warning("Environment validation warnings (AKIOS v1.0.0 optimized for Linux):")
+        logger.warning("Environment validation warnings (AKIOS optimized for Linux):")
         for w in warnings:
             logger.warning(f"  - {w}")
         logger.warning("Continuing execution - some features may be limited or unavailable")

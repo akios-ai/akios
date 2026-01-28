@@ -16,7 +16,7 @@
 """
 CLI output command - akios output <subcommand>
 
-Enhanced output management for v1.0.0 workflow isolation.
+Enhanced output management for workflow isolation.
 List, clean, and archive workflow outputs.
 """
 

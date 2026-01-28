@@ -1,8 +1,8 @@
-# AKIOS v1.0.0 Workflow Schema Guide
+# AKIOS v1.0 Workflow Schema Guide
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
-**Version 1.0.0** | **Last Updated:** January 9, 2026
+**Version 1.0.3** | **Last Updated:** January 9, 2026
 
 ## Overview
 
@@ -47,7 +47,7 @@ steps:
 
 ### Allowed Agents
 
-AKIOS v1.0.0 supports exactly 4 agents:
+AKIOS v1.0 supports exactly 4 agents:
 
 | Agent | Purpose | Example Actions |
 |-------|---------|-----------------|

@@ -19,8 +19,8 @@ Core Services Version Information
 Provides version information for the AKIOS core services package.
 """
 
-__version__ = "1.0.0"
-__version_info__ = (1, 0, 0)
+__version__ = "1.0.3"
+__version_info__ = (1, 0, 3)
 
 # Version metadata
 VERSION_MAJOR = 1

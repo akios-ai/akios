@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Engine module - Main runtime coordination for AKIOS v1.0.0
+Engine module - Main runtime coordination for AKIOS
 
 Orchestrates sequential workflow execution with security and audit integration.
 """

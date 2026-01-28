@@ -1,4 +1,4 @@
-# AKIOS V1.0.0 - Secure Cross-Platform Docker Deployment
+# AKIOS V1.0.3 - Secure Cross-Platform Docker Deployment
 # Multi-stage build: separate build dependencies from runtime image
 
 # Build stage - includes all build dependencies

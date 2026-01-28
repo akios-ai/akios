@@ -1,8 +1,8 @@
-# AKIOS v1.0.0 – Third-Party Licenses
+# AKIOS v1.0 – Third-Party Licenses
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
-This document lists **all third-party software components** used in AKIOS v1.0.0 Open Runtime and their licenses.
+This document lists **all third-party software components** used in AKIOS v1.0 Open Runtime and their licenses.
 
 AKIOS uses a comprehensive set of dependencies for core functionality, security, LLM integration, document processing, API services, and development tools. All dependencies are compatible with GPL-3.0-only licensing.
 
@@ -111,5 +111,5 @@ Full license texts and complete dependency list available in THIRD_PARTY_LICENSE
 
 ## Summary
 
-AKIOS v1.0.0 uses **40+ third-party dependencies** providing comprehensive functionality for secure AI agent execution, including LLM integration, document processing, API services, security, and development tools. All dependencies are well-maintained, GPL-3.0-compatible, and selected for their security, performance, and reliability.
+AKIOS v1.0 uses **40+ third-party dependencies** providing comprehensive functionality for secure AI agent execution, including LLM integration, document processing, API services, security, and development tools. All dependencies are well-maintained, GPL-3.0-compatible, and selected for their security, performance, and reliability.
 

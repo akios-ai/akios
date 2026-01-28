@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Application constants for AKIOS v1.0.0
+Application constants for AKIOS
 
 Fixed values that should not be user-configurable.
 Separated from defaults.py for better organization.

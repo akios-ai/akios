@@ -1,15 +1,15 @@
-# AKIOS Roadmap – v1.0.0, Future Open & PRO  
+# AKIOS Roadmap – v1.0, Future Open & PRO  
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
 This roadmap clearly separates the three tracks:  
-- **AKIOS Open Runtime v1.0.0** (free, minimal security cage – locked)  
+- **AKIOS Open Runtime v1.0** (free, minimal security cage – locked)  
 - **Future Open Releases** (V1.x / V2.0 – gradual usability improvements, community-driven)  
 - **AKIOS PRO** (paid legal upgrade – regulated sectors only)
 
 No feature bleed. Open stays clean & viral. PRO captures regulated industry.
 
-### 1. AKIOS Open Runtime v1.0.0 – Current & Locked (January 2026)
+### 1. AKIOS Open Runtime v1.0 – Current & Locked (January 2026)
 
 **Focus**: Strong cross-platform security foundation – Docker-based protection
 **License**: GPL-3.0 (free, open-source)
@@ -77,7 +77,7 @@ No feature bleed. Open stays clean & viral. PRO captures regulated industry.
 **Focus**: Instant legal permission for regulated/high-risk use  
 **License**: Proprietary (encrypted plugin + license key)  
 **Pricing**: €48,000+/year (unlimited agents, on-prem)  
-**Status**: Planned – after v1.0.0 Open ships
+**Status**: Planned – after v1.0 Open ships
 
 **Exclusive Features** (only these in initial PRO – no more):
 - FranceConnect / ProConnect-S official identity verification  
@@ -103,7 +103,7 @@ No feature bleed. Open stays clean & viral. PRO captures regulated industry.
 
 ### 4. Timeline Summary (High-Level)
 
-- **Jan 2026**: AKIOS Open v1.0.0 launch (free cage)  
+- **Jan 2026**: AKIOS Open v1.0 launch (free cage)  
 - **2026**: V1.x open releases (gradual usability)  
 - **Q2–Q3 2026**: AKIOS PRO initial pilots & launch (€48k+)  
 - **2027+**: PRO expansions (if demand justifies)
