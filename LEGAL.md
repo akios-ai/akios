@@ -6,11 +6,11 @@
 
 ## ⚖️ Important Legal Notice
 
-**AKIOS is open-source software provided free of charge. By using AKIOS, you acknowledge and accept the terms below.**
+**AKIOS is open-source software provided free of charge.**
 
-**Relationship to the GPL-3.0 license:** This notice is informational. The GNU GPL-3.0 license is the governing license for the AKIOS software. Nothing in this document adds restrictions beyond the GPL-3.0; in the event of any conflict, the GPL-3.0 controls.
+**Relationship to the GPL-3.0-only license:** This notice is informational. The GNU GPL-3.0-only license is the governing license for the AKIOS software. Nothing in this document adds restrictions beyond the GPL-3.0-only; in the event of any conflict, the GPL-3.0-only controls.
 
-This document contains important legal information about your rights and responsibilities when using AKIOS. Please read it carefully.
+This document contains important legal information about your rights and responsibilities when using AKIOS. We recommend you read it carefully.
 
 ---
 
@@ -18,7 +18,7 @@ This document contains important legal information about your rights and respons
 
 **Copyright © 2025 AKIOUD AI, SAS**
 
-AKIOS is free software licensed under the **GNU General Public License version 3 (GPL-3.0)**.
+AKIOS is free software licensed under the **GNU General Public License version 3 only (GPL-3.0-only)**.
 
 You may:
 - ✅ Use AKIOS for any purpose
@@ -27,7 +27,7 @@ You may:
 - ✅ Share improvements with the community
 
 You must:
-- 📋 Include the GPL-3.0 license with any distribution
+- 📋 Include the GPL-3.0-only license with any distribution
 - 📋 Make source code available when distributing binaries
 - 📋 Preserve copyright notices
 
@@ -111,9 +111,11 @@ Users are responsible for:
 
 ## 🌐 Governing Law & Jurisdiction
 
-This agreement is governed by **French law**.
+*Note: This section applies to disputes about the website, services, or trademarks, not to rights granted under the GPL-3.0-only license.*
 
-Any disputes shall be resolved in the courts of **Paris, France**.
+Operational disputes (non-GPL matters) are governed by **French law**.
+
+Any such disputes shall be resolved in the courts of **Paris, France**.
 
 ---
 
@@ -123,8 +125,7 @@ Any disputes shall be resolved in the courts of **Paris, France**.
 8b rue Abel  
 75012 Paris, France  
 
-**Legal Contact**: legal@akioud.ai  
-**General Contact**: hello@akios.ai  
+**Contact**: hello@akios.ai  
 
 ---
 
@@ -144,23 +145,125 @@ AKIOS may be subject to French and EU export control regulations. Users must com
 
 ---
 
-## 📋 Acceptance
+---
 
-**By downloading, installing, or using AKIOS, you:**
+## 📋 Responsibility Acceptance Guidelines
 
-1. ✅ Acknowledge you have read and understood this legal notice
-2. ✅ Accept the GPL-3.0 license terms
-3. ✅ Assume all risks and responsibilities for your use
-4. ✅ Agree to the liability limitations above
-5. ✅ Commit to using AKIOS responsibly and legally
+**For safe production use, we recommend you understand and acknowledge the following:**
 
-**If you do not agree to these terms, do not use AKIOS.**
+### Infrastructure Responsibility
+
+**AKIOS is NOT responsible for:**
+- ❌ Infrastructure performance or availability (AWS, Kubernetes, your servers)
+- ❌ Network latency, connectivity, or data transfer costs
+- ❌ Cloud provider billing, charges, or cost overruns
+- ❌ Instance configuration, sizing, or resource allocation
+- ❌ Operating system security or updates
+- ❌ Third-party service integrations or dependencies
+
+**YOU are responsible for:**
+- ✅ Choosing appropriate infrastructure for your workload
+- ✅ Monitoring and controlling cloud provider costs
+- ✅ Securing your infrastructure (firewalls, security groups, network policies)
+- ✅ Maintaining your operating system and dependencies
+- ✅ Validating performance meets your requirements on YOUR infrastructure
+- ✅ Testing on your chosen instance type before claiming performance parity
+
+### Data Security Responsibility
+
+**AKIOS provides algorithmic controls:**
+- ✅ Sandbox isolation (seccomp-bpf + cgroups on Linux)
+- ✅ PII redaction (50+ pattern detection)
+- ✅ Audit trails (cryptographic Merkle proofs)
+- ✅ Budget enforcement (LLM API kill-switches)
+
+**YOU must provide:**
+- ✅ Infrastructure security (credentials, access controls, encryption)
+- ✅ Data sensitivity classification (know what data you're processing)
+- ✅ Compliance enforcement (your laws, your industry rules)
+- ✅ Secret management (API keys, passwords, tokens)
+- ✅ Monitoring and alerting (costs, suspicious activity, data access)
+
+### Performance Validation Responsibility
+
+**AKIOS validates and documents:**
+- ✅ Baseline performance on t3.medium EC2 (25ms startup, 44.44 wf/s)
+- ✅ Docker performance on all platforms (<1000ms startup, >5 wf/s)
+- ✅ Scaling characteristics (100% efficient on native Linux)
+- ✅ Security overhead analysis (policy-based vs kernel-hard)
+
+**YOU must validate:**
+- ✅ Performance on YOUR instance type (use provided testing guide)
+- ✅ Performance in YOUR region and network conditions
+- ✅ Performance meets YOUR application requirements
+- ✅ Cost-benefit trade-offs for your use case
+- ✅ Compatibility with your existing systems
+
+See [EC2 Performance Testing Guide](./docs/ec2-performance-testing.md) for complete validation procedures.
+
+### Compliance Responsibility
+
+**AKIOS cannot guarantee compliance.**
+
+YOU are responsible for:
+- ✅ Legal compliance in YOUR jurisdiction
+- ✅ EU AI Act compliance (if applicable)
+- ✅ Data protection laws (GDPR, HIPAA, etc.)
+- ✅ Industry regulations (finance, healthcare, etc.)
+- ✅ Contractual obligations (customer agreements, SLAs)
+- ✅ Export control compliance (ITAR, EAR, etc.)
+
+**For regulated environments:**
+- 🚫 Do NOT assume AKIOS satisfies compliance requirements
+- 🎓 Consult legal experts and compliance specialists
+- 🔍 Conduct thorough risk assessments
+- 📋 Document your compliance justifications
+- ✅ Consider professional support solutions
 
 ---
 
+## ✅ Recommended Pre-Use Checklist
+
+**We recommend you acknowledge the following before production deployment:**
+
+1. **I understand the security capabilities and limitations**
+   - AKIOS provides strong security through sandboxing and PII redaction
+   - AKIOS does NOT provide absolute security or guarantee protection from all attacks
+   - I am responsible for additional security measures appropriate to my use case
+
+2. **I understand the performance metrics**
+   - AKIOS achieves documented baselines on t3.medium EC2 and Docker
+   - Performance on other infrastructure may differ
+   - I will validate performance on MY infrastructure before production use
+
+3. **I understand the infrastructure responsibility**
+   - AKIOS is responsible only for the sandbox and algorithms
+   - AWS/cloud costs, security groups, networking, storage are MY responsibility
+   - AKIOS will not reimburse unexpected infrastructure charges
+
+4. **I understand the compliance responsibility**
+   - AKIOS does not guarantee legal or regulatory compliance
+   - I am responsible for compliance in MY jurisdiction
+   - I will consult experts for regulated or high-risk deployments
+
+5. **I understand the liability limits**
+   - AKIOS is provided "as-is" with no warranties
+   - AKIOS is not liable for damages from using AKIOS
+   - Use of AKIOS is entirely at your own risk
+
+**We recommend confirming these understandings by:**
+- [ ] Reading this entire LEGAL.md document
+- [ ] Reading the [EC2 Performance Testing Guide](./docs/ec2-performance-testing.md)
+- [ ] Testing AKIOS on my infrastructure before production use
+- [ ] Monitoring costs and security of my deployment
+- [ ] Consulting experts for compliance-sensitive use cases
+
+---
+
+
 ## 📦 Source Code Availability for Distributions
 
-If you distribute AKIOS in binary form (including Docker images), you must provide the complete corresponding source code (or a written offer) in accordance with GPL-3.0 §6. Publish the source alongside the binaries or provide a documented retrieval method.
+If you distribute AKIOS in binary form (including Docker images), you must provide the complete corresponding source code (or a written offer) in accordance with GPL-3.0-only §6 (GPLv3 §6). Publish the source alongside the binaries or provide a documented retrieval method.
 
 ## 📚 Third-Party Components
 

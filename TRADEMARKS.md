@@ -6,7 +6,7 @@ These guidelines cover use of the **AKIOS** name, logos, and related brand asset
 
 ## Allowed Uses (No Permission Needed)
 - Accurate references to the AKIOS project (e.g., “Built with AKIOS”).
-- Unmodified redistribution of the AKIOS source/binaries under GPL-3.0.
+- Unmodified redistribution of the AKIOS source/binaries under GPL-3.0-only.
 - Forks that clearly state they are forks of AKIOS.
 
 ## Prohibited Uses (Permission Required)

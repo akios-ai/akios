@@ -260,9 +260,11 @@ settings = get_settings()
 print(f"Audit path: {settings.audit_storage_path}")
 print(f"Mock mode: {settings.mock_llm}")
 
-# Access nested settings
-print(f"Network access: {settings.agents.http.network_access_allowed}")
-print(f"Max tokens: {settings.agents.llm.max_tokens_per_call}")
+# Access settings (flat structure)
+print(f"Sandbox enabled: {settings.sandbox_enabled}")
+print(f"Network access: {settings.network_access_allowed}")
+print(f"Max tokens: {settings.max_tokens_per_call}")
+print(f"PII redaction: {settings.pii_redaction_enabled}")
 
 # Create custom settings (for testing)
 custom_settings = Settings(
@@ -318,40 +320,31 @@ print(f"Steps: {len(workflow.steps)}")
 
 ### Template Management
 
-```python
-from akios.templates import list_templates, copy_template
+Use CLI commands to manage templates:
 
+```bash
 # List available templates
-templates = list_templates()
-print("Available templates:")
-for template in templates:
-    print(f"  - {template}")
+akios templates list
 
-# Copy template to project
-copy_template("hello-workflow", "./my-workflow.yml")
+# Create workflow from template
+akios templates copy hello-workflow ./my-workflow.yml
 ```
 
 ## Error Handling
 
-### Exception Types
+### Error Classification
 
 ```python
-from akios.core.error import (
-    AkiError,              # Base exception
-    ValidationError,       # Workflow validation errors
-    AgentError,           # Agent execution errors
-    SecurityError,        # Security violation errors
-    ConfigurationError    # Configuration errors
-)
+from akios.core.error.classifier import classify_error
 
 try:
     result = engine.run("invalid-workflow.yml")
-except ValidationError as e:
-    print(f"Workflow validation failed: {e}")
-except AgentError as e:
-    print(f"Agent execution failed: {e}")
-except SecurityError as e:
-    print(f"Security violation: {e}")
+except Exception as e:
+    # Classify error for insights
+    fingerprint = classify_error(str(e), type(e).__name__)
+    print(f"Error: {fingerprint.get_user_friendly_message()}")
+    print(f"Category: {fingerprint.category}")
+    print(f"Severity: {fingerprint.severity}")
 ```
 
 ### Error Classification
@@ -490,9 +483,8 @@ class CustomAgent(BaseAgent):
         else:
             raise AgentError(f"Unknown action: {action}")
 
-# Register custom agent
-from akios.core.runtime.agents import register_agent
-register_agent("custom", CustomAgent)
+# Note: Custom agent registration is not supported in v1.0
+# Use built-in agents: filesystem, http, llm, tool_executor
 ```
 
 ### Workflow Templates
@@ -561,12 +553,12 @@ result = engine.run(
 # Old code (v0.x)
 from akios.engine import WorkflowEngine
 
-# New code (v1.0)
+```python
 from akios.core.runtime.engine import WorkflowEngine  # or RuntimeEngine
+```
 
-# Update configuration
-# Old: config.yaml with flat structure
-# New: config.yaml with nested agent configurations
+# Configuration
+The `config.yaml` file provides flat structure configuration for agent settings:
 ```
 
 ## Best Practices

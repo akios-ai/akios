@@ -33,11 +33,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -286,15 +286,14 @@ akios run workflow.yml --verbose
 # Enable real API mode with interactive setup
 akios run workflow.yml --real-api
 
-# Dry run (validate without executing)
-akios run workflow.yml --dry-run
+# Run with force flag (skip confirmation prompts)
+akios run workflow.yml --force
 ```
 
 **Options:**
 - `--verbose, -v`: Enable detailed execution logging
 - `--quiet, -q`: Suppress informational banners and non-error output
 - `--real-api`: Enable real API mode with interactive API key setup (sets AKIOS_MOCK_LLM=0, network_access_allowed=true, prompts for missing keys)
-- `--dry-run, -d`: Validate workflow without executing it
 - `--force, -f`: Skip confirmation prompts for template switches
 - `--debug`: Enable debug logging for troubleshooting
 

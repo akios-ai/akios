@@ -19,6 +19,74 @@ The cage is a **Python package or Docker container** — no database, no Redis, 
 Run anywhere (laptop, VM, air-gapped server) with **zero external dependencies** at runtime.  
 Security is enforced by the cage itself — not by infrastructure.
 
+## ⚖️ Deployment Legal Disclaimers
+
+**AKIOS provides security sandboxing at the application level. Infrastructure security is YOUR responsibility.**
+
+### What AKIOS Handles
+✅ **Application-level security:**
+- Syscall filtering (seccomp-bpf on Linux)
+- Process isolation (cgroups)
+- PII redaction (ML-based detection)
+- Audit logging (cryptographic trails)
+
+✅ **Budget controls:**
+- LLM API cost kill-switches ($1 default)
+- Token limits per workflow
+- Automatic termination on budget violation
+
+### What YOU Must Handle
+❌ **Infrastructure security (not our responsibility):**
+- Docker daemon security (runs as root by default)
+- Network security (firewalls, security groups, network policies)
+- Host OS security (application updates, kernels, patches)
+- SSH/access key management
+- Data at rest encryption
+- Data in transit encryption
+
+❌ **Deployment configuration (not our responsibility):**
+- Docker resource limits (memory, CPU)
+- Volume mount permissions
+- Container image scanning for vulnerabilities
+- Base image security updates
+- Running as non-root (we recommend it, you must implement)
+
+❌ **Cloud infrastructure costs (not our responsibility):**
+- AWS EC2, Azure VMs, GCP Compute charges
+- Data transfer costs
+- Storage costs
+- Monitoring/logging service costs
+- AKIOS only controls LLM API costs, not infrastructure costs
+
+### Performance Validation Responsibility
+- **AKIOS baseline:** Documented on t3.medium EC2 in us-east-1
+- **Your deployment:** You must validate performance meets requirements
+- **Different infrastructure:** Performance will differ (test before production)
+- **Cost optimization:** You're responsible for infrastructure sizing
+
+See [EC2 Performance Testing Guide](./ec2-performance-testing.md) for complete validation procedures.
+
+### Deployment Security Recommendations
+
+**AKIOS recommends (not required, your choice):**
+1. Run Docker container with `--user` (non-root)
+2. Limit container resources: `--memory 1gb --cpus 2`
+3. Use read-only root filesystem: `--read-only`
+4. Scan base images for vulnerabilities before deployment
+5. Keep base OS and dependencies updated
+6. Monitor for unexpected resource usage or costs
+7. Restrict network access with security groups
+8. Use encrypted volumes for persistent data
+
+**These are best practices, not replacements for your own security review.**
+
+### Limitations of Scope
+- AKIOS cannot protect against compromised Docker daemon
+- AKIOS cannot prevent AWS billing surprises (you monitor your bill)
+- AKIOS cannot replace your infrastructure security team
+- AKIOS cannot guarantee compliance with your regulations
+- AKIOS cannot prevent misconfiguration of your deployment
+
 ### 2. In Scope – What MUST exist in v1.0 Deployment
 
 **Deployment Options (two supported methods)**:

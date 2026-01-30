@@ -1,4 +1,4 @@
-# AKIOS v1.0.3 – Troubleshooting Guide
+# AKIOS v1.0 – Troubleshooting Guide
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 

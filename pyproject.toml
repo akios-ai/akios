@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.0.3"
+version = "1.0.4"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOS Team", email = "hello@akios.ai" },
@@ -30,7 +30,7 @@ dependencies = [
     "google-generativeai>=0.8.0",
     "tiktoken>=0.5.0",  # Required for accurate token counting
 
-    # Security fix: Pin protobuf to version that fixes CVE-2026-0994 (compatible with google-generativeai)
+    # Pin protobuf for stability and security monitoring
     "protobuf>=5.29.5",
 
     # Document processing (REQUIRED for multi-format file support)
@@ -88,9 +88,17 @@ dev = [
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
+# CRITICAL SECURITY NOTE (SENSITIVE PRODUCT):
+# Legal files (LICENSE, NOTICE, etc.) MUST ALWAYS be included in PyPI wheel.
+# We use BOTH modern (pyproject.toml) and traditional (MANIFEST.in) mechanisms
+# to guarantee legal files reach users. Never remove or modify this configuration
+# without verifying the generated wheel contains all legal files.
+
 [tool.setuptools]
 include-package-data = true
-license-files = ["LICENSE", "NOTICE", "TRADEMARKS.md", "DCO.md"]
+# These are PEP 621 standard license file declarations (modern, recommended)
+# Backup: MANIFEST.in provides explicit inclusion (traditional, proven)
+license-files = ["LICENSE", "NOTICE", "LEGAL.md", "THIRD_PARTY_LICENSES.md", "TRADEMARKS.md", "DCO.md"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

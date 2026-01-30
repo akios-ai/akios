@@ -166,9 +166,6 @@ steps:
       prompt: |
         Validate JSON structure: {{safe_read.content}}
         Return {"valid": true/false, "errors": [...]}
-    retry:
-      max_attempts: 2
-      backoff_seconds: 1
 
   - step: "process_valid_data"
     agent: "llm"
@@ -263,22 +260,20 @@ name: "Optimized Document Processing"
 description: "Use caching for better performance"
 
 steps:
-  - step: "cached_read"
+  - step: "read_document"
     agent: "filesystem"
     action: "read"
     config:
       allowed_paths: ["./data/input"]
     parameters:
       path: "./data/input/document.pdf"
-      cache_ttl: 3600  # Cache for 1 hour
 
-  - step: "cached_analysis"
+  - step: "analyze_content"
     agent: "llm"
     action: "complete"
     config: {}
     parameters:
-      prompt: "Analyze: {{cached_read.content}}"
-      cache_key: "analysis_{{cached_read.hash}}"  # Custom cache key
+      prompt: "Analyze: {{read_document.content}}"
 ```
 
 ### Batch Processing

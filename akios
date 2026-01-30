@@ -92,7 +92,7 @@ add_env_if_set() {
 
 # Check if image exists locally (avoid unnecessary pulls)
 check_image_cached() {
-    docker image inspect akiosai/akios:v1.0.3 &>/dev/null
+    docker image inspect akiosai/akios:v1.0.4 &>/dev/null
 }
 
 # Show progress message if pulling
@@ -100,11 +100,11 @@ pull_if_needed() {
     # Allow developers to force fresh pulls during testing
     if [[ "${AKIOS_FORCE_PULL:-0}" == "1" ]]; then
         echo "🐳 Force-pulling AKIOS Docker image (dev mode)..." >&2
-        docker pull akiosai/akios:v1.0.3
+        docker pull akiosai/akios:v1.0.4
         echo "✅ Docker image updated!" >&2
     elif ! check_image_cached; then
         echo "🐳 Pulling AKIOS Docker image..." >&2
-        docker pull akiosai/akios:v1.0.3
+        docker pull akiosai/akios:v1.0.4
         echo "✅ Docker image ready!" >&2
     fi
 }
@@ -130,7 +130,7 @@ if is_help_command "$@"; then
         -e GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
         -e AKIOS_LLM_PROVIDER="${AKIOS_LLM_PROVIDER:-}" \
         -e AKIOS_LLM_MODEL="${AKIOS_LLM_MODEL:-}" \
-        akiosai/akios:v1.0.3 \
+        akiosai/akios:v1.0.4 \
         "$@")
     echo "$help_output"
     cache_help_output "$help_output"
@@ -156,6 +156,6 @@ else
         -e GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
         -e AKIOS_LLM_PROVIDER="${AKIOS_LLM_PROVIDER:-}" \
         -e AKIOS_LLM_MODEL="${AKIOS_LLM_MODEL:-}" \
-        akiosai/akios:v1.0.3 \
+        akiosai/akios:v1.0.4 \
         "$@"
 fi

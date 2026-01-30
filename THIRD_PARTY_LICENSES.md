@@ -19,7 +19,7 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 | **requests**        | >=2.25.0        | Apache-2.0           | HTTP library for web requests                | https://github.com/psf/requests                    |
 | **cryptography**    | >=42.0.0        | Apache-2.0           | Cryptographic operations and security        | https://github.com/pyca/cryptography               |
 | **psutil**          | >=5.9.0         | BSD                  | System and process utilities                 | https://github.com/giampaolo/psutil                |
-| **openai**          | >=1.0.0         | MIT                  | OpenAI API client                            | https://github.com/openai/openai-python            |
+| **openai**          | >=1.0.0         | Apache-2.0           | OpenAI API client                            | https://github.com/openai/openai-python            |
 | **anthropic**       | >=0.30.0        | MIT                  | Anthropic Claude API client                  | https://github.com/anthropics/anthropic-sdk-python |
 | **google-generativeai**| >=0.8.0       | Apache-2.0           | Google Gemini API client                     | https://github.com/google/generative-ai-python    |
 | **tiktoken**        | >=0.5.0         | MIT                  | Token counting for LLM providers             | https://github.com/openai/tiktoken                 |
@@ -35,7 +35,7 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 | **fastapi**         | >=0.104.0       | MIT                  | REST API framework                           | https://github.com/tiangolo/fastapi                | api |
 | **uvicorn**         | >=0.24.0        | BSD                  | ASGI server for FastAPI                      | https://github.com/encode/uvicorn                  | api |
 | **prometheus-client**| >=0.17.0        | Apache-2.0           | Prometheus metrics collection                | https://github.com/prometheus/client_python        | monitoring |
-| **seccomp**         | >=1.0.0         | LGPL-2.1            | Linux syscall filtering                      | https://github.com/seccomp/libseccomp              | seccomp |
+| **seccomp**         | >=1.0.0         | LGPL-2.1-or-later    | Linux syscall filtering                      | https://github.com/seccomp/libseccomp              | seccomp |
 | **backoff**         | >=2.2.0         | MIT                  | Retry logic with exponential backoff         | https://github.com/litl/backoff                    | extended |
 | **aiohttp**         | >=3.9.0         | Apache-2.0           | Asynchronous HTTP client                     | https://github.com/aio-libs/aiohttp                | extended |
 
@@ -64,18 +64,18 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 | **setuptools**      | >=65.0.0        | MIT                  | Python package building                      | https://github.com/pypa/setuptools                 |
 | **wheel**           | >=0.37.0        | MIT                  | Python wheel packaging                       | https://github.com/pypa/wheel                      |
 | **build**           | >=1.0.0         | MIT                  | Python package building frontend             | https://github.com/pypa/build                      |
-| **PyInstaller**     | >=5.0.0         | GPL-2.0             | Standalone executable creation               | https://github.com/pyinstaller/pyinstaller         |
+| **PyInstaller**     | >=5.0.0         | GPL-2.0 + Exception  | Standalone executable creation               | https://github.com/pyinstaller/pyinstaller         |
 
 ## License Compatibility
 
 All dependencies are **compatible with GPL-3.0-only**:
-- **MIT**: Fully compatible (pydantic, pyyaml, openai, anthropic, tiktoken, fastapi, pdfminer.six, python-docx, pytest, black, isort, mypy, ruff, pre-commit, flake8, sphinx-rtd-theme, tox, setuptools, wheel, build)
-- **Apache-2.0**: Compatible (cryptography, requests, google-generativeai, prometheus-client, aiohttp, types-PyYAML, types-requests)
+- **MIT**: Fully compatible (pydantic, pyyaml, anthropic, tiktoken, fastapi, pdfminer.six, python-docx, pytest, black, isort, mypy, ruff, pre-commit, flake8, sphinx-rtd-theme, tox, setuptools, wheel, build)
+- **Apache-2.0**: Compatible (openai, cryptography, requests, google-generativeai, prometheus-client, aiohttp, types-PyYAML, types-requests)
 - **BSD-3-Clause**: Compatible (click, protobuf)
 - **BSD**: Compatible (httpx, psutil, uvicorn, PyPDF2)
 - **BSD-2-Clause**: Compatible (sphinx)
-- **GPL-2.0**: Compatible (PyInstaller - build tool only)
-- **LGPL-2.1**: Compatible (seccomp - optional security enhancement)
+- **GPL-2.0 + Exception**: Compatible (PyInstaller - build tool with exception allowing proprietary programs)
+- **LGPL-2.1-or-later**: Compatible (seccomp - optional security enhancement)
 
 No GPL-incompatible licenses are used.
 
@@ -97,10 +97,10 @@ AKIOS includes the following third-party software:
 Core Dependencies:
 - pydantic (MIT): https://github.com/pydantic/pydantic/blob/main/LICENSE
 - PyYAML (MIT): https://github.com/yaml/pyyaml/blob/main/LICENSE
+- openai (Apache-2.0): https://github.com/openai/openai-python/blob/main/LICENSE
 - cryptography (Apache-2.0): https://github.com/pyca/cryptography/blob/main/LICENSE
 - httpx (BSD): https://github.com/encode/httpx/blob/main/LICENSE
 - psutil (BSD): https://github.com/giampaolo/psutil/blob/main/LICENSE
-- openai (MIT): https://github.com/openai/openai-python/blob/main/LICENSE
 - anthropic (MIT): https://github.com/anthropics/anthropic-sdk-python/blob/main/LICENSE
 - google-generativeai (Apache-2.0): https://github.com/google/generative-ai-python/blob/main/LICENSE
 

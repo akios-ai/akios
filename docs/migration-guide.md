@@ -4,37 +4,40 @@
 
 **Upgrading from Previous Versions to v1.0 Hybrid Distribution**
 
-## O#### Op#### Option #### Option 1: Upgrade to Pip Package (Recommended)
+AKIOS v1.0 features **hybrid distribution** - standalone binaries + pip packages. This guide helps you migrate from older versions while maintaining your existing workflows and configurations.
+
+---
+
+## Installation Options
+
+### Option 1: Upgrade to Pip Package (Recommended)
 ```bash
 # 1. Upgrade your existing installation
 pip install --upgrade akios
 
-# 2. Your existing workflows work unchanged
-akios run workflow.ymakios --version
-```
-
-### Issue: "Configuration validation failed"ts:** Full kernel-hard security, Python ecosystem integration. Package (Recommended)
-```bash
-# 1. Upgrade your existing installation
-pip install --upgrade akios
-
-# 2. Your existing workflows work unchanged
-akios run workflow.yml
-```
-
+# 2. Verify the upgrade
 akios --version
-```
 
-### Issue: "Configuration validation failed"ull kernel-hard security, Python ecosystem integration.o Pip Package (Recommended)
-```bash
-# 1. Install latest version
-pip install --upgrade akios
-
-# 2. Your existing workflows work unchanged
+# 3. Your existing workflows work unchanged
 akios run workflow.yml
 ```
 
-**Benefits:** Full kernel-hard security, Python ecosystem integration..0 introduces **hybrid distribution** - standalone binaries + pip packages. This guide helps you migrate from older versions while maintaining your existing workflows and configurations.
+**Benefits:** Full kernel-hard security (Linux), Python ecosystem integration, easiest upgrade path.
+
+### Option 2: Switch to Docker (Cross-Platform)
+```bash
+# 1. Download wrapper script
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
+chmod +x akios
+
+# 2. Verify installation
+./akios --version
+
+# 3. Your existing workflows work unchanged
+./akios run workflow.yml
+```
+
+**Benefits:** Cross-platform consistency, works on macOS/Windows, easy containerization.
 
 ---
 
@@ -113,11 +116,11 @@ chmod +x akios
 ### For **Emergency Recovery**
 ```bash
 # Direct Docker - When wrapper download fails
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
 cd my-project
 # Create wrapper for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
 chmod +x akios
 ```
 
@@ -231,7 +234,7 @@ AKIOS_MOCK_LLM=0
 
 ### Config.yaml Updates (Optional)
 
-v1.0 introduces new security and performance options. Your existing config continues to work, but you can add:
+v1.0 includes additional security and performance options. Your existing config continues to work, but you can add:
 
 ```yaml
 # Enhanced security (optional additions)
@@ -254,7 +257,7 @@ network_access_allowed: true    # Allow external API calls
 | `pii_redaction_enabled` | `true` | `true` | No change |
 | `cost_kill_enabled` | `true` | `true` | No change |
 | `audit_enabled` | `true` | `true` | No change |
-| `pii_redaction_outputs` | N/A | `true` | **New feature** |
+| `pii_redaction_outputs` | N/A | `true` | Enhanced in v1.0 |
 | `max_tokens_per_call` | `1000` | `500` | **More conservative** |
 | `budget_limit_per_run` | `1.0` | `1.0` | No change |
 
@@ -282,27 +285,27 @@ steps:
 
 ### ✅ **Enhanced Features Available**
 
-v1.0 adds new capabilities you can optionally use:
+v1.0 provides additional capabilities you can optionally use:
 
 ```yaml
-# New v1.0 features (optional)
+# Optional v1.0 features
 steps:
   - step: 1
     agent: llm
     config:
-      provider: "anthropic"  # New provider support
+      provider: "anthropic"  # Additional provider support
       model: "claude-3-sonnet-20240229"
     action: complete
     parameters:
       prompt: "Enhanced with better PII protection"
-    # New: output redaction automatically applied
+    # Output redaction automatically applied
 ```
 
 ### ✅ **Agent Compatibility**
 
 | Agent | Status | Changes |
 |-------|--------|---------|
-| **LLM** | ✅ Compatible | Enhanced PII redaction, new providers |
+| **LLM** | ✅ Compatible | Enhanced PII redaction, additional providers |
 | **Filesystem** | ✅ Compatible | Improved security validation |
 | **HTTP** | ✅ Compatible | Better network controls |
 | **Tool Executor** | ✅ Compatible | Enhanced command validation |

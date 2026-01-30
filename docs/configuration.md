@@ -124,12 +124,8 @@ redaction_strategy: "mask"
 
 # Cost & loop protection
 cost_kill_enabled: true
-max_tokens_per_call: 500
+max_tokens_per_call: 1000
 budget_limit_per_run: 1.0
-
-# Input validation & reliability
-input_validation_enabled: true
-max_input_chars: 100000
 
 # Audit & paths
 audit_enabled: true
@@ -294,14 +290,14 @@ cost_kill_enabled: true  # Recommended: always true
 
 ### `max_tokens_per_call`
 **Type:** `integer` (> 0)  
-**Default:** `500`  
+**Default:** `1000`  
 **Description:** Maximum tokens per LLM API call
 
 Limits individual LLM requests to prevent excessive API costs.
 
 ```yaml
-max_tokens_per_call: 500  # Conservative limit
-max_tokens_per_call: 1000 # Higher limit for complex tasks
+max_tokens_per_call: 500   # Conservative limit
+max_tokens_per_call: 1000  # Default limit for complex tasks
 ```
 
 ### `budget_limit_per_run`
@@ -316,32 +312,7 @@ budget_limit_per_run: 1.0   # $1.00 per workflow (recommended)
 budget_limit_per_run: 5.0   # $5.00 for complex workflows
 ```
 
-## 🛡️ Input Validation & Reliability Settings
-
-### `input_validation_enabled`
-**Type:** `boolean`  
-**Default:** `true`  
-**Description:** Enable automatic input validation and size limits
-
-Validates all AI inputs for safety and prevents oversized requests.
-
-```yaml
-input_validation_enabled: true  # Recommended: always true
-```
-
-### `max_input_chars`
-**Type:** `integer` (> 0)  
-**Default:** `100000`  
-**Description:** Maximum characters allowed in AI inputs
-
-Automatically rejects inputs exceeding this limit to prevent DoS attacks.
-
-```yaml
-max_input_chars: 100000  # 100k characters (recommended)
-max_input_chars: 50000   # Smaller limit for restricted environments
-```
-
-## 📊 Audit & Logging Settings
+##  Audit & Logging Settings
 
 ### `audit_enabled`
 **Type:** `boolean`  

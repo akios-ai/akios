@@ -6,84 +6,77 @@
 
 ## 🎯 Choose Your Installation
 
-**AKIOS supports four deployment methods - pick what's best for you:**
+**AKIOS supports two deployment methods - pick what's best for you:**
 
-### 🚀 **Standalone Binary** (Recommended - Zero Setup)
-**Download and run immediately - no Python or Docker required!**
+### 🐧 **Pip Package** (Recommended - Python Developers)
+**Native Python installation with full ecosystem integration**
 ```bash
-# Download from https://github.com/akios-ai/akios/releases
-# Linux: akios-linux-x64 | macOS: akios-macos-universal | Windows: akios-windows-x64.exe
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
 
-# Make executable and run
-chmod +x akios-linux-x64  # Skip on Windows
-./akios-linux-x64 init my-project
-```
-
-**Perfect for:** Quick evaluation, air-gapped environments, non-technical users
-
-### 🐧 **Pip Package** (Python Developers)
-**Full Python ecosystem integration with maximum security**
-```bash
+# Other users (Ubuntu 20.04/22.04, macOS, Windows):
 pip install akios
+
+# Or install a specific version:
+pip install akios==1.0.4
+
+# Verify installation
+akios --version
 akios init my-project
 ```
 
-**Perfect for:** Custom extensions, CI/CD pipelines, Python development
+**Perfect for:** Developers, CI/CD pipelines, custom extensions, full Python ecosystem access
 
-### 🐳 **Docker** (Cross-Platform Teams)
-**Containerized deployment works everywhere**
+### 🐳 **Docker** (Recommended - Teams & Cross-Platform)
+**Containerized deployment works everywhere - no Python/dependencies needed**
 ```bash
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (~3.4KB shell script)
-chmod +x akios
-./akios init my-project
+# Pull the Docker image
+docker pull akiosai/akios:v1.0.4
+
+# Initialize a new project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
+
+# Run workflows
+cd my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 run templates/hello-workflow.yml
 ```
 
-**Perfect for:** Teams using containers, development environments
-**Optimized for:** Fast subsequent runs with smart caching
-
-**Refresh the image on demand:**
+**OR use the wrapper script for easier commands:**
 ```bash
+# Create wrapper script (one-time setup)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
+chmod +x akios
+
+# Now use ./akios like native installation
+./akios init my-project
+cd my-project
+./akios run templates/hello-workflow.yml
+
+# Force refresh image (pull latest)
 AKIOS_FORCE_PULL=1 ./akios status
 ```
 
-### 🚨 **Direct Docker** (Emergency Fallback)
-**Use Docker directly when wrapper script download fails**
-```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
-cd my-project
-# Create wrapper script for future use
-echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
-chmod +x akios
-./akios run templates/hello-workflow.yml
-```
-
-**Perfect for:** Network issues, GitHub unavailable, emergency recovery
-
-**This guide shows Binary installation** - see [README.md](README.md) for all options.
+**Perfect for:** Teams using containers, cloud deployments, CI/CD, zero-setup environments
 
 ---
 
-## ⚡ Quick Start (Binary)
+## ⚡ Quick Start (Pip)
 
-### 1. Download & Setup
+### 1. Install AKIOS
 ```bash
-# Visit https://github.com/akios-ai/akios/releases
-# Download your platform's binary:
-# - Linux x64: akios-linux-x64
-# - Linux ARM64: akios-linux-arm64
-# - macOS: akios-macos-universal
-# - Windows: akios-windows-x64.exe
+# Using pip (most systems)
+pip install akios
 
-# Make executable (skip on Windows)
-chmod +x akios-linux-x64
+# OR using pipx (Ubuntu 24.04+ recommended)
+sudo apt install pipx
+pipx install akios
 ```
 
 ### 2. Create Your Project
 ```bash
 # Initialize a new project
-./akios-linux-x64 init my-project
+akios init my-project
 cd my-project
 ```
 
@@ -93,11 +86,11 @@ AKIOS includes an interactive setup wizard that makes configuration effortless.
 
 ```bash
 # The setup wizard runs automatically on your first workflow
-./akios-linux-x64 run templates/hello-workflow.yml
+akios run templates/hello-workflow.yml
 
 # Or run it manually anytime
-./akios-linux-x64 setup
-# Use --force to re-run setup: ./akios-linux-x64 setup --force
+akios setup
+# Use --force to re-run setup: akios setup --force
 ```
 
 The wizard guides you through:
@@ -117,10 +110,10 @@ cp .env.example .env
 ### 4. Run Your First Workflow
 ```bash
 # See available templates
-../akios-linux-x64 templates list
+akios templates list
 
 # Run a pre-built AI workflow
-../akios-linux-x64 run templates/hello-workflow.yml
+akios run templates/hello-workflow.yml
 ```
 
 **🎉 Success!** You'll see real AI output and security features in action.
@@ -128,13 +121,13 @@ cp .env.example .env
 ### 5. Explore More (Optional)
 ```bash
 # Check project status anytime
-../akios-linux-x64 status
+akios status
 
 # View detailed security information
-../akios-linux-x64 status --security
+akios status --security
 
 # Clean up old runs when disk space gets low
-../akios-linux-x64 clean --old-runs
+akios clean --old-runs
 ```
 
 ---

@@ -82,7 +82,7 @@ akios run templates/hello-workflow.yml
 ```
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
-> For specific versions: `pip install akios==1.0.3`. 
+> For specific versions: `pip install akios==1.0.4`.
 
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
 
@@ -103,8 +103,7 @@ akios run templates/hello-workflow.yml
 ```
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
-> For specific versions: `pip install akios==1.0.3`. 
-> **⚠️ Avoid v1.0.0 and v1.0.1** - these releases were yanked due to missing critical files.
+> For specific versions: `pip install akios==1.0.4`.
 
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
 
@@ -128,11 +127,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 **Emergency fallback when the wrapper script download fails:**
 ```bash
 # Use Docker directly (works even if curl/network fails)
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
 chmod +x akios
 ./akios run templates/hello-workflow.yml
 ```

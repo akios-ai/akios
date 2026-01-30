@@ -1,11 +1,17 @@
 # Changelog
 **Document Version:** 1.0  
-**Date:** 2026-01-25  
+**Date:** 2026-01-29  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.4] - 2026-01-29
+
+### Changed
+- Enhanced release process with v3.1 safety gates
+- Updated documentation with clearer version references
 
 ## [1.0.0] - 2026-01-24
 

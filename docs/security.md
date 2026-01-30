@@ -19,7 +19,7 @@ This document describes the security features and protections available in v1.0.
 
 **DO NOT report security issues on public GitHub.**
 
-Send private reports to: **hello@akios.ai**
+Send private reports to: **security@akios.ai**
 
 ### What to Include
 - Clear description of the vulnerability

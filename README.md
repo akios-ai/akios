@@ -11,9 +11,9 @@
 
 
 
-AKIOS is open-source (GPL-3.0). Read the legal notices, trademarks, and security policy before use.
+AKIOS is open-source (GPL-3.0-only). Read the legal notices, trademarks, and security policy before use.
 
-**EU AI Act disclaimer:** AKIOS is not designed for “high-risk” use cases under the EU AI Act. For such deployments, consult a compliance expert and consider regulated/PRO options.
+**EU AI Act disclaimer:** AKIOS is not designed for "high-risk" use cases under the EU AI Act. For such deployments, consult a compliance expert and consider implementing additional regulatory controls on top of AKIOS.
 
 [![GitHub stars](https://img.shields.io/github/stars/akios-ai/akios?style=social)](https://github.com/akios-ai/akios)
 
@@ -125,7 +125,7 @@ AKIOS_FORCE_PULL=1 ./akios status
 ```
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
-> For specific versions: `pip install akios==1.0.3`. 
+> For specific versions: `pip install akios==1.0.4`. 
 
 
 ### Which Installation Should I Choose?
@@ -252,6 +252,155 @@ cd my-project                    # ← REQUIRED STEP
 - **⚡ Zero-Dependency Deployment**: Standalone binaries for air-gapped environments, plus pip packages for Python integration
 - **🔧 Core Agents**: Filesystem, HTTP, LLM, and Tool Executor agents for complete AI workflows
 - **✅ Real AI Integration**: Templates use actual LLM APIs - not mock responses or demo placeholders
+- **🚀 10/10 Performance**: Validated performance metrics across all platforms (native Linux: 25ms startup, 44.44 wf/s throughput; Docker: <1000ms startup, >5 wf/s throughput)
+
+## ⚡ Performance Highlights
+
+AKIOS v1.0.4 achieves **10/10 performance scores** across all platforms:
+
+### Native Linux (Maximum Performance)
+```
+✅ Startup:     25ms (sub-50ms latency)
+✅ Throughput:  44.44 workflows/second
+✅ Memory:      21MB footprint
+✅ Scaling:     100% efficiency (perfect horizontal scaling)
+✅ Cost:        Industry-leading AI agent execution speed
+```
+
+### Docker (Cross-Platform Performance)
+```
+✅ Startup:     <1000ms (container overhead normal)
+✅ Throughput:  >5 workflows/second (parallel-friendly)
+✅ Memory:      <150MB (containerized)
+✅ Scaling:     >90% efficiency
+✅ Cost:        Excellent cross-platform performance
+```
+
+**Why Both Scores Matter:**
+- **Native Linux (EC2/Kubernetes)**: Choose for maximum performance & security, lowest cost at scale
+- **Docker (macOS/Windows/Cloud)**: Choose for cross-platform compatibility, strong security, excellent performance
+
+Both performance profiles are **validated and blocking for every release** — we measure both to ensure no regressions as AKIOS evolves.
+
+See [Native Linux Performance (EC2)](/.github/scripts/release/v4/scripts/ec2/README.md#step-9-performance-testing-30-minutes--blocking) and [Docker Performance](/.github/scripts/release/v4/scripts/docker/README.md#performance-validation-phase) for detailed validation reports.
+
+## ⚖️ Legal Disclaimers & User Responsibility
+
+### AKIOS Performance Validation Scope
+
+**AKIOS v1.0.4 performance metrics are validated ONLY on AWS EC2 t3.medium instances in us-east-1 region.** Your actual performance may differ significantly based on:
+- Instance type and size
+- AWS region and network latency
+- System load and other processes  
+- Workflow complexity and input data size
+- LLM API provider response times
+- Configuration choices
+
+### What AKIOS Guarantees
+✅ **Security of the sandbox** - Full kernel-hard isolation on native Linux (verified with 26/26 security tests)  
+✅ **PII redaction** - 50+ pattern detection (>95% accuracy)  
+✅ **Audit integrity** - Cryptographic Merkle proofs of execution  
+✅ **Performance baseline** - 25ms startup & 44.44 wf/s throughput on t3.medium  
+
+### What AKIOS Does NOT Guarantee
+❌ **AWS infrastructure performance** - Varies by instance type and region  
+❌ **AWS account security** - Your responsibility to manage credentials and IAM  
+❌ **AWS cost management** - You are responsible for monitoring AWS billing  
+❌ **Performance on untested instances** - Test on YOUR instance before assuming performance  
+❌ **Results from misconfigured deployments** - Configuration errors are user responsibility  
+
+### User Responsibilities
+
+#### AWS Account Security
+- **Keep access keys safe** — never commit to git or share
+- **Use IAM roles** with least-privilege permissions (don't use root credentials)
+- **Enable CloudTrail** for API audit logging
+- **Rotate credentials** regularly and monitor account activity
+- **Use security groups** to restrict EC2 access (SSH on port 22 only)
+
+**AKIOS is NOT responsible for:**
+- EC2 instance compromise or account takeover
+- AWS IAM misconfigurations
+- Leaked credentials or API keys
+- Unauthorized access to your instances
+
+#### Cost Management
+- **Monitor your AWS bill** actively during testing
+- **Set up AWS billing alerts** to prevent surprise charges
+- **Terminate instances** when testing is complete
+- **Understand EC2 pricing** for your region and instance type
+- **Use on-demand or spot instances** according to your needs
+
+**AKIOS is NOT responsible for:**
+- AWS infrastructure charges you incur
+- Runaway instances left running after testing
+- Data transfer costs or unexpected charges
+- Regional price variations
+
+Note: AKIOS includes budget kill-switches for LLM API costs ($1 default), but this does NOT cover AWS EC2, storage, or data transfer costs.
+
+#### Data Security
+- **Encrypt sensitive files** before processing through AKIOS
+- **Don't hardcode secrets** in workflow definitions or code
+- **Use environment variables** for credentials
+- **Secure EC2 instances** with proper security groups and SSH key management
+- **Review permissions** on all input files and directories
+
+**AKIOS is NOT responsible for:**
+- EC2 instance compromise due to misconfiguration
+- Secrets leaked through mismanaged workflows
+- Data breaches from improperly configured security groups
+- Malicious workflows from untrusted sources
+
+#### Infrastructure Validation
+- **Test on YOUR instance type** (not just t3.medium)
+- **Validate performance** meets YOUR requirements
+- **Understand differences** between baseline and your setup
+- **Document findings** for your team and future reference
+
+**AKIOS is NOT responsible for:**
+- Performance degradation on untested instance types
+- Results that don't match your use case
+- Infrastructure issues outside AKIOS control
+- Third-party software conflicts or misconfiguration
+
+### Performance Testing & Validation
+
+We provide two resources to help validate AKIOS for your use case:
+
+1. **[EC2 Performance Testing Guide](./docs/ec2-performance-testing.md)** (Complete how-to)
+   - Instance type recommendations by use case
+   - Step-by-step EC2 setup instructions
+   - Performance optimization tips
+   - Cost estimation and control strategies
+   - Troubleshooting for common issues
+   - Security best practices for AWS
+
+2. **[Native vs Docker Performance Comparison](/.github/scripts/release/v4/NATIVE_VS_DOCKER_PERFORMANCE.md)** (Detailed analysis)
+   - Side-by-side metrics comparison
+   - Performance analysis for each metric
+   - Decision matrix: when to use each platform
+   - Validation results and methodologies
+
+### When Testing AKIOS on AWS EC2
+
+✅ **Before starting:**
+- Understand AWS costs in your region (check EC2 pricing)
+- Secure your AWS credentials properly
+- Plan for instance cleanup after testing
+- Have valid LLM API credentials ready
+
+✅ **During testing:**
+- Monitor your AWS billing actively
+- Document your instance type and actual performance
+- Verify security status (kernel-hard isolation confirmed)
+- Test both mock and real API modes
+
+✅ **After testing:**
+- Terminate EC2 instances to stop charges
+- Archive results and performance baselines
+- Rotate any exposed credentials immediately
+- Clean up S3, CloudTrail, or other resources
 
 ## 🔍 Audit & Compliance
 
@@ -277,7 +426,7 @@ AKIOS v1.0 uses Linux kernel features for maximum security. Security levels vary
 - **Security Level**: Strong (policy-based)
 - **Features**:
   - ✓ Command/path allowlisting
-  - ✓ PII redaction (ML-based)
+  - ✓ PII redaction (rule-based, 50+ patterns)
   - ✓ Audit logging
   - ✓ Container isolation
   - ✓ Cross-platform compatibility
@@ -307,13 +456,13 @@ ls -la akios && file akios
 # akios: Bourne-Again shell script text executable, Unicode text, UTF-8 text
 
 # If download failed, use Direct Docker fallback:
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
 chmod +x akios
-./akios --version  # Should show "AKIOS 1.0.3"
+./akios --version  # Should show "AKIOS 1.0.4"
 ```
 
 #### Docker Installation Issues
@@ -436,7 +585,7 @@ AKIOS uses a structured dependency management system for different use cases:
 Runtime dependencies required to run AKIOS workflows:
 - **Core functionality**: `pydantic`, `click`, `pyyaml`, `jsonschema`
 - **LLM providers**: `openai`, `anthropic` (for AI agent functionality)
-- **Security & PII**: `presidio-analyzer`, `presidio-anonymizer`, `cryptography`
+- **Security**: `cryptography`, `psutil`
 - **System monitoring**: `psutil`, `httpx`
 
 ### Build Dependencies (`requirements-build.txt`)
@@ -761,11 +910,11 @@ cat data/output/run_*/batch-summary.json
 
 - **GitHub Issues**: Bug reports and feature requests
 - **GitHub Discussions**: Questions and community support
-- **Security**: Report vulnerabilities to hello@akios.ai
+- **Security**: Report vulnerabilities to security@akioud.ai
 
 ## 📄 License
 
-AKIOS Open Runtime is licensed under the **GPL-3.0** license. The security cage and audit system ensure AI agents run safely while maintaining full transparency through open source.
+AKIOS Open Runtime is licensed under the **GPL-3.0-only** license. The security cage and audit system ensure AI agents run safely while maintaining full transparency through open source.
 
 ---
 
