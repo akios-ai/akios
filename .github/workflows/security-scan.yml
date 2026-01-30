@@ -1,0 +1,44 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '*.md'
+      - '.github/scripts/release/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '*.md'
+      - '.github/scripts/release/**'
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Scan for secrets (relaxed for public repo)
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        config: |
+          title = "gitleaks config"
+          [[rules]]
+          description = "Generic API Key"
+          regex = '''(?i)(api[_-]?key|apikey)([\\"':=| ]{1,5})([A-Za-z0-9_-]{20,})'''
+          tags = ["key", "API", "generic"]
+
+    - name: Run TruffleHog (scan source code only)
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        extra_args: --only-verified
