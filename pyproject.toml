@@ -43,6 +43,7 @@ dependencies = [
 "Homepage" = "https://akios.ai"
 "Bug Tracker" = "https://github.com/akios-ai/akios/issues"
 "Source" = "https://github.com/akios-ai/akios"
+"Logo" = "https://raw.githubusercontent.com/akios-ai/akios/main/assets/logo.png"
 
 [project.scripts]
 akios = "akios.cli.main:main"
