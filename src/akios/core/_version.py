@@ -19,8 +19,33 @@ Core Services Version Information
 Provides version information for the AKIOS core services package.
 """
 
-__version__ = "1.0.3"
-__version_info__ = (1, 0, 3)
+from pathlib import Path
+
+# Try development mode first (pyproject.toml in grandparent directory)
+try:
+    pyproject_path = Path(__file__).parent.parent.parent.parent / "pyproject.toml"
+    if pyproject_path.exists():
+        with open(pyproject_path, "r") as f:
+            for line in f:
+                if line.startswith("version = "):
+                    __version__ = line.split('"')[1]
+                    raise StopIteration  # Found it, exit early
+    # If we get here, pyproject.toml exists but no version found
+    raise FileNotFoundError
+except StopIteration:
+    pass  # Successfully found version
+except (FileNotFoundError, OSError):
+    # Installed package mode: Read from package metadata
+    try:
+        from importlib.metadata import version
+        __version__ = version("akios")
+    except Exception:
+        __version__ = "unknown"
+
+try:
+    __version_info__ = tuple(int(x) for x in __version__.split("."))
+except (ValueError, AttributeError):
+    __version_info__ = (0, 0, 0)
 
 # Version metadata
 VERSION_MAJOR = 1

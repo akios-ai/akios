@@ -2,7 +2,7 @@
 **Document Version:** 1.0  
 **Date:** 2026-01-25  
 
-**Version 1.0.3** | **Last Updated:** January 9, 2026
+**Version 1.0** | **Last Updated:** January 9, 2026
 
 ## Overview
 

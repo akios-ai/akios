@@ -200,7 +200,7 @@ def get_status_data(workflow_filter: str = None) -> dict:
 
         # Build status data
         status_data = {
-            "akios_version": "1.0.3",
+            "akios_version": "1.0.4",
             "configuration_loaded": True,
             "sandbox_enabled": settings.sandbox_enabled,
             "audit_enabled": settings.audit_enabled,

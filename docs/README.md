@@ -20,29 +20,24 @@ Welcome to the official AKIOS documentation! This section contains all the guide
 
 ### Configuration & Usage
 - **[configuration.md](configuration.md)** - All configuration options documented
+- **[CONFIG.md](CONFIG.md)** - Configuration file reference and schema
 - **[cli-reference.md](cli-reference.md)** - Complete command-line interface guide
 - **[security.md](security.md)** - Security features and compliance information
 
-### Deployment & Operations
-- **[deployment.md](deployment.md)** - Production deployment and scaling
+### Deployment & Operations  
+- **[deployment.md](deployment.md)** - Production deployment and scaling best practices
+- **[ec2-performance-testing.md](ec2-performance-testing.md)** - Complete AWS EC2 testing guide with performance validation, instance recommendations, and cost estimation ⭐ **NEW**
 - **[troubleshooting.md](troubleshooting.md)** - Common issues and solutions
-
-## 🏗️ Advanced Topics
-
-### Integration & Development
-- **[api-reference.md](api-reference.md)** - Complete Python API for programmatic integration
-- **[integration/document-processing.md](integration/document-processing.md)** - Document processing workflows and patterns
-- **[integration/api-integration.md](integration/api-integration.md)** - REST APIs, webhooks, and external service integration
-- **[best-practices.md](best-practices.md)** - Security, performance, and deployment best practices
-- **[migration-guide.md](migration-guide.md)** - **NEW:** Migrate tohybrid distribution
+- **[migration-guide.md](migration-guide.md)** - Migrate to hybrid distribution
 
 ### For Developers
-- **Custom Workflows** - Creating your own YAML templates
-- **Agent Development** - Extending AKIOS with new agents
-- **Integration APIs** - Using AKIOS programmatically
+- **[workflow-schema.md](workflow-schema.md)** - YAML workflow schema and syntax reference
+- **[api-reference.md](api-reference.md)** - Developer API reference
+- **[best-practices.md](best-practices.md)** - AKIOS development and deployment best practices
 
 ### For Organizations
-- **Compliance Reporting** - Cryptographic audit trails and compliance logging
+- **[Compliance Reporting](deployment.md#compliance--audit-trails)** - Cryptographic audit trails and compliance logging
+- **[Integration Guides](integration/)** - API integration and document processing examples
 ## 📋 Templates & Examples
 
 AKIOS comes with production-ready workflow templates:
@@ -63,6 +58,8 @@ All templates produce **real AI output** from live LLM providers with full audit
 | **Migrate to v1.0** | **[migration-guide.md](migration-guide.md)** |
 | **Configure settings** | [configuration.md](configuration.md) |
 | **Run commands** | [cli-reference.md](cli-reference.md) |
+| **Test on AWS EC2** | **[ec2-performance-testing.md](ec2-performance-testing.md)** - Instance selection, setup, validation, troubleshooting |
+| **Workflow syntax** | [workflow-schema.md](workflow-schema.md) |
 | **Process documents** | [integration/document-processing.md](integration/document-processing.md) |
 | **Integrate APIs** | [integration/api-integration.md](integration/api-integration.md) |
 | **Developer API** | [api-reference.md](api-reference.md) |

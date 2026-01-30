@@ -8,7 +8,13 @@ AKIOS V1.0.O supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
+
 akios init
 akios run templates/hello-workflow.yml
 ```
@@ -27,11 +33,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.3 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -280,15 +286,14 @@ akios run workflow.yml --verbose
 # Enable real API mode with interactive setup
 akios run workflow.yml --real-api
 
-# Dry run (validate without executing)
-akios run workflow.yml --dry-run
+# Run with force flag (skip confirmation prompts)
+akios run workflow.yml --force
 ```
 
 **Options:**
 - `--verbose, -v`: Enable detailed execution logging
 - `--quiet, -q`: Suppress informational banners and non-error output
 - `--real-api`: Enable real API mode with interactive API key setup (sets AKIOS_MOCK_LLM=0, network_access_allowed=true, prompts for missing keys)
-- `--dry-run, -d`: Validate workflow without executing it
 - `--force, -f`: Skip confirmation prompts for template switches
 - `--debug`: Enable debug logging for troubleshooting
 
@@ -475,6 +480,11 @@ akios output export --format json --output outputs.json
 ### Native Linux Installation
 ```bash
 # Install AKIOS
+# Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
+sudo apt install pipx
+pipx install akios
+
+# Ubuntu 20.04/22.04 and other Linux/macOS/Windows users:
 pip install akios
 
 # 1. Initialize a new project

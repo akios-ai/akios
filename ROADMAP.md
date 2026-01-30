@@ -12,7 +12,7 @@ No feature bleed. Open stays clean & viral. PRO captures regulated industry.
 ### 1. AKIOS Open Runtime v1.0 – Current & Locked (January 2026)
 
 **Focus**: Strong cross-platform security foundation – Docker-based protection
-**License**: GPL-3.0 (free, open-source)
+**License**: GPL-3.0-only (free, open-source)
 **Status**: ✅ Final & locked – ship this
 
 **Key Features (no changes allowed)**:
@@ -33,7 +33,7 @@ No feature bleed. Open stays clean & viral. PRO captures regulated industry.
 ### 2. Future Open Releases (V1.x / V2.0) – Planned Gradual Improvements
 
 **Focus**: Make the cage more usable without diluting security  
-**License**: GPL-3.0 (free, open-source)  
+**License**: GPL-3.0-only (free, open-source)  
 **Timeline**: 2026–2027 (no fixed dates – community & contributor-driven)
 
 **Prioritized Evolution** (rough order – no promises on dates):

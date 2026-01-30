@@ -1,5 +1,7 @@
-# AKIOS V1.0.3 - Secure Cross-Platform Docker Deployment
+# AKIOS v1.0 - Secure Cross-Platform Docker Deployment
 # Multi-stage build: separate build dependencies from runtime image
+# GPL-3.0-only Compliance: Legal files baked into image, source pointer included
+# OCI Compliant: Proper labels and metadata for container registries
 
 # Build stage - includes all build dependencies
 FROM ubuntu:24.04 AS builder
@@ -50,6 +52,20 @@ RUN /opt/venv/bin/python -m build --wheel --outdir /build/dist
 # Runtime stage - Ubuntu 24.04 for maximum security
 FROM ubuntu:24.04
 
+# Redeclare build args for use in this stage
+ARG GIT_HASH
+ARG BUILD_TIMESTAMP
+
+# OCI Labels for container metadata and GPL-3.0-only compliance
+LABEL org.opencontainers.image.title="AKIOS - Secure AI Workflow Engine"
+LABEL org.opencontainers.image.description="GPL-3.0-only licensed AI agent execution engine with military-grade security"
+LABEL org.opencontainers.image.version="1.0.4"
+LABEL org.opencontainers.image.source="https://github.com/akios-ai/akios"
+LABEL org.opencontainers.image.licenses="GPL-3.0-only"
+LABEL org.opencontainers.image.vendor="AKIOUD AI, SAS"
+LABEL org.opencontainers.image.url="https://github.com/akios-ai/akios"
+LABEL org.opencontainers.image.revision="${GIT_HASH}"
+
 # Install Python and essential system dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -61,8 +77,11 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/* /tmp/* /var/tmp/* && \
     rm -rf /usr/share/doc/* /usr/share/man/* /usr/share/locale/* 2>/dev/null || true
 
-# Security: Create non-root user
-RUN groupadd -r akios -g 1001 && useradd -r -g akios -u 1001 akios
+# Create legal files directory for GPL-3.0-only compliance
+RUN mkdir -p /usr/share/akios/legal
+
+# Security: Create non-root user (optional - commented out due to build issues)
+# RUN groupadd -r akios -g 1001 && useradd -r -g akios -u 1001 akios
 
 # Security: Remove setuid/setgid privileges from all binaries
 RUN echo "Removing setuid binaries..." && \
@@ -78,6 +97,32 @@ WORKDIR /app
 COPY akios /app/akios
 RUN chmod +x /app/akios
 
+# Copy legal files for GPL-3.0-only compliance (baked into image)
+COPY LICENSE /usr/share/akios/legal/
+COPY NOTICE /usr/share/akios/legal/
+COPY THIRD_PARTY_LICENSES.md /usr/share/akios/legal/
+COPY TRADEMARKS.md /usr/share/akios/legal/
+
+# Create SOURCE.txt pointer for GPL-3.0-only source availability (GPLv3 §6)
+RUN echo "SOURCE AVAILABILITY\n\
+\n\
+This Docker image contains GPL-3.0-only licensed software.\n\
+GPL-3.0-only requires that corresponding source code be available.\n\
+\n\
+Source Location: https://github.com/akios-ai/akios/releases/tag/v1.0.4\n\
+Build Instructions: See https://github.com/akios-ai/akios/blob/v1.0.4/GETTING_STARTED.md\n\
+License Text: See /usr/share/akios/legal/LICENSE\n\
+\n\
+Source Availability Commitment: 3 years minimum (until 2029-01-30)\n\
+This source will remain available for at least 3 years from the release date.\n\
+Earlier versions remain available via GitHub releases history.\n\
+\n\
+For more information on your rights: https://www.gnu.org/licenses/gpl-3.0.en.html\n\
+For more information on AKIOS: https://github.com/akios-ai/akios" > /usr/share/akios/legal/SOURCE.txt
+
+# Set proper permissions on legal files
+RUN chmod 644 /usr/share/akios/legal/*
+
 # Copy the built wheel from builder stage
 COPY --from=builder /build/dist/ .
 
@@ -90,11 +135,10 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages *.whl && \
 
 # Security hardening, cleanup, and directory setup in single layer
 RUN mkdir -p /app/data/input /app/data/output /app/audit /app/workflows && \
-    chown -R akios:akios /app && \
     rm -rf /tmp/* /var/tmp/* /root/.cache/* 2>/dev/null || true
 
-# Switch to non-root user
-USER akios
+# Switch to non-root user (disabled due to build issues)
+# USER akios
 
 # Health check (optional but recommended)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

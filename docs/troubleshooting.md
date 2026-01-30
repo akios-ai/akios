@@ -146,6 +146,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 
 3. **Reinstall if needed:**
    ```bash
+   # Ubuntu 24.04+ users: Use pipx
+   pipx uninstall akios
+   pipx install akios
+
+   # Ubuntu 20.04/22.04 and other systems:
    pip uninstall akios
    pip install akios
    ```
@@ -171,6 +176,10 @@ AKIOS_FORCE_PULL=1 ./akios status
 
 2. **Reinstall in virtual environment:**
    ```bash
+   # Ubuntu 24.04+ users: Use pipx (recommended)
+   pipx install akios
+
+   # Alternative: Virtual environment (works on all systems)
    python3 -m venv akios_env
    source akios_env/bin/activate
    pip install akios
@@ -801,7 +810,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 
 2. **Pull specific version:**
    ```bash
-   docker pull akiosai/akios:v1.0.3
+   docker pull akiosai/akios:v1.0.4
    ```
 
 3. **Clear Docker cache:**
@@ -825,7 +834,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 1. **Check volume mounts:**
    ```bash
    # Ensure correct mount syntax
-   docker run -v $(pwd):/app akiosai/akios:v1.0.3
+   docker run -v $(pwd):/app akiosai/akios:v1.0.4
    ```
 
 2. **Fix file permissions:**

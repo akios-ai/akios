@@ -20,7 +20,7 @@ This policy explains how we handle vulnerabilities in the open runtime.
 
 **DO NOT report security issues on public GitHub.**
 
-Send private reports to: **hello@akios.ai**
+Send private reports to: **security@akioud.ai**
 
 ### What to Include
 - Clear description of the vulnerability
@@ -49,7 +49,7 @@ Users must secure their environment and validate outputs.
 
 ## 📞 Contact
 
-Security issues only: **security@akioud.ai**  
+Security reports: **security@akioud.ai**  
 General questions: **hello@akios.ai**
 
 Thank you for helping keep the cage strong.
