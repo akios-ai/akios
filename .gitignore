@@ -1,0 +1,81 @@
+# AKIOS Public Repository - Security Protection
+# Prevents accidental commit of sensitive data
+
+# === CRITICAL: Prevent Secret Leakage ===
+*.pem
+*.key
+*.ppk
+*.p12
+*.pfx
+id_rsa*
+known_hosts
+
+# AWS Credentials
+.aws/
+*.credentials
+
+# Environment Files
+.env
+.env.*
+!.env.example
+
+# API Keys & Tokens
+*secret*
+*token*
+*credential*
+
+# === Build Artifacts ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# === IDE / Editor ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# === Testing ===
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# === Logs ===
+*.log
+logs/
+
+# === Temporary ===
+*.tmp
+*.bak
+*.swp
+.cache/
+
+# === macOS ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === Never include these in public ===
+internal/
+private/
+secret/
