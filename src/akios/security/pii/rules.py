@@ -193,8 +193,8 @@ class ComplianceRules:
 
             'phone_fr': PIIPattern(
                 name='phone_fr',
-                pattern=r'(?<![\w@./])(?:\+33|0033|33)\d{9}|\b0[1-9](?:[\s\.\-]?\d{2}){4}\b(?!\d|@|\.[\w]{2,})',
-                compiled_pattern=re.compile(r'(?<![\w@./])(?:\+33|0033|33)\d{9}|\b0[1-9](?:[\s\.\-]?\d{2}){4}\b(?!\d|@|\.[\w]{2,})'),
+                pattern=r'(?<![\w@./])(?:\+33|0033|33)[\s\.\-]?\d[\s\.\-]?\d{2}[\s\.\-]?\d{2}[\s\.\-]?\d{2}[\s\.\-]?\d{2}|\b0[1-9](?:[\s\.\-]?\d{2}){4}\b(?!\d|@|\.[\w]{2,})',
+                compiled_pattern=re.compile(r'(?<![\w@./])(?:\+33|0033|33)[\s\.\-]?\d[\s\.\-]?\d{2}[\s\.\-]?\d{2}[\s\.\-]?\d{2}[\s\.\-]?\d{2}|\b0[1-9](?:[\s\.\-]?\d{2}){4}\b(?!\d|@|\.[\w]{2,})'),
                 category='personal',
                 sensitivity='high',
                 description='French phone numbers (+33/0033/33 international or local 0X XX XX XX XX)',
@@ -203,8 +203,8 @@ class ComplianceRules:
 
             'phone_us': PIIPattern(
                 name='phone_us',
-                pattern=r'(?<![\w@.])\(?\d{3}\)?-?\s?\d{3}-?\s?\d{4}(?!\d|@|\.[\w]{2,})',
-                compiled_pattern=re.compile(r'(?<![\w@.])\(?\d{3}\)?-?\s?\d{3}-?\s?\d{4}(?!\d|@|\.[\w]{2,})'),
+                pattern=r'(?<![\w@.])(?<!NPI[:\s])(?<!NPI: )(?<!MRN-)(?<!MRN )\(?\d{3}\)?-?\s?\d{3}-?\s?\d{4}(?!\d|@|\.[\w]{2,})',
+                compiled_pattern=re.compile(r'(?<![\w@.])(?<!NPI[:\s])(?<!NPI: )(?<!MRN-)(?<!MRN )\(?\d{3}\)?-?\s?\d{3}-?\s?\d{4}(?!\d|@|\.[\w]{2,})'),
                 category='personal',
                 sensitivity='high',
                 description='US and North American phone numbers',
@@ -253,8 +253,8 @@ class ComplianceRules:
 
             'germany_id': PIIPattern(
                 name='germany_id',
-                pattern=r'(?<![\w@./])\d{8,12}(?!\d|@|\.[\w]{2,})',
-                compiled_pattern=re.compile(r'(?<![\w@./])\d{8,12}(?!\d|@|\.[\w]{2,})'),
+                pattern=r'(?<![\w@./])(?<!NPI: )(?<!NPI:)(?<!NPI )\d{8,12}(?!\d|@|\.[\w]{2,})',
+                compiled_pattern=re.compile(r'(?<![\w@./])(?<!NPI: )(?<!NPI:)(?<!NPI )\d{8,12}(?!\d|@|\.[\w]{2,})'),
                 category='personal',
                 sensitivity='high',
                 description='German ID numbers',
@@ -263,8 +263,8 @@ class ComplianceRules:
 
             'passport_eu': PIIPattern(
                 name='passport_eu',
-                pattern=r'\b[A-Z]{1,2}\d{6,9}\b',
-                compiled_pattern=re.compile(r'\b[A-Z]{1,2}\d{6,9}\b'),
+                pattern=r'(?<!DEA[:\s])(?<!DEA: )\b[A-Z]{1,2}\d{6,9}\b',
+                compiled_pattern=re.compile(r'(?<!DEA[:\s])(?<!DEA: )\b[A-Z]{1,2}\d{6,9}\b'),
                 category='personal',
                 sensitivity='high',
                 description='European passport numbers',
@@ -283,22 +283,32 @@ class ComplianceRules:
 
             'birth_date': PIIPattern(
                 name='birth_date',
-                pattern=r'\b(19|20)\d{2}[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])\b(?!\d)',
-                compiled_pattern=re.compile(r'\b(19|20)\d{2}[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])\b(?!\d)'),
+                pattern=r'\b(?:(19|20)\d{2}[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])|(0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])[-/](19|20)\d{2}|(0[1-9]|[12]\d|3[01])[-/](0[1-9]|1[0-2])[-/](19|20)\d{2})\b(?!\d)',
+                compiled_pattern=re.compile(r'\b(?:(19|20)\d{2}[-/](0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])|(0[1-9]|1[0-2])[-/](0[1-9]|[12]\d|3[01])[-/](19|20)\d{2}|(0[1-9]|[12]\d|3[01])[-/](0[1-9]|1[0-2])[-/](19|20)\d{2})\b(?!\d)'),
                 category='personal',
                 sensitivity='high',
-                description='Birth dates in YYYY-MM-DD or YYYY/MM/DD format',
-                examples=['1990-05-15', '1985/12/31']
+                description='Birth dates in YYYY-MM-DD, MM/DD/YYYY, or DD/MM/YYYY format',
+                examples=['1990-05-15', '1985/12/31', '03/22/1985', '12-31-1990', '25/03/1985']
             ),
 
             'full_name': PIIPattern(
                 name='full_name',
-                pattern=r'(?:Mr|Mrs|Ms|Dr|Prof)\.\s+[A-Z][a-z]+ [A-Z][a-z]+\b',
-                compiled_pattern=re.compile(r'(?:Mr|Mrs|Ms|Dr|Prof)\.\s+[A-Z][a-z]+ [A-Z][a-z]+\b'),
+                pattern=r'(?:Mr|Mrs|Ms|Dr|Prof|Mme|Mlle)\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b|\bM\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b',
+                compiled_pattern=re.compile(r'(?:Mr|Mrs|Ms|Dr|Prof|Mme|Mlle)\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b|\bM\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b'),
                 category='personal',
                 sensitivity='low',
-                description='Full names with titles (e.g., "Mr. John Doe")',
-                examples=['Mr. John Doe', 'Dr. Jane Smith', 'Prof. Robert Johnson']
+                description='Full names with titles (English: Mr./Mrs./Dr. | French: M./Mme./Mlle., incl. compound names)',
+                examples=['Mr. John Doe', 'Dr. Jane Smith', 'M. Jean-Luc Picard', 'Mme. Marie-Claire Dupont']
+            ),
+
+            'french_ssn': PIIPattern(
+                name='french_ssn',
+                pattern=r'\b[12]\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{3}\s?\d{2}\b',
+                compiled_pattern=re.compile(r'\b[12]\s?\d{2}\s?\d{2}\s?\d{2}\s?\d{3}\s?\d{3}\s?\d{2}\b'),
+                category='personal',
+                sensitivity='high',
+                description='French Social Security numbers (numéro de sécurité sociale, 15 digits)',
+                examples=['2 85 03 75 123 456 78', '185037512345678']
             ),
 
             'tax_id_us': PIIPattern(
@@ -323,8 +333,8 @@ class ComplianceRules:
 
             'bank_account_us': PIIPattern(
                 name='bank_account_us',
-                pattern=r'(?<![\w@./])\d{8,12}(?!\d|@|\.[\w]{2,})',
-                compiled_pattern=re.compile(r'(?<![\w@./])\d{8,12}(?!\d|@|\.[\w]{2,})'),
+                pattern=r'(?<![\w@./])(?<!NPI: )(?<!NPI:)(?<!NPI )\d{8,12}(?!\d|@|\.[\w]{2,})',
+                compiled_pattern=re.compile(r'(?<![\w@./])(?<!NPI: )(?<!NPI:)(?<!NPI )\d{8,12}(?!\d|@|\.[\w]{2,})'),
                 category='personal',
                 sensitivity='high',
                 description='US bank account numbers',
@@ -371,6 +381,16 @@ class ComplianceRules:
                     r'(?!TCK-)'
                     r'(?!TICKET-)'
                     r'(?!TKT-)'
+                    r'(?!MRN-)'
+                    r'(?!ADM-)'
+                    r'(?!ICD-)'
+                    r'(?!NDC-)'
+                    r'(?!CPT-)'
+                    r'(?!GHS-)'
+                    r'(?!BCBS-)'
+                    r'(?!GRP-)'
+                    r'(?!NPI-)'
+                    r'(?!DEA-)'
                     r'[A-Z]{1,3}-?\d{2,4}-?[A-Z]{0,2}\b(?!-\d)'
                 ),
                 compiled_pattern=re.compile(
@@ -392,6 +412,13 @@ class ComplianceRules:
                     r'(?<!TCK-)'
                     r'(?<!TICKET-)'
                     r'(?<!TKT-)'
+                    r'(?<!MRN-)'
+                    r'(?<!ADM-)'
+                    r'(?<!ICD-)'
+                    r'(?<!NDC-)'
+                    r'(?<!CPT-)'
+                    r'(?<!BCBS-)'
+                    r'(?<!GRP-)'
                     r'\b'
                     r'(?!INV-)'
                     r'(?!INVOICE-)'
@@ -411,6 +438,16 @@ class ComplianceRules:
                     r'(?!TCK-)'
                     r'(?!TICKET-)'
                     r'(?!TKT-)'
+                    r'(?!MRN-)'
+                    r'(?!ADM-)'
+                    r'(?!ICD-)'
+                    r'(?!NDC-)'
+                    r'(?!CPT-)'
+                    r'(?!GHS-)'
+                    r'(?!BCBS-)'
+                    r'(?!GRP-)'
+                    r'(?!NPI-)'
+                    r'(?!DEA-)'
                     r'[A-Z]{1,3}-?\d{2,4}-?[A-Z]{0,2}\b(?!-\d)'
                 ),
                 category='personal',
@@ -455,12 +492,12 @@ class ComplianceRules:
 
             'bic': PIIPattern(
                 name='bic',
-                pattern=r'\b[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?\b',
-                compiled_pattern=re.compile(r'\b[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?\b'),
+                pattern=r'\b(?:BIC|SWIFT|swift)\s*[:=]\s*[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b',
+                compiled_pattern=re.compile(r'\b(?:BIC|SWIFT|swift)\s*[:=]\s*[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b'),
                 category='financial',
                 sensitivity='medium',
-                description='BIC/SWIFT codes',
-                examples=['BNPAFRPP', 'DEUTDEFF']
+                description='BIC/SWIFT codes (requires context prefix to avoid false positives on English words)',
+                examples=['BIC: BNPAFRPP', 'SWIFT: DEUTDEFF']
             ),
 
             'routing_number': PIIPattern(
@@ -529,8 +566,8 @@ class ComplianceRules:
 
             'medical_record': PIIPattern(
                 name='medical_record',
-                pattern=r'\b(medical|patient|record|diagnosis|treatment|prescription)\s+(number|id|record)[\s:]*[A-Z0-9\-]{4,}\b',
-                compiled_pattern=re.compile(r'\b(medical|patient|record|diagnosis|treatment|prescription)\s+(number|id|record)[\s:]*[A-Z0-9\-]{4,}\b', re.IGNORECASE),
+                pattern=r'\b(medical|patient|record|diagnosis|treatment|prescription)\s+(number|id\b|record)[\s:]*[A-Z0-9\-]{4,}\b',
+                compiled_pattern=re.compile(r'\b(medical|patient|record|diagnosis|treatment|prescription)\s+(number|id\b|record)[\s:]*[A-Z0-9\-]{4,}\b', re.IGNORECASE),
                 category='health',
                 sensitivity='high',
                 description='Medical record references',
@@ -549,12 +586,12 @@ class ComplianceRules:
 
             'blood_pressure': PIIPattern(
                 name='blood_pressure',
-                pattern=r'\b\d{2,3}\/\d{2,3}\s*(mmHg|mm Hg)?\b',
-                compiled_pattern=re.compile(r'\b\d{2,3}\/\d{2,3}\s*(mmHg|mm Hg)?\b'),
+                pattern=r'\b\d{2,3}\/\d{2,3}\s*(mmHg|mm Hg)\b',
+                compiled_pattern=re.compile(r'\b\d{2,3}\/\d{2,3}\s*(mmHg|mm Hg)\b'),
                 category='health',
                 sensitivity='medium',
-                description='Blood pressure readings',
-                examples=['120/80 mmHg', '140/90', '110/70 mm Hg']
+                description='Blood pressure readings (requires mmHg unit to avoid date false positives)',
+                examples=['120/80 mmHg', '140/90 mmHg', '110/70 mm Hg']
             ),
 
             'lab_results': PIIPattern(
@@ -595,6 +632,36 @@ class ComplianceRules:
                 sensitivity='high',
                 description='Emergency contact information',
                 examples=['Emergency Contact: John Doe +1-555-123-4567', 'Next of Kin: Jane Smith (555) 987-6543']
+            ),
+
+            'us_npi': PIIPattern(
+                name='us_npi',
+                pattern=r'\bNPI[\s:]*\d{10}\b',
+                compiled_pattern=re.compile(r'\bNPI[\s:]*\d{10}\b', re.IGNORECASE),
+                category='health',
+                sensitivity='high',
+                description='US National Provider Identifier (NPI)',
+                examples=['NPI: 1234567890', 'NPI:1234567890']
+            ),
+
+            'us_dea': PIIPattern(
+                name='us_dea',
+                pattern=r'\bDEA[\s:]*[A-Z]{1,2}\d{7}\b',
+                compiled_pattern=re.compile(r'\bDEA[\s:]*[A-Z]{1,2}\d{7}\b', re.IGNORECASE),
+                category='health',
+                sensitivity='high',
+                description='US Drug Enforcement Administration number',
+                examples=['DEA: AM9812345', 'DEA:AB1234567']
+            ),
+
+            'medical_record_number': PIIPattern(
+                name='medical_record_number',
+                pattern=r'\bMRN[-\s]?\d{3}[-\s]?\d{3}[-\s]?\d{4}\b',
+                compiled_pattern=re.compile(r'\bMRN[-\s]?\d{3}[-\s]?\d{3}[-\s]?\d{4}\b'),
+                category='health',
+                sensitivity='high',
+                description='Medical Record Numbers (MRN format)',
+                examples=['MRN-882-441-7739', 'MRN 882 441 7739']
             )
         }
 
@@ -609,6 +676,16 @@ class ComplianceRules:
                 sensitivity='medium',
                 description='Postal addresses with zip codes',
                 examples=['123 Main Street, Paris 75001', '456 Rue de la Paix, 75002 Paris']
+            ),
+
+            'postal_address_fr': PIIPattern(
+                name='postal_address_fr',
+                pattern=r'\b\d+\s+(?:Rue|Avenue|Boulevard|Place|All\u00e9e|Chemin|Impasse)\s+[A-Za-z\u00C0-\u00FF\s,-]+(?:France|Paris|Lyon|Marseille|Bordeaux|Toulouse|Nantes|Strasbourg|Lille|Nice)\b',
+                compiled_pattern=re.compile(r'\b\d+\s+(?:Rue|Avenue|Boulevard|Place|All\u00e9e|Chemin|Impasse)\s+[A-Za-z\u00C0-\u00FF\s,-]+(?:France|Paris|Lyon|Marseille|Bordeaux|Toulouse|Nantes|Strasbourg|Lille|Nice)\b'),
+                category='location',
+                sensitivity='medium',
+                description='French postal addresses with street type and city',
+                examples=['12 Rue de la Paix, 75002 Paris', '45 Boulevard Haussmann, Paris']
             ),
 
             'coordinates': PIIPattern(

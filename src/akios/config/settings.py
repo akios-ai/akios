@@ -19,10 +19,11 @@ Pydantic settings model for AKIOS configuration
 Defines all configurable parameters for the security cage.
 """
 
-from typing import List
+from typing import List, Dict, Optional
+import logging
 
-from pydantic import Field, ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic import Field, ConfigDict, model_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 
@@ -40,6 +41,10 @@ class Settings(BaseSettings):
     max_open_files: int = Field(100, gt=10, description="Maximum open file descriptors")
     max_file_size_mb: int = Field(10, gt=0, description="Maximum file size in MB for writes")
     network_access_allowed: bool = Field(False, description="Allow network access")
+    allowed_domains: List[str] = Field(
+        [],
+        description="Allowed domains for HTTP agent in strict mode (e.g. ['api.salesforce.com'])"
+    )
 
     # PII & compliance
     pii_redaction_enabled: bool = Field(True, description="Enable real-time PII redaction")
@@ -64,6 +69,16 @@ class Settings(BaseSettings):
         default="json",
         pattern="^(json)$",
         description="Audit export format"
+    )
+
+    # UI & Theming
+    ui_theme: str = Field(
+        default="default",
+        description="UI color theme (default, dark, light, custom)"
+    )
+    ui_custom_theme: Optional[Dict[str, str]] = Field(
+        default=None,
+        description="Custom theme color overrides"
     )
 
     # LLM provider controls
@@ -91,9 +106,31 @@ class Settings(BaseSettings):
         description="Logging level"
     )
 
-    model_config = ConfigDict(
+    @model_validator(mode='after')
+    def validate_sandbox_in_production(self) -> 'Settings':
+        """Prevent disabling sandbox in production"""
+        if not self.sandbox_enabled and self.environment == 'production':
+            raise ValueError(
+                "sandbox_enabled cannot be False in production environment. "
+                "Disabling sandbox removes ALL security (PII, audit, command restrictions, resource limits). "
+                "This is only allowed in development/testing environments."
+            )
+        
+        if not self.sandbox_enabled:
+            # Log loud warning even in non-production
+            logger = logging.getLogger(__name__)
+            logger.warning(
+                "⚠️  SECURITY WARNING: Sandbox is DISABLED! "
+                "This removes ALL security protections including PII redaction, "
+                "audit logging, command restrictions, and resource limits. "
+                "This should ONLY be used for local development/testing."
+            )
+        
+        return self
+
+    model_config = SettingsConfigDict(
         env_prefix="AKIOS_",
         env_file=None,  # Disable .env file loading to avoid permission issues
-        extra="ignore",  # Ignore extra environment variables not defined in the model
+        extra="forbid",  # Forbid extra configuration to catch typos/nesting errors
     )
 

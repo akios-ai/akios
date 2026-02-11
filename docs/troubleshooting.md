@@ -18,10 +18,10 @@ Run the diagnostic command to check system health:
 ./akios --debug status
 
 # View recent audit events
-./akios audit view --limit 10
+./akios logs --limit 10
 
-# Check configuration validity
-./akios config validate
+# Check configuration validity (implicit in status)
+./akios status
 ```
 
 ### Debug Logging
@@ -596,6 +596,32 @@ AKIOS_FORCE_PULL=1 ./akios status
    # Some validations are relaxed but still enforced
    ```
 
+### "Trace/breakpoint trap" / SIGTRAP When Running with Sudo
+
+**Symptoms:**
+- `sudo akios run` crashes with "Trace/breakpoint trap (core dumped)"
+- Exit code 133 (128 + 5 = SIGTRAP)
+
+**Cause:** Seccomp BPF filter rejecting essential syscalls. Fixed in v1.0.5.
+
+**Solutions:**
+
+1. **Upgrade to v1.0.5+:**
+   ```bash
+   sudo pip3 install --upgrade akios
+   ```
+
+2. **Verify system packages installed:**
+   ```bash
+   sudo apt-get install libseccomp-dev python3-seccomp
+   ```
+
+3. **Test the fix:**
+   ```bash
+   sudo akios run templates/hello-workflow.yml
+   # Should complete without crash
+   ```
+
 ### PII Redaction Issues
 
 **Symptoms:**
@@ -810,7 +836,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 
 2. **Pull specific version:**
    ```bash
-   docker pull akiosai/akios:v1.0.4
+   docker pull akiosai/akios:v1.0.5
    ```
 
 3. **Clear Docker cache:**
@@ -834,7 +860,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 1. **Check volume mounts:**
    ```bash
    # Ensure correct mount syntax
-   docker run -v $(pwd):/app akiosai/akios:v1.0.4
+   docker run -v $(pwd):/app akiosai/akios:v1.0.5
    ```
 
 2. **Fix file permissions:**

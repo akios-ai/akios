@@ -23,10 +23,20 @@ Handles interactive configuration with TTY compatibility across environments.
 import os
 import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 import logging
 
 from ...core.ui.commands import suggest_command
+from ...core.ui.rich_output import get_theme_color
+from ...cli.rich_helpers import output_with_mode, should_use_rich
+
+# Import Rich console for color support
+try:
+    from rich.console import Console
+    _console = Console()
+    _has_rich = True
+except ImportError:
+    _has_rich = False
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +148,7 @@ class FirstRunDetector:
         in_docker = (
             os.path.exists('/.dockerenv') or  # Docker env file
             os.environ.get('AKIOS_IN_DOCKER') == '1' or  # Explicit flag
-            (os.path.exists('/proc/1/cgroup') and 'docker' in open('/proc/1/cgroup').read()) or  # cgroup check
+            (os.path.exists('/proc/1/cgroup') and self._check_docker_cgroup()) or  # cgroup check
             (os.environ.get('TERM') == 'dumb' and os.environ.get('SHELL'))  # Terminal indicators
         )
 
@@ -163,6 +173,15 @@ class FirstRunDetector:
             # Fallback to basic TTY check if select/os operations fail
             return sys.stdin.isatty() and sys.stdout.isatty()
 
+    @staticmethod
+    def _check_docker_cgroup() -> bool:
+        """Check if /proc/1/cgroup contains 'docker' (with proper file handling)."""
+        try:
+            with open('/proc/1/cgroup', 'r') as f:
+                return 'docker' in f.read()
+        except (OSError, IOError):
+            return False
+
 
 class SetupWizard:
     """
@@ -182,9 +201,15 @@ class SetupWizard:
         self.project_root = project_root
         self.detector = FirstRunDetector(project_root)
 
-    def run_wizard(self, force: bool = False) -> bool:
+    def run_wizard(self, force: bool = False, mock_mode: bool = False, provider: Optional[str] = None, defaults: bool = False) -> bool:
         """
         Run the complete setup wizard.
+
+        Args:
+            force: Force run even if already configured
+            mock_mode: Use mock mode (non-interactive)
+            provider: Pre-selected provider (non-interactive)
+            defaults: Use recommended defaults (non-interactive)
 
         Returns:
             True if setup completed successfully
@@ -192,9 +217,18 @@ class SetupWizard:
         if not force and not self.detector.should_show_wizard():
             return True
 
+        # Handle automated/non-interactive setup
+        if mock_mode or provider or defaults:
+            return self._run_automated_setup(mock_mode, provider, defaults, force=force)
+
         interactive_tty = sys.stdin.isatty() and sys.stdout.isatty()
 
-        print("\n🎉 Welcome to AKIOS v1.0! Let's set up your first workflow.\n")
+        output_with_mode(
+            message=f"[bold {get_theme_color('header')}]AKIOS Security Initialization[/bold {get_theme_color('header')}]\n[dim]Configuring secure execution environment[/dim]",
+            json_mode=False,
+            quiet_mode=False,
+            output_type="panel"
+        )
 
         interactive = self.detector._is_interactive()
 
@@ -202,7 +236,12 @@ class SetupWizard:
         use_real_api = self._select_api_mode()
         if use_real_api is None:  # Cancelled
             if interactive_tty:
-                print("Setup cancelled.")
+                output_with_mode(
+                    message="Setup cancelled",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
             return False
 
         # Step 2: Provider selection (only if using real API)
@@ -210,7 +249,12 @@ class SetupWizard:
             provider = self._select_provider()
             if not provider:
                 if interactive_tty:
-                    print("Setup cancelled.")
+                    output_with_mode(
+                        message="Setup cancelled",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
                 return False
             self.current_provider = provider
         else:
@@ -221,27 +265,57 @@ class SetupWizard:
         # Step 3: API key setup (skip for mock mode)
         if provider == 'mock':
             api_key = 'mock-key'
-            print("\n🎭 Using mock mode - no API key required!")
+            output_with_mode(
+                message="Using mock mode - no API key required",
+                json_mode=False,
+                quiet_mode=False,
+                output_type="success"
+            )
         else:
             api_key = self._setup_api_key(provider)
             if not api_key:
                 if interactive_tty:
-                    print("Setup cancelled.")
+                    output_with_mode(
+                        message="Setup cancelled",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
                 return False
 
             # Step 4: API key validation with test call
             provider_label = self._get_provider_display_name(provider)
-            print(f"\n🔍 Testing {provider_label} key... [....] ", end="", flush=True)
+            output_with_mode(
+                message=f"Testing {provider_label} key",
+                json_mode=False,
+                quiet_mode=False,
+                output_type="info"
+            )
             if not self._test_api_key(provider, api_key):
-                print("❌ Failed!")
-                print("❌ API key validation failed. Please check your key and try again.")
+                output_with_mode(
+                    message="API key validation failed",
+                    details=["Please check your key and try again"],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="error"
+                )
                 return False
-            print("✅ Validated!")
+            output_with_mode(
+                message="API key validated successfully",
+                json_mode=False,
+                quiet_mode=False,
+                output_type="success"
+            )
 
         # Step 4: Model selection (skip for mock mode)
         if provider == 'mock':
             model = 'mock-model'
-            print("\n🎭 Mock mode - using simulated AI responses!")
+            output_with_mode(
+                message="Mock mode - using simulated AI responses",
+                json_mode=False,
+                quiet_mode=False,
+                output_type="success"
+            )
         else:
             model = self._select_model(provider)
 
@@ -251,13 +325,24 @@ class SetupWizard:
         # Step 5: Advanced settings (skip for mock mode)
         if provider == 'mock':
             advanced_config = {}
-            print("\n⚙️ Using default settings for mock mode!")
+            output_with_mode(
+                message="Using default settings for mock mode",
+                json_mode=False,
+                quiet_mode=False,
+                output_type="success"
+            )
         else:
             advanced_config = self._configure_advanced_settings()
 
         # Step 6: Configuration validation and save
         if not self._validate_and_save(provider, api_key, model, advanced_config):
-            print("❌ Configuration validation failed. Please try again.")
+            output_with_mode(
+                message="Configuration validation failed",
+                details=["Please try again"],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="error"
+            )
             return False
 
         # Step 4: Success and next steps
@@ -268,6 +353,68 @@ class SetupWizard:
         self.detector._mark_setup_complete()
 
         return True
+
+    def _run_automated_setup(self, mock_mode: bool, provider: Optional[str], defaults: bool, force: bool = False) -> bool:
+        """
+        Run automated setup without user interaction.
+        
+        Args:
+            mock_mode: Use mock mode
+            provider: Pre-selected provider
+            defaults: Use defaults
+            force: Force overwrite of existing configuration
+            
+        Returns:
+            True if successful
+        """
+        output_with_mode(
+            message="Running automated setup...",
+            json_mode=False,
+            quiet_mode=False,
+            output_type="info"
+        )
+        
+        # Determine settings
+        if mock_mode:
+            selected_provider = 'mock'
+            api_key = 'mock-key'
+            model = 'mock-model'
+            advanced_config = {}
+            output_with_mode("Selected: Mock Mode", output_type="success")
+        elif provider:
+            selected_provider = provider
+            # Check environment for API key
+            env_var = self._get_required_env_var(provider)
+            api_key = os.environ.get(env_var, '')
+            if not api_key:
+                 output_with_mode(f"Missing API key in environment variable: {env_var}", output_type="error")
+                 return False
+            model = self._get_default_model(provider)
+            advanced_config = {'budget_limit': 1.0}
+            output_with_mode(f"Selected: {provider} (using {env_var})", output_type="success")
+        elif defaults:
+             # Default to Mock Mode for safety in automated runs if no provider specified
+             selected_provider = 'mock'
+             api_key = 'mock-key'
+             model = 'mock-model'
+             advanced_config = {}
+             output_with_mode("Selected: Defaults (Mock Mode)", output_type="success")
+        else:
+             return False
+
+        self.current_provider = selected_provider
+        self.current_model = model
+
+        # Validate and save
+        if not self._validate_and_save(selected_provider, api_key, model, advanced_config, force=force):
+             return False
+             
+        # Success
+        budget = advanced_config.get('budget_limit', 1.0) if advanced_config else 1.0
+        self._show_success_message(budget)
+        self.detector._mark_setup_complete()
+        return True
+
 
     def _test_api_key(self, provider: str, api_key: str) -> bool:
         """
@@ -282,13 +429,101 @@ class SetupWizard:
         """
         try:
             if not self._validate_api_key_format(provider, api_key):
-                print(f"❌ {provider.title()} API key format invalid.")
+                output_with_mode(
+                    message=f"{provider.title()} API key format invalid",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="error"
+                )
                 return False
 
             # Lightweight validation only; real model access is validated later.
             return True
         except Exception as e:
-            print(f"❌ API key test failed: {e}")
+            output_with_mode(
+                message="API key test failed",
+                details=[str(e)],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="error"
+            )
+            return False
+
+    def save_interactive_config(self, config: Dict[str, Any]) -> bool:
+        """
+        Save configuration from interactive setup wizard.
+
+        Args:
+            config: Configuration dict from interactive wizard
+                   Expected keys: 'provider', 'api_key', 'budget'
+
+        Returns:
+            True if configuration saved successfully
+        """
+        try:
+            provider = config.get('provider', 'openai').lower()
+            api_key = config.get('api_key', '')
+            budget = config.get('budget', 10.0)
+
+            # Validate required fields
+            if not provider or not api_key:
+                output_with_mode(
+                    message="Configuration incomplete",
+                    details=["Provider and API key are required"],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="error"
+                )
+                return False
+
+            # Get correct environment variable name for provider
+            env_var = self._get_required_env_var(provider)
+            default_model = self._get_default_model(provider)
+
+            # Create or update .env file
+            env_file = self.project_root / ".env"
+            env_content = f"""# AKIOS Configuration
+# Generated by interactive setup wizard
+
+# LLM Provider Configuration
+LLM_PROVIDER={provider}
+{env_var}={api_key}
+LLM_MODEL={default_model}
+
+# Budget Settings
+BUDGET_LIMIT_PER_RUN={budget}
+
+# Execution Mode
+AKIOS_MOCK_MODE=false
+"""
+
+            env_file.write_text(env_content)
+
+            # Mark setup as complete
+            self.detector._mark_setup_complete()
+
+            output_with_mode(
+                message="Configuration saved successfully",
+                details=[
+                    f"Provider: {provider}",
+                    f"Model: {default_model}",
+                    f"Budget: ${budget:.2f}"
+                ],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="success"
+            )
+
+            return True
+
+        except Exception as e:
+            output_with_mode(
+                message="Failed to save configuration",
+                details=[str(e)],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="error"
+            )
             return False
 
     def _get_required_env_var(self, provider: str) -> str:
@@ -321,16 +556,23 @@ class SetupWizard:
         }
         return defaults.get(provider, 'gpt-4o-mini')
 
-    def _configure_advanced_settings(self) -> Dict[str, any]:
+    def _configure_advanced_settings(self) -> Dict[str, Any]:
         """
         Configure advanced settings like budget limits, token limits, etc.
 
         Returns:
             Dict of advanced configuration options
         """
-        print("\n⚙️ Budget limit per workflow (press Enter for $1.00, or enter custom amount):")
         pricing_example = self._get_budget_pricing_example()
-        print(f"(controls total API cost per run — ex: {pricing_example})")
+        
+        output_with_mode(
+            title="Budget Settings",
+            message=f"Set your budget limit per workflow run.\n(Controls total API cost per run — ex: {pricing_example})",
+            details=["Press Enter for default ($1.00), or enter custom amount"],
+            json_mode=False,
+            quiet_mode=False,
+            output_type="panel"
+        )
 
         config = {}
 
@@ -346,15 +588,32 @@ class SetupWizard:
                     config['budget_limit'] = budget_val
                     break
                 else:
-                    print("Budget must be positive.")
+                    output_with_mode(
+                        message="Budget must be positive",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
             except ValueError:
-                print("Please enter a valid number.")
+                output_with_mode(
+                    message="Please enter a valid number",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
 
         config['max_tokens_per_call'] = 1000
-        print("💡 Token limit set to 1000 tokens per AI request.")
-        print("   • Tokens control AI response length (~4 chars per token)")
-        print("   • 1000 tokens ≈ 750 words of AI response")
-        print("   • Protects against runaway costs and long responses")
+        output_with_mode(
+            message="Token limit set to 1000 tokens per AI request",
+            details=[
+                "Tokens control AI response length (~4 chars per token)",
+                "1000 tokens ≈ 750 words of AI response",
+                "Protects against runaway costs and long responses"
+            ],
+            json_mode=False,
+            quiet_mode=False,
+            output_type="success"
+        )
         return config
 
     def _get_budget_pricing_example(self) -> str:
@@ -396,13 +655,22 @@ class SetupWizard:
             valid_models = get_valid_models_for_provider(provider)
 
         provider_label = self._get_provider_display_name(provider)
-        print(f"\n🤖 Choose {provider_label} Model:")
+        
+        message_lines = []
         if model_items:
             for i, (model, description) in enumerate(model_items, 1):
-                print(f"  {i}. {model}      — {description}")
+                message_lines.append(f"{i}. {model} — {description}")
         else:
             for i, model in enumerate(valid_models, 1):
-                print(f"  {i}. {model}")
+                message_lines.append(f"{i}. {model}")
+        
+        output_with_mode(
+            title=f"Choose {provider_label} Model",
+            message="\n".join(message_lines),
+            json_mode=False,
+            quiet_mode=False,
+            output_type="panel"
+        )
 
         while True:
             try:
@@ -414,9 +682,19 @@ class SetupWizard:
                 if 0 <= idx < len(valid_models):
                     return valid_models[idx]
                 else:
-                    print(f"Please enter a number between 1 and {len(valid_models)}")
+                    output_with_mode(
+                        message=f"Please enter a number between 1 and {len(valid_models)}",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
             except (ValueError, EOFError):
-                print("Invalid input. Please enter a number.")
+                output_with_mode(
+                    message="Invalid input. Please enter a number",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
 
     def _get_available_models(self, provider: str) -> Dict[str, str]:
         """Get available models for a provider."""
@@ -433,9 +711,9 @@ class SetupWizard:
                 'claude-3-opus': 'Most powerful (complex reasoning tasks)'
             },
             'grok': {
-                'grok-3': 'Balanced performance (recommended)',
-                'grok-4.1': 'Balanced performance',
-                'grok-3': 'Very capable legacy model'
+                'grok-3': 'Very capable model (recommended)',
+                'grok-4.1': 'Latest balanced performance',
+                'grok-4.1-fast': 'Fastest Grok model'
             },
             'mistral': {
                 'mistral-small': 'Fast & cheap (everyday tasks)',
@@ -468,39 +746,75 @@ class SetupWizard:
         Returns:
             True for real API, False for mock mode, None if cancelled
         """
-        print("🚀 How would you like to use AKIOS?")
-        print("1. Try with mock data (no API key needed — instant setup)")
-        print("2. Use real AI providers (requires API key — full AI power)")
-        print("3. Skip setup (use mock mode by default — configure later)")
-        print()
+        options_text = """[bold]1. Mock Mode (Secure Simulation)[/bold]
+   (No API key required — Recommended for testing)
+
+[bold]2. Production Mode (Real AI)[/bold]
+   (Requires API key — Full capabilities enabled)"""
+
+        output_with_mode(
+            title="Execution Mode Selection",
+            message=options_text,
+            json_mode=False,
+            quiet_mode=False,
+            output_type="panel"
+        )
 
         while True:
             try:
                 if not self.detector._is_interactive():
-                    print("\nNon-interactive environment detected. Skipping setup.")
+                    output_with_mode(
+                        message="Non-interactive environment detected. Skipping setup.",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
                     return None
-                choice = input("Enter your choice (1-3) [default: 1]: ").strip()
+                
+                choice = input("Enter your choice (1-2) [default: 1]: ").strip()
 
                 if choice in ['', '1']:
-                    print("\n🎭 Mock mode selected!")
-                    print("You'll use simulated AI responses for testing AKIOS.")
+                    output_with_mode(
+                        message="Mock mode selected",
+                        details=["You'll use simulated AI responses for testing AKIOS."],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="success"
+                    )
                     return False
                 elif choice == '2':
-                    print("\n🤖 Real API mode selected!")
-                    print("You'll connect to powerful AI providers for full functionality.")
+                    output_with_mode(
+                        message="Real API mode selected",
+                        details=["You'll connect to powerful AI providers for full functionality."],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="success"
+                    )
                     return True
-                elif choice == '3':
-                    print(f"\n⏭️  Setup skipped!")
-                    print(f"Using mock mode by default. Configure later with '{suggest_command('setup --force')}'.")
-                    return False
                 else:
-                    print("Please enter 1, 2, or 3.")
+                    output_with_mode(
+                        message="Please enter 1 or 2",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
 
             except KeyboardInterrupt:
-                print("\nSetup cancelled.")
+                output_with_mode(
+                    message="Setup cancelled",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
                 return None
             except EOFError:
-                print("\nNon-interactive environment detected. Skipping setup.")
+                output_with_mode(
+                    message="Non-interactive environment detected",
+                    details=["Skipping setup"],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="info"
+                )
                 return None
 
     def _select_provider(self) -> Optional[str]:
@@ -510,19 +824,31 @@ class SetupWizard:
         Returns:
             Selected provider name or None if cancelled
         """
-        print("🤖 Choose your AI Provider:")
-        print("1. OpenAI (GPT) — Most popular")
-        print("2. Anthropic (Claude) — High safety")
-        print("3. xAI (Grok) — Helpful & truthful")
-        print("4. Mistral — Fast open-source")
-        print("5. Google (Gemini) — Multimodal")
-        print()
+        provider_options = """1. OpenAI (GPT) — Balanced Performance
+2. Anthropic (Claude) — Enhanced Safety
+3. xAI (Grok) — Real-time Capabilities
+4. Mistral — Low Latency
+5. Google (Gemini) — Multimodal Context"""
+
+        output_with_mode(
+            title="Select AI Inference Provider",
+            message=provider_options,
+            json_mode=False,
+            quiet_mode=False,
+            output_type="panel"
+        )
 
         while True:
             try:
                 # First check if we can actually read input
                 if not self.detector._is_interactive():
-                    print("\nNon-interactive environment detected. Skipping setup.")
+                    output_with_mode(
+                        message="Non-interactive environment detected",
+                        details=["Skipping setup"],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
                     return None
                 choice = input("Enter your choice (1-5): ").strip()
 
@@ -537,13 +863,29 @@ class SetupWizard:
                 elif choice == '5':
                     return 'gemini'
                 else:
-                    print("Please enter 1, 2, 3, 4, 5, or 6.")
+                    output_with_mode(
+                        message="Please enter 1, 2, 3, 4, or 5",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
 
             except KeyboardInterrupt:
-                print("\nSetup cancelled.")
+                output_with_mode(
+                    message="Setup cancelled",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
                 return None
             except EOFError:
-                print("\nNon-interactive environment detected. Skipping setup.")
+                output_with_mode(
+                    message="Non-interactive environment detected",
+                    details=["Skipping setup"],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="info"
+                )
                 return None
 
     def _setup_api_key(self, provider: str) -> Optional[str]:
@@ -558,16 +900,26 @@ class SetupWizard:
         """
         provider_info = self._get_provider_info(provider)
 
-        print(f"\n🔑 {provider_info['name']} API Key Setup")
-        print(f"   {provider_info['description']}")
-        print(f"   📖 Get your key: {provider_info['signup_url']}")
-        print()
+        output_with_mode(
+            title=f"{provider_info['name']} API Key Setup",
+            message=provider_info['description'],
+            details=[f"Get your key: {provider_info['signup_url']}"],
+            json_mode=False,
+            quiet_mode=False,
+            output_type="panel"
+        )
 
         while True:
             try:
                 # Check if we can actually read input
                 if not self.detector._is_interactive():
-                    print("\nNon-interactive environment detected. Skipping setup.")
+                    output_with_mode(
+                        message="Non-interactive environment detected",
+                        details=["Skipping setup"],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
                     return None
                 api_key = input(f"Enter your {provider_info['name']} API key (or 'cancel'): ").strip()
 
@@ -577,13 +929,30 @@ class SetupWizard:
                 if self._validate_api_key_format(provider, api_key):
                     return api_key
                 else:
-                    print(f"❌ Invalid {provider_info['name']} API key format. Please try again.")
+                    output_with_mode(
+                        message=f"Invalid {provider_info['name']} API key format",
+                        details=["Please try again"],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
 
             except KeyboardInterrupt:
-                print("\nSetup cancelled.")
+                output_with_mode(
+                    message="Setup cancelled",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
                 return None
             except EOFError:
-                print("\nNon-interactive environment detected. Skipping setup.")
+                output_with_mode(
+                    message="Non-interactive environment detected",
+                    details=["Skipping setup"],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="info"
+                )
                 return None
 
     def _get_provider_info(self, provider: str) -> Dict[str, str]:
@@ -662,13 +1031,14 @@ class SetupWizard:
         # Allow other providers with basic validation
         return len(api_key) > 15
 
-    def _validate_and_save(self, provider: str, api_key: str, model: str, advanced_config: Dict[str, any] = None) -> bool:
+    def _validate_and_save(self, provider: str, api_key: str, model: str, advanced_config: Dict[str, Any] = None, force: bool = False) -> bool:
         """
         Validate configuration and save to files.
 
         Args:
             provider: Selected provider
             api_key: API key
+            force: Force overwrite without prompting
 
         Returns:
             True if validation and save successful
@@ -703,61 +1073,142 @@ AKIOS_NETWORK_ACCESS_ALLOWED={network_allowed}
             env_content += "\n"
 
             budget = advanced_config.get('budget_limit', 1.0) if advanced_config else 1.0
-            print("\n📝 Configuration Preview:")
+            
             if provider == 'mock':
-                print(f"Provider: Mock AI    Model: Simulated responses    Budget: $0.00    Network: Disabled (mock)")
+                summary_text = f"""Provider: Mock AI
+Model:    Simulated responses
+Budget:   $0.00
+Network:  Disabled (mock)
+File:     {env_file_display}"""
             else:
-                print(f"Provider: {provider.title()}    Model: {model}    Budget: ${budget:.2f}    Network: Enabled")
-            print(f"File: {env_file_display}")
+                summary_text = f"""Provider: {provider.title()}
+Model:    {model}
+Budget:   ${budget:.2f}
+Network:  Enabled
+File:     {env_file_display}"""
+
+            output_with_mode(
+                title="Configuration Preview",
+                message=summary_text,
+                json_mode=False,
+                quiet_mode=False,
+                output_type="panel"
+            )
 
             # Check for existing .env file
             env_exists = env_file.exists()
-            if env_exists:
+            if env_exists and not force:
                 existing_content = env_file.read_text()
                 has_existing_keys = any(key in existing_content for key in ['GROK_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'MISTRAL_API_KEY', 'GEMINI_API_KEY'])
                 if has_existing_keys:
-                    print(f"\n⚠️ Existing .env found — will overwrite (keys lost unless backed up).")
-                    print()
-                    print("Options:")
-                    print("1. Backup & overwrite (recommended)")
-                    print("2. Skip wizard (keep existing)")
-                    print("3. Rename existing & continue")
+                    output_with_mode(
+                        message="Existing .env found",
+                        details=["Will overwrite (keys lost unless backed up)"],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
+                    
+                    options_text = """1. Backup & overwrite (recommended)
+2. Skip wizard (keep existing)
+3. Rename existing & continue"""
+                    
+                    output_with_mode(
+                        message=options_text,
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
 
                     while True:
                         try:
+                            # Check for non-interactive environment inside the loop to avoid infinite loops if input fails
+                            if not self.detector._is_interactive():
+                                # In non-interactive mode without force, we should probably backup and overwrite default
+                                # or fail. But here we are inside 'not force'.
+                                # If we are here, it means we ARE in interactive mode OR checking failed?
+                                # _is_interactive() checks stdin.isatty().
+                                pass
+
                             choice = input("Enter 1-3 (default 1): ").strip()
                             if choice in ['', '1']:
                                 backup_file = self.project_root / ".env.backup"
                                 backup_file.write_text(existing_content)
-                                print("✅ Backup: .env.backup created")
+                                output_with_mode(
+                                    message="Backup created: .env.backup",
+                                    json_mode=False,
+                                    quiet_mode=False,
+                                    output_type="success"
+                                )
                                 break
                             if choice == '2':
-                                print("ℹ️  Keeping existing configuration. Setup skipped.")
+                                output_with_mode(
+                                    message="Keeping existing configuration. Setup skipped.",
+                                    json_mode=False,
+                                    quiet_mode=False,
+                                    output_type="info"
+                                )
                                 return True
                             if choice == '3':
                                 timestamp = __import__('datetime').datetime.now().strftime("%Y%m%d_%H%M%S")
                                 renamed = self.project_root / f".env.backup.{timestamp}"
                                 env_file.rename(renamed)
-                                print(f"✅ Renamed existing .env to {renamed.name}")
+                                output_with_mode(
+                                    message=f"Renamed existing .env to {renamed.name}",
+                                    json_mode=False,
+                                    quiet_mode=False,
+                                    output_type="success"
+                                )
                                 break
                             print("Please enter 1, 2, or 3.")
                         except (KeyboardInterrupt, EOFError):
                             print("\nConfiguration cancelled.")
                             return False
-
-            while True:
+            elif env_exists and force:
+                # Auto-backup on force
                 try:
-                    confirm = input("\nSave this configuration? (yes/no): ").strip().lower()
-                    if confirm in ['yes', 'y']:
-                        break
-                    elif confirm in ['no', 'n']:
-                        print("Configuration cancelled.")
+                    existing_content = env_file.read_text()
+                    backup_file = self.project_root / ".env.backup"
+                    backup_file.write_text(existing_content)
+                    output_with_mode(
+                        message="Existing configuration backed up to .env.backup",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
+                except Exception as e:
+                    # Don't fail if backup fails, just warn
+                    output_with_mode(f"Could not backup existing .env: {e}", output_type="warning")
+
+            if not force:
+                while True:
+                    try:
+                        confirm = input("\nSave this configuration? (yes/no): ").strip().lower()
+                        if confirm in ['yes', 'y']:
+                            break
+                        elif confirm in ['no', 'n']:
+                            output_with_mode(
+                                message="Configuration cancelled",
+                                json_mode=False,
+                                quiet_mode=False,
+                                output_type="warning"
+                            )
+                            return False
+                        else:
+                            output_with_mode(
+                                message="Please enter 'yes' or 'no'",
+                                json_mode=False,
+                                quiet_mode=False,
+                                output_type="warning"
+                            )
+                    except (KeyboardInterrupt, EOFError):
+                        output_with_mode(
+                            message="Configuration cancelled",
+                            json_mode=False,
+                            quiet_mode=False,
+                            output_type="warning"
+                        )
                         return False
-                    else:
-                        print("Please enter 'yes' or 'no'")
-                except (KeyboardInterrupt, EOFError):
-                    print("\nConfiguration cancelled.")
-                    return False
 
             old_env = os.environ.copy()
             validated = False
@@ -780,17 +1231,32 @@ AKIOS_NETWORK_ACCESS_ALLOWED={network_allowed}
                     os.environ['AKIOS_NETWORK_ACCESS_ALLOWED'] = '1'
 
                     # Test configuration for real API mode
-                    print("🔍 Testing configuration...")
+                    output_with_mode(
+                        message="Testing configuration...",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
                     from ...config.loader import get_settings
                     settings = get_settings()
 
                     # Validate that settings match what we expect
                     if getattr(settings, 'llm_provider', None) != provider or os.environ.get(provider_env_var) != api_key:
-                        print("❌ Configuration validation failed.")
+                        output_with_mode(
+                            message="Configuration validation failed.",
+                            json_mode=False,
+                            quiet_mode=False,
+                            output_type="error"
+                        )
                         return False
                     validated = True
             except Exception as e:
-                print(f"❌ Configuration validation failed. {e}")
+                output_with_mode(
+                    message=f"Configuration validation failed: {e}",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="error"
+                )
                 return False
             finally:
                 if not validated:
@@ -824,44 +1290,78 @@ AKIOS_NETWORK_ACCESS_ALLOWED={network_allowed}
             # Final validation check
             if provider == 'mock':
                 # Mock mode - already validated above, just confirm
-                print("✅ Configuration saved and validated!")
+                output_with_mode(
+                    message="Configuration saved and validated",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="success"
+                )
                 return True
             else:
                 # Real API mode - check settings one more time
                 if getattr(settings, 'llm_provider', None) == provider and os.environ.get(provider_env_var) == api_key:
-                    print("✅ Configuration saved and validated!")
+                    output_with_mode(
+                        message="Configuration saved and validated",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="success"
+                    )
                     return True
                 else:
-                    print("❌ Configuration validation failed.")
+                    output_with_mode(
+                        message="Configuration validation failed",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="error"
+                    )
                     return False
 
         except Exception as e:
-            print(f"❌ Error saving configuration: {e}")
+            output_with_mode(
+                message="Error saving configuration",
+                details=[str(e)],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="error"
+            )
             return False
-
     def _show_success_message(self, budget: float = 1.0) -> None:
-        """Display success message and next steps."""
-        print("\n🎉 Setup Complete!")
-        print("──────────────────")
-        print("**Summary:**")
-        if hasattr(self, 'current_provider') and self.current_provider == 'mock':
-            print("• Provider: Mock AI    Model: Simulated responses")
-            print("• Budget: $0.00/run • Network: Disabled (mock)")
-            print("• No API key needed • Mock: Enabled")
-        else:
-            provider_name = getattr(self, 'current_provider', 'grok')
-            model_name = getattr(self, 'current_model', 'grok-4.1-fast')
-            print(f"• Provider: {provider_name}    Model: {model_name}")
-            print(f"• Budget: ${budget:.2f}/run • Network: Enabled")
-            print("• Real API ready    • Mock: Disabled")
-        print()
+        """Display success message and next steps with Rich colors."""
+        if not _has_rich:
+            # Fallback for environments without Rich
+            print("\nSecurity Configuration Complete")
+            print("─" * 38)
+            if hasattr(self, 'current_provider') and self.current_provider == 'mock':
+                print("Provider: Mock AI    Model: Simulated")
+                print("Network:  Disabled   Budget: $0.00")
+            else:
+                provider_name = getattr(self, 'current_provider', 'grok').title()
+                model_name = getattr(self, 'current_model', 'grok-3')
+                print(f"Provider: {provider_name}    Model: {model_name}")
+                print(f"Network:  Enabled    Budget: ${budget:.2f}")
+            print(f"\nNext Actions:")
+            print(f"  • {suggest_command('run templates/hello-workflow.yml')}")
+            print(f"  • {suggest_command('status')}")
+            print()
+            return
 
-        print("**📋 Next Steps:**")
-        print(f"1. {suggest_command('run templates/hello-workflow.yml')}")
-        print(f"2. {suggest_command('status')}")
-        print("3. cat data/output/run_*/hello.txt")
-        print()
-        print(f"📖 Help: {suggest_command('--help')}    🔧 Reconfigure: {suggest_command('setup --force')}")
+        _console.print(f"\n[bold {get_theme_color('success')}]Security Configuration Complete[/bold {get_theme_color('success')}]")
+        _console.print("[dim]──────────────────────────────────────[/dim]")
+        
+        if hasattr(self, 'current_provider') and self.current_provider == 'mock':
+            _console.print(f"[dim]Provider:[/dim] [{get_theme_color('info')}]Mock AI[/{get_theme_color('info')}]    [dim]Model:[/dim] [{get_theme_color('info')}]Simulated[/{get_theme_color('info')}]")
+            _console.print(f"[dim]Network:[/dim]  [{get_theme_color('error')}]Disabled[/{get_theme_color('error')}]   [dim]Budget:[/dim] [{get_theme_color('success')}]$0.00[/{get_theme_color('success')}]")
+        else:
+            provider_name = getattr(self, 'current_provider', 'grok').title()
+            model_name = getattr(self, 'current_model', 'grok-3')
+            _console.print(f"[dim]Provider:[/dim] [{get_theme_color('info')}]{provider_name}[/{get_theme_color('info')}]    [dim]Model:[/dim] [{get_theme_color('info')}]{model_name}[/{get_theme_color('info')}]")
+            _console.print(f"[dim]Network:[/dim]  [{get_theme_color('success')}]Enabled[/{get_theme_color('success')}]    [dim]Budget:[/dim] [{get_theme_color('warning')}]${budget:.2f}[/{get_theme_color('warning')}]")
+        
+        _console.print()
+        _console.print(f"[bold {get_theme_color('header')}]Next Actions:[/bold {get_theme_color('header')}]")
+        _console.print(f"  • {suggest_command('run templates/hello-workflow.yml')}")
+        _console.print(f"  • {suggest_command('status')}")
+        _console.print()
 
     def _check_recent_workflow_runs(self) -> bool:
         """Check if there have been recent workflow runs."""
@@ -873,13 +1373,19 @@ AKIOS_NETWORK_ACCESS_ALLOWED={network_allowed}
 
             # Check for workflow completion events in the last hour
             import time
+            from datetime import datetime, timezone
             one_hour_ago = time.time() - 3600
 
             for event in events:
                 if (hasattr(event, 'action') and event.action == 'workflow_complete' and
-                    hasattr(event, 'timestamp') and event.timestamp and
-                    event.timestamp.timestamp() > one_hour_ago):
-                    return True
+                    hasattr(event, 'timestamp') and event.timestamp):
+                    try:
+                        # timestamp is an ISO format string, parse it
+                        ts = datetime.fromisoformat(event.timestamp.replace('Z', '+00:00'))
+                        if ts.timestamp() > one_hour_ago:
+                            return True
+                    except (ValueError, AttributeError):
+                        continue
 
             return False
         except Exception:

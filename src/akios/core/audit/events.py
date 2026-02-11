@@ -110,11 +110,6 @@ class AuditEvent:
                     safe_dict[key] = str(value)
             return json.dumps(safe_dict, sort_keys=True)
 
-    @property
-    def hash(self) -> str:
-        """Get the cryptographic hash of this event"""
-        return self._hash
-
     def _calculate_hash(self) -> str:
         """Calculate SHA-256 hash of event data (excluding timestamp for equality)"""
         # Create a safe version of metadata for hashing

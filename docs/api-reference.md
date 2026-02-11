@@ -23,15 +23,15 @@ pip install -e .
 
 ## Core Classes
 
-### WorkflowEngine
+### RuntimeEngine
 
 Main class for executing workflows programmatically.
 
 ```python
-from akios.core.runtime.engine import WorkflowEngine
+from akios.core.runtime.engine import RuntimeEngine
 
 # Initialize engine
-engine = WorkflowEngine()
+engine = RuntimeEngine()
 
 # Execute workflow
 result = engine.run("path/to/workflow.yml")
@@ -45,7 +45,7 @@ if result["status"] == "completed":
 #### Methods
 
 **`__init__(workflow=None)`**
-- Initialize workflow engine
+- Initialize runtime engine
 - `workflow`: Optional pre-loaded workflow object
 
 **`run(workflow_path_or_workflow=None, context=None)`**
@@ -54,16 +54,6 @@ if result["status"] == "completed":
 - `context`: Optional execution context variables
 - Returns: Execution result dictionary
 
-### RuntimeEngine (Legacy)
-
-Alias for WorkflowEngine for backward compatibility.
-
-```python
-from akios.core.runtime.engine import RuntimeEngine
-
-engine = RuntimeEngine()
-# Same API as WorkflowEngine
-```
 
 ## Agents
 
@@ -120,7 +110,7 @@ print(f"Modified: {info['modified']}")
 
 ### HTTP Agent
 
-Secure HTTP requests with automatic PII protection.
+Secure HTTP requests with domain whitelisting and automatic PII redaction. Outbound requests are restricted to configured `allowed_domains`; LLM provider APIs bypass the whitelist. Also available as a standalone CLI command: `akios http <METHOD> <URL>`.
 
 ```python
 from akios.core.runtime.agents.http import HttpAgent
@@ -339,22 +329,6 @@ from akios.core.error.classifier import classify_error
 
 try:
     result = engine.run("invalid-workflow.yml")
-except Exception as e:
-    # Classify error for insights
-    fingerprint = classify_error(str(e), type(e).__name__)
-    print(f"Error: {fingerprint.get_user_friendly_message()}")
-    print(f"Category: {fingerprint.category}")
-    print(f"Severity: {fingerprint.severity}")
-```
-
-### Error Classification
-
-```python
-from akios.core.error.classifier import classify_error
-
-try:
-    # Some operation that might fail
-    pass
 except Exception as e:
     fingerprint = classify_error(str(e), type(e).__name__)
 

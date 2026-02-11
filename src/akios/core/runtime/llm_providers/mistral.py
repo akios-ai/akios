@@ -86,7 +86,7 @@ class MistralProvider(LLMProvider):
                 f"{self.base_url}/chat/completions",
                 headers=headers,
                 json=data,
-                timeout=30
+                timeout=120  # 120s for large prompts with high max_tokens
             )
             response.raise_for_status()
 
@@ -150,7 +150,7 @@ class MistralProvider(LLMProvider):
                 f"{self.base_url}/chat/completions",
                 headers=headers,
                 json=data,
-                timeout=30
+                timeout=120  # 120s for large prompts with high max_tokens
             )
             response.raise_for_status()
 

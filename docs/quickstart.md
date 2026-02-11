@@ -1,8 +1,8 @@
-# 🚀 AKIOS Comprehensive Quick Start Guide
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# AKIOS Comprehensive Quick Start Guide
+**Document Version:** 1.5  
+**Date:** 2026-02-10  
 
-**Master AKIOS v1.0 - From Beginner to Advanced User**
+**Master AKIOS v1.0.5 - From Beginner to Advanced User**
 
 *Complete tutorial: 15-30 minutes*
 
@@ -36,7 +36,7 @@ AKIOS (AI Knowledge & Intelligence Operating System) is a **security-first runti
 
 ### 🤖 **Multi-Provider AI Support**
 - **OpenAI**: GPT-4, GPT-3.5-turbo
-- **Anthropic**: Claude-3, Claude-2
+- **Anthropic**: Claude-3.5-haiku, Claude-3.5-sonnet
 - **Grok**: Real-time knowledge and reasoning
 - **Mistral**: Efficient inference, strong reasoning
 - **Gemini**: Multimodal capabilities, strong coding
@@ -60,14 +60,23 @@ AKIOS supports three deployment methods - choose the best one for your use case:
 
 | Method | Best For | Setup Time | Security Level |
 |--------|----------|------------|----------------|
-| **Pip Package** ⭐ | Python developers | 2 minutes | Full kernel-hard security |
+| **Pip Package** ⭐ | Python developers | 2 minutes | Full kernel-hard security (with sudo on Linux) |
 | **Docker** | Cross-platform teams | 1 minute | Strong policy-based security |
 | **Direct Docker** | Emergency fallback when wrapper fails | 1 minute | Strong policy-based security |
 
 #### � **Pip Package** (Recommended for Most Users)
 **Maximum security on native Linux:**
-
+**IMPORTANT: Linux Users Must Install System Packages First**
 ```bash
+# Ubuntu/Debian - REQUIRED BEFORE pip install
+sudo apt-get update
+sudo apt-get install libseccomp-dev python3-seccomp
+
+# Fedora/RHEL - REQUIRED BEFORE pip install
+sudo dnf install libseccomp-devel python3-seccomp
+```
+
+Then install AKIOS:```bash
 # Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
 sudo apt install pipx
 pipx install akios
@@ -82,7 +91,7 @@ akios run templates/hello-workflow.yml
 ```
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
-> For specific versions: `pip install akios==1.0.4`.
+> For specific versions: `pip install akios==1.0.5`.
 
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
 
@@ -99,19 +108,25 @@ pip install akios
 akios --version
 akios init my-project
 cd my-project
+
+# For maximum security on Linux, run with sudo for kernel-hard protection:
+# sudo akios run templates/hello-workflow.yml
+# Without sudo, AKIOS gracefully falls back to policy-based mode with warnings
+
 akios run templates/hello-workflow.yml
 ```
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
-> For specific versions: `pip install akios==1.0.4`.
+> For specific versions: `pip install akios==1.0.5`.
+> **🛡️ Security Note:** On Linux, `pip install akios` includes the seccomp module for kernel-hard security. Run with `sudo` for full protection.
 
-**Benefits:** Full kernel-hard security, Python ecosystem integration.
+**Benefits:** Full kernel-hard security (with sudo), Python ecosystem integration.
 
 #### 🐳 **Docker** (Cross-Platform Teams)
 **Works on Linux, macOS, and Windows:**
 ```bash
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 ./akios --help
 ```
@@ -127,11 +142,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 **Emergency fallback when the wrapper script download fails:**
 ```bash
 # Use Docker directly (works even if curl/network fails)
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 "$@"' > akios
 chmod +x akios
 ./akios run templates/hello-workflow.yml
 ```
@@ -148,8 +163,8 @@ chmod +x akios
 
 ```bash
 # Download the cross-platform wrapper script
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 
 # Verify it works
@@ -415,8 +430,11 @@ file_analysis.yml         File Security Scanner - Analyzes files with security-f
 Over time, workflow runs accumulate in the `data/output/` directory. Use the `clean` command to remove old runs:
 
 ```bash
-# Remove runs older than 7 days (default)
-./akios clean --old-runs
+# Clean up old runs (older than 7 days by default)
+akios clean
+
+# Or specify a different age (e.g., 30 days)
+akios clean --old-runs 30
 
 # Remove runs older than 30 days
 ./akios clean --old-runs 30
@@ -662,7 +680,71 @@ AKIOS_BUDGET_LIMIT_PER_RUN=5.0
 
 ---
 
-## 🔒 Security & Audit System
+## Security & Audit System
+
+### Security Cage
+
+AKIOS v1.0.5 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
+
+**Activate the cage:**
+```bash
+# Turn on all protections
+akios cage up
+
+# Check security posture
+akios cage status
+
+# Run full diagnostics
+akios doctor
+```
+
+**Cage bypass tests (all blocked):**
+```bash
+# Network: external calls blocked
+curl https://httpbin.org/get  # → Connection blocked
+
+# Budget: kill-switch enforced
+AKIOS_BUDGET_LIMIT_PER_RUN=0.0001 akios run workflow.yml --force  # → Halted
+
+# Commands: only approved agents can execute
+# No arbitrary shell execution permitted inside the cage
+```
+
+**Deactivate the cage:**
+```bash
+# Full shutdown — destroys ALL session data (default)
+akios cage down
+
+# Dev mode — relax protections, keep data for debugging
+akios cage down --keep-data
+```
+
+### PII Protection
+
+**Scan files for sensitive data before processing:**
+```bash
+# Scan a file for PII (SSN, names, emails, NPI numbers, DEA numbers, medical record numbers, etc.)
+akios protect scan data/input/patient.txt
+
+# Preview the interpolated + redacted prompt the LLM will receive
+akios protect show-prompt templates/healthcare.yml
+```
+
+PII markers appear in **magenta** in terminal output: `«SSN»`, `«NAME»`, `«EMAIL»`, `«US_NPI»`, `«US_DEA»`, `«MEDICAL_RECORD_NUMBER»`, etc. Original text appears in red for contrast.
+
+### Workflow Output
+
+**Retrieve structured results for CI/CD integration:**
+```bash
+# Get latest execution as deployable JSON
+akios output latest
+
+# List all outputs
+akios output list
+
+# View execution timeline
+akios timeline
+```
 
 ### Security Architecture
 
@@ -937,7 +1019,9 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 ✅ **Project setup** and configuration
 ✅ **Workflow development** from templates to custom
 ✅ **Multi-provider AI integration**
+✅ **Security Cage** — cage up/down, PII scanning, data lifecycle
 ✅ **Audit system** and compliance features
+✅ **Output management** — deployable JSON, timeline, budget
 ✅ **Troubleshooting** and best practices
 ✅ **Production deployment** strategies
 
@@ -945,6 +1029,6 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 
 ---
 
-*AKIOS v1.0 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0.5 - Where AI meets unbreakable security*
 
-**Need help?** Check the audit logs, README.md, or create a GitHub issue.
+**Need help?** Run `akios doctor`, check the audit logs, or create a GitHub issue.

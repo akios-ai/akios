@@ -27,7 +27,8 @@ akios run workflow.yml
 ### Option 2: Switch to Docker (Cross-Platform)
 ```bash
 # 1. Download wrapper script
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 
 # 2. Verify installation
@@ -105,8 +106,8 @@ akios init my-project
 ### For **Cross-Platform Teams**
 ```bash
 # Docker - Consistent environment everywhere
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 ./akios init my-project
 ```
@@ -116,11 +117,11 @@ chmod +x akios
 ### For **Emergency Recovery**
 ```bash
 # Direct Docker - When wrapper download fails
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
 cd my-project
 # Create wrapper for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 "$@"' > akios
 chmod +x akios
 ```
 
@@ -167,8 +168,8 @@ akios run workflow.yml       # Same commands, enhanced security
 ### Current Setup (Docker Only)
 ```bash
 # Your current Docker wrapper
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 ./akios run workflow.yml
 ```
@@ -178,8 +179,8 @@ chmod +x akios
 #### Option 1: Upgrade Docker Wrapper (Recommended)
 ```bash
 # Your existing wrapper continues to work
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 
 # Enhanced v1.0 features automatically available
@@ -201,8 +202,8 @@ akios run workflow.yml  # Direct execution, full security
 #### Option 3: Keep Docker for Development, Use Pip for Production
 ```bash
 # Development (familiar Docker environment)
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 ./akios run workflow.yml
 

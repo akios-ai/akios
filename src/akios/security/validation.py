@@ -28,6 +28,9 @@ import time
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+# Import semantic colors for consistent output
+from ..core.ui.semantic_colors import print_warning, print_info, print_success
+
 # Global flag to indicate package loading phase
 # During this phase, security validation is disabled to allow PII functionality
 _PACKAGE_LOADING = True
@@ -93,12 +96,13 @@ def _load_security_cache() -> Optional[Dict[str, Any]]:
 def _save_security_cache(cache_data: Dict[str, Any]) -> None:
     """Save security validation results to cache"""
     try:
+        # Ensure cache directory exists (handles /root/.akios/ when running with sudo)
+        os.makedirs(os.path.dirname(_SECURITY_CACHE_FILE), exist_ok=True)
         cache_data['timestamp'] = time.time()
         with open(_SECURITY_CACHE_FILE, 'w') as f:
             json.dump(cache_data, f)
-    except OSError as e:
-        print(f"⚠️ Security cache save failed: {e}", file=sys.stderr)
-        pass
+    except OSError:
+        pass  # Cache save is non-critical — silently continue
 
 
 def _load_warning_session() -> Optional[Dict[str, Any]]:
@@ -216,7 +220,7 @@ def validate_all_security() -> bool:
             import akios.security.syscall
         except ImportError as e:
             # Log warning but don't fail - security can still work via fallbacks
-            print(f"⚠️  Security module import warning: {e}", file=__import__('sys').stderr)
+            print_warning(f"Security module import warning: {e}")
             pass
 
         return True
@@ -224,7 +228,7 @@ def validate_all_security() -> bool:
     except Exception as e:
         # If any unexpected error occurs during basic validation, log and continue
         # This ensures PII functionality is never blocked by security validation issues
-        print(f"⚠️  Security validation warning (non-blocking): {e}", file=__import__('sys').stderr)
+        print_warning(f"Security validation warning (non-blocking): {e}")
         return True
 
 
@@ -235,55 +239,59 @@ def _is_container_environment() -> bool:
     Checks multiple indicators to reliably detect containerized environments
     where certain security features may not be available.
 
+    IMPORTANT: This must NOT false-positive on native Linux (including EC2/cloud VMs).
+    Only match genuine container indicators, not systemd services or non-root perms.
+
     Returns:
         bool: True if running in a container environment
     """
     import os
 
-    # Check for Docker container files
+    # Check 1: Docker/Podman marker files (most reliable)
     docker_indicators = [
         '/.dockerenv',
         '/run/.containerenv'
     ]
-
     for indicator in docker_indicators:
         if os.path.exists(indicator):
             return True
 
-    # Check environment variables
+    # Check 2: Container-specific environment variables
     container_vars = ['DOCKER_CONTAINER', 'KUBERNETES_SERVICE_HOST']
     for var in container_vars:
         if os.getenv(var):
             return True
 
-    # Check hostname for container patterns
-    hostname = os.getenv('HOSTNAME', '').lower()
-    if any(pattern in hostname for pattern in ['docker', 'container', 'podman']):
-        return True
-
-    # Check cgroup path for container indicators
+    # Check 3: /proc/1/cgroup for container-specific cgroup PATHS
+    # On native Linux (including EC2), PID 1 is systemd with cgroup path like "0::/init.scope"
+    # In Docker, PID 1 has paths containing "/docker/<hash>" or "/lxc/<name>"
+    # NOTE: Do NOT match "containerd" — that's a systemd service on bare-metal hosts
     try:
         with open('/proc/1/cgroup', 'r') as f:
-            cgroup_content = f.read()
-            if any(indicator in cgroup_content.lower() for indicator in ['docker', 'containerd', 'podman']):
-                return True
+            for line in f:
+                # Each line: hierarchy-ID:controller-list:cgroup-path
+                parts = line.strip().split(':', 2)
+                if len(parts) == 3:
+                    cgroup_path = parts[2]
+                    # Match container-specific path patterns (not service names)
+                    if '/docker/' in cgroup_path or '/lxc/' in cgroup_path or '/podman/' in cgroup_path:
+                        return True
     except (OSError, IOError):
         pass
 
-    # Check if cgroups filesystem is read-only (common in containers)
+    # Check 4: /proc/1/environ for container markers (requires read permission)
     try:
-        cgroup_base = Path('/sys/fs/cgroup')
-        if cgroup_base.exists():
-            # Try to create a test directory
-            test_path = cgroup_base / '.akios_container_test'
-            try:
-                test_path.mkdir(parents=True, exist_ok=True)
-                test_path.rmdir()  # Clean up
-                return False  # Writable, so not container
-            except (OSError, PermissionError):
-                return True  # Read-only, likely container
-    except Exception:
+        with open('/proc/1/environ', 'r') as f:
+            environ = f.read()
+            if 'container=' in environ:
+                return True
+    except (OSError, IOError, PermissionError):
         pass
+
+    # NOTE: We intentionally do NOT check:
+    # - cgroup filesystem writability (non-root users can't write to it on bare metal either)
+    # - hostname patterns (EC2 hostnames can contain misleading strings)
+    # These cause false positives on native EC2/cloud VMs.
 
     return False  # Default to native environment
 
@@ -304,16 +312,17 @@ def validate_startup_security() -> bool:
         # 1. Container check FIRST - allow Docker on ANY platform with policy-based security
         if _is_container_environment():
             # Docker provides policy-based security on all platforms
-            print("🔒 Security Mode: Docker (Policy-Based)", file=sys.stderr)
-            print("✅ Full PII redaction, audit, command limits active", file=sys.stderr)
-            print("ℹ️ Kernel-hard protections available on native Linux only", file=sys.stderr)
+            from ..core.ui.semantic_colors import print_security, print_info
+            print_security("Security Mode: Docker (Policy-Based)")
+            print_info("Full PII redaction, audit, command limits active")
+            print_info("Kernel-hard protections available on native Linux only")
 
             # One-time first-run notice for non-Linux Docker
             if platform.system() != 'Linux' and _should_show_warning('docker_first_run'):
-                print("", file=sys.stderr)
-                print("First-run notice:", file=sys.stderr)
-                print("Running in Docker on macOS → using policy-based security.", file=sys.stderr)
-                print("For maximum isolation: run natively on Linux host.", file=sys.stderr)
+                print_info("First-run notice: Running in Docker on macOS", [
+                    "Using policy-based security (Docker mode)",
+                    "For maximum kernel-hard isolation: run natively on Linux host"
+                ])
 
             # Allow execution in containers - skip strict Linux requirements
             return True
@@ -328,7 +337,7 @@ def validate_startup_security() -> bool:
             else:
                 # Use cached results for expensive checks
                 if _debug_enabled():
-                    print("✓ Security validation cache loaded (cold start optimized)", file=sys.stderr)
+                    print_success("Security validation cache loaded (cold start optimized)")
                 return True
 
         # 2. Platform check only for native (non-container) environments
@@ -351,19 +360,10 @@ def validate_startup_security() -> bool:
             import seccomp
             # Just check import - don't create any filters to avoid interference
             if _debug_enabled():
-                print("✓ Seccomp syscall filtering available (kernel-hard security)", file=sys.stderr)
+                print_success("Seccomp syscall filtering available (kernel-hard security)")
             seccomp_available = True
         except (ImportError, Exception) as e:
-            # Native environment - seccomp is required (container check already handled above)
-            raise SecurityError(
-                "SECURITY FAILURE: seccomp-bpf not available.\n"
-                "AKIOS REQUIRES kernel syscall filtering for secure operation.\n"
-                "\n"
-                "For Linux native: Install system dependencies: apt-get install libseccomp-dev\n"
-                "Then install Python library: pip install seccomp\n"
-                "\n"
-                "SECURITY COMPROMISED: Cannot run AKIOS without syscall filtering."
-            )
+            warn_seccomp_disabled(str(e))
 
         # 2. Check if PII detection is available (uses regex-based detection)
         # Note: uses built-in regex PII detection, not presidio/spaCy
@@ -371,11 +371,15 @@ def validate_startup_security() -> bool:
             # Import the built-in PII detector from security module
             from akios.security.pii import PIIDetector
             detector = PIIDetector()
-            # Test basic functionality
-            test_result = detector.detect_pii("test@example.com")
+            # Test basic functionality — force_detection=True so the check
+            # works regardless of the current pii_redaction_enabled setting.
+            # We are validating detector *capability*, not config state.
+            test_result = detector.detect_pii(
+                "test@example.com", force_detection=True
+            )
             if 'email' in test_result:
                 if _debug_enabled():
-                    print("✓ PII detection available (regex-based)", file=sys.stderr)
+                    print_success("PII detection available (regex-based)")
             else:
                 raise Exception("PII detector not functional")
         except Exception as e:
@@ -402,7 +406,8 @@ def validate_startup_security() -> bool:
                             os.makedirs(test_path, exist_ok=True)
                             os.rmdir(test_path)
                             cgroups_available = True
-                            print("✓ Cgroups v2 process isolation available", file=sys.stderr)
+                            if _debug_enabled():
+                                print_success("Cgroups v2 process isolation available")
                         except (OSError, PermissionError):
                             pass
         except Exception:
@@ -411,7 +416,15 @@ def validate_startup_security() -> bool:
         if not cgroups_available:
             if _is_container_environment():
                 if _debug_enabled():
-                    print("⚠️ Cgroups v2 not available in container - using POSIX limits", file=sys.stderr)
+                    print_warning("Cgroups v2 not available in container - using POSIX limits")
+            elif os.geteuid() != 0:
+                # Native Linux without root: degrade gracefully to policy-based security
+                # All software protections remain active (PII redaction, audit, budget limits,
+                # command whitelisting). Only kernel-hard cgroups isolation is unavailable.
+                from ..core.ui.semantic_colors import print_security, print_info
+                print_security("Security Mode: Linux (Policy-Based)")
+                print_info("Full PII redaction, audit, command limits active")
+                print_info("For kernel-hard cgroups isolation: run with sudo")
             else:
                 raise SecurityError(
                     "SECURITY FAILURE: cgroups v2 not available for process isolation.\n"
@@ -425,27 +438,44 @@ def validate_startup_security() -> bool:
                 )
 
         # 4. Check if LLM providers are available
-        llm_providers_available = []
-        try:
-            import openai
-            llm_providers_available.append("OpenAI")
-        except ImportError:
-            pass
+        # Skip check entirely in mock mode — no SDK needed
+        if os.environ.get('AKIOS_MOCK_LLM') == '1':
+            if _debug_enabled():
+                print_success("Mock LLM mode enabled — skipping provider SDK check")
+        else:
+            llm_providers_available = []
+            provider_checks = [
+                ("openai", "OpenAI"),
+                ("anthropic", "Anthropic"),
+                ("xai", "Grok/xAI"),
+                ("mistralai", "Mistral"),
+                ("google.generativeai", "Gemini"),
+            ]
+            for module_name, label in provider_checks:
+                try:
+                    import warnings as _w
+                    with _w.catch_warnings():
+                        _w.simplefilter("ignore", FutureWarning)
+                        __import__(module_name)
+                    llm_providers_available.append(label)
+                except ImportError:
+                    pass
 
-        try:
-            import anthropic
-            llm_providers_available.append("Anthropic")
-        except ImportError:
-            pass
-
-        if not llm_providers_available:
-            raise SecurityError(
-                "SECURITY FAILURE: No LLM providers available.\n"
-                "AKIOS requires at least one LLM provider for AI functionality.\n"
-                "Install with: pip install openai>=1.0.0 and/or anthropic>=0.7.0\n"
-                "\n"
-                "Cannot start AKIOS without LLM capability."
-            )
+            if not llm_providers_available:
+                raise SecurityError(
+                    "SECURITY FAILURE: No LLM provider SDKs found.\n"
+                    "AKIOS requires at least one LLM provider SDK for AI functionality.\n"
+                    "\n"
+                    "Install one of:\n"
+                    "  pip install openai>=1.0.0       # OpenAI / Grok (xAI)\n"
+                    "  pip install anthropic>=0.7.0     # Anthropic\n"
+                    "  pip install mistralai            # Mistral\n"
+                    "  pip install google-generativeai  # Gemini\n"
+                    "\n"
+                    "Or set AKIOS_MOCK_LLM=1 for testing without an LLM provider.\n"
+                    "\n"
+                    "Cannot start AKIOS without LLM capability."
+                )
 
         # If we get here, all required security components are available
         # Cache successful validation results for performance optimization
@@ -481,21 +511,31 @@ def _validate_security_requirements() -> bool:
         # Check if we're in a containerized environment
         if _is_container_environment():
             # Docker/container environment - allow with policy-based security
-            print("🔒 Security Mode: Docker (Policy-Based)", file=sys.stderr)
-            print("✅ Full PII redaction, audit, command limits active", file=sys.stderr)
-            print("ℹ️ Kernel-hard protections available on native Linux only", file=sys.stderr)
+            from ..core.ui.semantic_colors import print_security, print_info
+            print_security("Security Mode: Docker (Policy-Based)")
+            print_info("Full PII redaction, audit, command limits active")
+            print_info("Kernel-hard protections available on native Linux only")
 
             # One-time first-run notice for non-Linux Docker
             if platform.system() != 'Linux' and _should_show_warning('docker_first_run'):
-                print("", file=sys.stderr)
-                print("First-run notice:", file=sys.stderr)
-                print("Running in Docker on macOS → using policy-based security.", file=sys.stderr)
-                print("For maximum isolation: run natively on Linux host.", file=sys.stderr)
+                print_info("First-run notice: Running in Docker on macOS", [
+                    "Using policy-based security (Docker mode)",
+                    "For maximum kernel-hard isolation: run natively on Linux host"
+                ])
 
             # Allow execution in containers with policy-based security
             return True
+        elif platform.system() == 'Linux' and os.geteuid() != 0:
+            # Native Linux without root: allow with policy-based security
+            # Seccomp requires root (CAP_SYS_ADMIN), but all software protections
+            # (PII redaction, audit, budget limits, command whitelisting) still work.
+            from ..core.ui.semantic_colors import print_security, print_info
+            print_security("Security Mode: Linux (Policy-Based)")
+            print_info("Full PII redaction, audit, command limits active")
+            print_info("Kernel-hard protections available on native Linux only")
+            return True
         else:
-            # Native environment - seccomp should work
+            # Native environment with root - seccomp should work
             raise SecurityError(
                 "SECURITY FAILURE: Syscall filtering (seccomp-bpf) is not available.\n"
                 "AKIOS requires Linux kernel syscall filtering for secure workflow execution.\n"
@@ -506,10 +546,14 @@ def _validate_security_requirements() -> bool:
 
     # 2. Validate sandbox capability
     if not _sandbox_available():
-        raise SecurityError(
-            "SECURITY FAILURE: Process sandboxing (cgroups) is not available.\n"
-            "AKIOS requires cgroups v2 for process isolation during workflow execution."
-        )
+        if os.geteuid() != 0:
+            # Non-root: cgroups write access unavailable, policy-based security active
+            pass  # Already warned above, continue with policy-based
+        else:
+            raise SecurityError(
+                "SECURITY FAILURE: Process sandboxing (cgroups) is not available.\n"
+                "AKIOS requires cgroups v2 for process isolation during workflow execution."
+            )
 
     # 3. Validate audit system
     if not _audit_system_available():
@@ -521,16 +565,31 @@ def _validate_security_requirements() -> bool:
     return True
 
 def _syscall_filtering_available() -> bool:
-    """Check if syscall filtering is available"""
+    """Check if syscall filtering is available AND usable"""
     if platform.system() != 'Linux':
+        return False
+    
+    # Check if in container
+    if _is_container_environment():
         return False
 
     try:
-        # Just check if seccomp module can be imported
-        # Don't create or load any filters to avoid applying seccomp to current process
         import seccomp
+        # seccomp-bpf filter loading requires root privileges
+        # Check if we have sufficient privileges (CAP_SYS_ADMIN or euid=0)
+        if os.geteuid() != 0:
+            # Module exists but we lack privileges - warn user
+            print_warning(
+                "⚠️ seccomp filter requires root privileges—run with sudo for kernel-hard security",
+                ["Policy-based security active (PII redaction, audit, command limits)"]
+            )
+            return False
         return True
     except ImportError:
+        print_warning(
+            "⚠️ seccomp module not installed",
+            ["Install python3-seccomp for kernel-hard security", "Policy-based security active"]
+        )
         return False
 
 def _pii_redaction_available() -> bool:
@@ -551,7 +610,7 @@ def _sandbox_available() -> bool:
         with open("/proc/mounts", "r") as f:
             mounts = f.read()
             return "cgroup2" in mounts and cgroup_path in mounts
-    except:
+    except Exception:
         return False
 
 def _audit_system_available() -> bool:
@@ -566,7 +625,7 @@ def _audit_system_available() -> bool:
             f.write("test")
         os.unlink(test_file)
         return True
-    except:
+    except Exception:
         return False
 
 class SecurityError(Exception):

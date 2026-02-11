@@ -97,6 +97,20 @@ class SandboxManager:
             # Ensure base cgroup directory exists
             self.cgroup_base_path.mkdir(parents=True, exist_ok=True)
 
+            # Delegate controllers to child cgroups via subtree_control
+            # Without this, child cgroups won't have cpu.max, memory.max, etc.
+            subtree_control = self.cgroup_base_path / "cgroup.subtree_control"
+            try:
+                current = subtree_control.read_text().strip()
+                needed = []
+                for ctrl in ['cpu', 'memory', 'pids']:
+                    if ctrl not in current:
+                        needed.append(f"+{ctrl}")
+                if needed:
+                    subtree_control.write_text(" ".join(needed) + "\n")
+            except (OSError, PermissionError):
+                pass  # Best-effort: child cgroups may still work without all controllers
+
             # Create unique cgroup path
             cgroup_path = self.cgroup_base_path / f"{process_name}_{int(time.time())}"
             cgroup_path.mkdir(parents=True, exist_ok=True)

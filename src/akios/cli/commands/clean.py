@@ -25,6 +25,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 from ..helpers import CLIError, output_result, check_project_context
+from ..rich_helpers import output_with_mode, is_json_mode
 
 
 def register_clean_command(subparsers: argparse._SubParsersAction) -> None:
@@ -37,6 +38,12 @@ def register_clean_command(subparsers: argparse._SubParsersAction) -> None:
     parser = subparsers.add_parser(
         "clean",
         help="Clean up project data"
+    )
+
+    parser.add_argument(
+        "--all",
+        action="store_true",
+        help="Clean all runs regardless of age"
     )
 
     parser.add_argument(
@@ -81,18 +88,42 @@ def run_clean_command(args: argparse.Namespace) -> int:
         # Verify we're in a valid project context
         check_project_context()
 
-        clean_data = clean_old_runs(args.old_runs, dry_run=args.dry_run)
+        days = 0 if args.all else args.old_runs
+        clean_data = clean_old_runs(days, dry_run=args.dry_run)
 
         if args.json:
             output_result(clean_data, json_mode=True)
         else:
-            formatted = format_clean_results(clean_data, args.dry_run)
-            print(formatted)
+            # Format and display results
+            if clean_data['cleaned_runs'] > 0:
+                size_mb = clean_data['total_size_cleaned'] / (1024 * 1024)
+                details = [
+                    f"Cleaned {clean_data['cleaned_runs']} runs older than {clean_data['cutoff_days']} days",
+                    f"Space freed: {size_mb:.2f} MB",
+                    f"Runs found: {clean_data['runs_found']}"
+                ]
+                output_with_mode(
+                    message="Cleanup completed successfully",
+                    details=details,
+                    output_type="success",
+                    json_mode=False
+                )
+            else:
+                output_with_mode(
+                    message="No old runs found to clean",
+                    output_type="info",
+                    json_mode=False
+                )
 
         return 0
 
     except CLIError as e:
-        print(f"Error: {e}", file=__import__("sys").stderr)
+        output_with_mode(
+            message=f"Error: {e}",
+            output_type="error",
+            json_mode=is_json_mode(getattr(args, 'json', False)),
+            quiet_mode=False
+        )
         return e.exit_code
     except Exception as e:
         from ..helpers import handle_cli_error
@@ -110,10 +141,14 @@ def clean_old_runs(days_old: int, dry_run: bool = False) -> dict:
     Returns:
         Dict with cleaning results
     """
-    if days_old <= 0:
+    if days_old < 0:
         raise CLIError(f"Days must be positive, got {days_old}", exit_code=2)
 
-    cutoff_date = datetime.now() - timedelta(days=days_old)
+    if days_old == 0:
+        # Clean everything - set cutoff to future
+        cutoff_date = datetime.now() + timedelta(days=365)
+    else:
+        cutoff_date = datetime.now() - timedelta(days=days_old)
 
     # Find data/output/run_* directories
     output_dir = Path("data/output")
@@ -198,41 +233,45 @@ def get_directory_size(directory: Path) -> int:
     return total_size
 
 
-def format_clean_results(clean_data: dict, dry_run: bool) -> str:
+def format_clean_results(clean_data: dict, dry_run: bool = False) -> str:
     """
-    Format clean results for display.
+    Format clean results into a human-readable string.
 
     Args:
-        clean_data: Cleaning results dictionary
+        clean_data: Dictionary with clean operation results
         dry_run: Whether this was a dry run
 
     Returns:
-        Formatted string
+        Formatted result string
     """
     lines = []
 
     if dry_run:
         lines.append("Clean Dry Run Results")
-        lines.append("=" * 21)
-        lines.append(f"Would clean runs older than {clean_data['cutoff_days']} days")
+        lines.append("=" * 20)
+        cutoff_days = clean_data.get("cutoff_days", 7)
+        lines.append(f"Would clean runs older than {cutoff_days} days")
     else:
         lines.append("Clean Results")
         lines.append("=" * 13)
-        lines.append(f"Cleaned runs older than {clean_data['cutoff_days']} days")
 
-    lines.append(f"Runs found: {clean_data['runs_found']}")
-    lines.append(f"Runs cleaned: {clean_data['cleaned_runs']}")
+    runs_found = clean_data.get("runs_found", 0)
+    cleaned_runs = clean_data.get("cleaned_runs", 0)
+    total_size = clean_data.get("total_size_cleaned", 0)
+    run_names = clean_data.get("run_names", [])
 
-    if clean_data['cleaned_runs'] > 0:
-        # Format size
-        size_mb = clean_data['total_size_cleaned'] / (1024 * 1024)
-        lines.append(f"Space freed: {size_mb:.2f} MB")
+    lines.append(f"Runs found: {runs_found}")
+    lines.append(f"Runs cleaned: {cleaned_runs}")
 
-        lines.append("")
-        lines.append("Cleaned runs:")
-        for run_name in clean_data['run_names']:
-            lines.append(f"  - {run_name}")
-    else:
+    # Format size in MB
+    size_mb = total_size / (1024 * 1024)
+    lines.append(f"Space freed: {size_mb:.2f} MB")
+
+    if cleaned_runs == 0 and not dry_run:
         lines.append("No old runs to clean")
+    elif run_names:
+        lines.append("Cleaned runs:")
+        for name in run_names:
+            lines.append(f"  - {name}")
 
     return "\n".join(lines)

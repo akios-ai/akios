@@ -1,8 +1,8 @@
-# AKIOS v1.0 – Troubleshooting Guide
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# AKIOS v1.0.5 – Troubleshooting Guide
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
-**Common issues, error codes, and solutions for AKIOS V1.0.**
+**Common issues, error codes, and solutions for AKIOS v1.0.5.**
 
 This guide covers the most frequent issues users encounter with AKIOS. If you can't find your issue here, check the [GitHub Issues](https://github.com/akios-ai/akios/issues) or start a [GitHub Discussion](https://github.com/akios-ai/akios/discussions).
 
@@ -14,7 +14,7 @@ This guide covers the most frequent issues users encounter with AKIOS. If you ca
 python3 --version  # Should show 3.8+
 
 # Check Linux kernel
-uname -r  # Should show 5.4+
+uname -r  # Should show 3.17+ (seccomp-bpf support)
 
 # Verify cgroups v2
 stat -fc %T /sys/fs/cgroup/  # Should show "cgroup2fs"
@@ -42,6 +42,57 @@ akios status
 ```
 
 ## ❌ Common Error Messages
+
+### "Domain not in allowed list: example.com"
+
+**Cause:** HTTP agent attempting to access a domain not in the `allowed_domains` whitelist.
+
+**Solutions:**
+1. **Add domain to config.yaml:**
+   ```yaml
+   network_access_allowed: true
+   allowed_domains:
+     - example.com
+     - api.example.com
+   ```
+
+2. **Or use environment variable:**
+   ```bash
+   export AKIOS_ALLOWED_DOMAINS="example.com,api.example.com"
+   akios run workflow.yml
+   ```
+
+3. **Check if using subdomain:** `api.example.com` ≠ `example.com` (no wildcard support)
+
+4. **Note:** LLM APIs (OpenAI, Anthropic, etc.) always bypass whitelist — cannot be blocked.
+
+### "Cage down destroyed data but directories not empty"
+
+**Cause:** Filesystem permissions or files locked by another process.
+
+**Solutions:**
+1. **Check directory ownership:**
+   ```bash
+   ls -la audit/ data/output/ data/input/
+   sudo chown -R $(whoami):$(whoami) audit/ data/
+   ```
+
+2. **Force cleanup manually:**
+   ```bash
+   rm -rf audit/* data/output/* data/input/*
+   ```
+
+3. **Check for locked files:**
+   ```bash
+   lsof +D audit/
+   lsof +D data/
+   ```
+
+4. **Verify cage down completed:**
+   ```bash
+   akios cage status  # Should show RELAXED
+   find audit/ data/output/ data/input/ -type f  # Should be empty
+   ```
 
 ### "AKIOS requires Linux kernel 5.4+ with cgroups v2"
 
@@ -116,6 +167,29 @@ akios status
    lsb_release -a
    ```
 
+### "Trace/breakpoint trap (core dumped)" / SIGTRAP with sudo
+
+**Cause:** Seccomp BPF filter rejecting essential syscalls during `sudo akios run`. Fixed in v1.0.5.
+
+**Solutions:**
+1. **Upgrade to v1.0.5+:**
+   ```bash
+   pip install --upgrade akios
+   # Or for system-wide:
+   sudo pip3 install --upgrade akios
+   ```
+
+2. **Verify fix:**
+   ```bash
+   sudo akios run templates/hello-workflow.yml
+   # Should complete without crash
+   ```
+
+3. **If still occurring:** Check that `python3-seccomp` system package is installed:
+   ```bash
+   sudo apt-get install libseccomp-dev python3-seccomp
+   ```
+
 ### "Permission denied" / "Cannot access file"
 
 **Cause:** File permissions or path restrictions.
@@ -169,7 +243,7 @@ akios status
 **Solutions:**
 1. **Check current budget:**
    ```bash
-   akios status  # Shows current costs
+   akios status --budget  # Shows budget dashboard with cost breakdown
    ```
 
 2. **Increase budget limit:**
@@ -222,6 +296,50 @@ akios status
    ```bash
    # Instead of: tool_executor run command: "curl"
    # Use: http get url: "https://example.com"
+   ```
+
+### "Direct shell execution is not permitted inside the security cage"
+
+**Cause:** Using `--exec` flag with `akios run`. This flag is a security trap that blocks shell-injection attempts.
+
+**Solutions:**
+1. **Remove `--exec` from your command:**
+   ```bash
+   # Wrong:
+   akios run workflow.yml --exec "some command"
+
+   # Correct:
+   akios run workflow.yml
+   ```
+
+2. **Use proper agents instead of shell commands:**
+   - Use `http` agent for HTTP requests
+   - Use `filesystem` agent for file operations
+   - Use `tool_executor` agent for allowed commands
+
+### "HTTP request failed" / "URL not in whitelist" (akios http)
+
+**Cause:** Domain not in `allowed_domains` or cage not active.
+
+**Solutions:**
+1. **Add domain to whitelist:**
+   ```yaml
+   # config.yaml
+   network_access_allowed: true
+   allowed_domains:
+     - api.example.com
+   ```
+
+2. **Ensure cage is active:**
+   ```bash
+   akios cage up
+   akios http GET https://api.example.com/data
+   ```
+
+3. **Use HTTPS (required):**
+   ```bash
+   # Wrong: akios http GET http://api.example.com
+   # Correct: akios http GET https://api.example.com
    ```
 
 ### "Audit log corrupted" / "Integrity check failed"
@@ -454,7 +572,7 @@ akios audit export --format json
 
 ## 📞 Emergency Contacts
 
-**Security Issues:** hello@akios.ai (private disclosure only)  
+**Security Issues:** security@akioud.ai (private disclosure only)  
 **General Support:** GitHub Issues/Discussions  
 
 ---

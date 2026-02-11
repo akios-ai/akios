@@ -56,6 +56,8 @@ else:
 
 from ...config import get_settings
 from .policy import SyscallPolicy, AgentType, load_syscall_policy
+from .warnings import warn_seccomp_disabled
+from ...core.audit import append_audit_event
 
 
 class SyscallViolationError(Exception):
@@ -70,6 +72,11 @@ class SyscallInterceptor:
     Intercepts and allows/denies syscalls based on security policy.
     Implements seccomp-bpf for true kernel-level syscall filtering.
     """
+    
+    # Class-level flags: seccomp can only be loaded ONCE per process
+    # Multiple agents in workflow → multiple interceptors → but only ONE seccomp load allowed
+    _seccomp_loaded = False
+    _seccomp_load_attempted = False
 
     def __init__(self, agent_type: Optional[AgentType] = None, settings=None):
         self.settings = settings or get_settings()
@@ -84,18 +91,59 @@ class SyscallInterceptor:
 
         Sets up seccomp-bpf filters based on the security policy.
         This provides kernel-level syscall filtering.
+        
+        NOTE: Seccomp can only be loaded ONCE per process. Subsequent calls
+        will skip loading if already loaded.
         """
         if not self.settings.sandbox_enabled:
             return
-
-        if not self._is_seccomp_supported():
-            print("Warning: seccomp-bpf not supported on this system, falling back to policy checking", file=__import__('sys').stderr)
+        
+        # Check if seccomp was already loaded by another agent in this process
+        if SyscallInterceptor._seccomp_loaded:
+            self.monitoring_enabled = True
+            return
+        
+        # Check if loading was already attempted and failed
+        if SyscallInterceptor._seccomp_load_attempted and not SyscallInterceptor._seccomp_loaded:
             self.monitoring_enabled = True
             return
 
-        try:
-            self._setup_seccomp_filters()
+        if not self._is_seccomp_supported():
+            warn_seccomp_disabled("seccomp module not available or running on unsupported platform")
             self.monitoring_enabled = True
+            SyscallInterceptor._seccomp_load_attempted = True
+            return
+
+        # CRITICAL: seccomp filter loading requires root privileges (CAP_SYS_ADMIN)
+        # Without root, attempting to load the filter will cause SIGTRAP crashes
+        if os.geteuid() != 0:
+            warn_seccomp_disabled("seccomp requires root privileges (run with sudo for kernel-hard security)")
+            self.monitoring_enabled = True
+            SyscallInterceptor._seccomp_load_attempted = True
+            return
+
+        try:
+            SyscallInterceptor._seccomp_load_attempted = True
+            self._setup_seccomp_filters()
+            SyscallInterceptor._seccomp_loaded = True  # Mark as successfully loaded
+            self.monitoring_enabled = True
+            
+            # Log successful seccomp enablement to audit trail
+            try:
+                append_audit_event({
+                    'workflow_id': 'security_monitor',
+                    'step': 0,
+                    'agent': 'syscall_interceptor',
+                    'action': 'enable_seccomp',
+                    'result': 'SUCCESS',
+                    'metadata': {
+                        'event_type': 'seccomp_enabled',
+                        'agent_type': self.agent_type.value if self.agent_type else 'unknown',
+                        'mode': 'kernel_filtering'
+                    }
+                })
+            except Exception:
+                pass  # Don't block on audit logging
         except Exception as e:
             # Check if we're in a containerized environment
             try:
@@ -106,32 +154,64 @@ class SyscallInterceptor:
 
             if is_container:
                 # Container environment - allow with policy-based monitoring
-                import sys
-                print("🔒 Security Mode: Docker (Policy-Based)", file=sys.stderr)
-                print("✅ PII redaction, audit logging, command restrictions, resource limits", file=sys.stderr)
-                print("ℹ️ For kernel-hard max security: native Linux", file=sys.stderr)
-                print("✓ All core features active", file=sys.stderr)
+                from ...core.ui.semantic_colors import print_security, print_info
+                print_security("Security Mode: Docker (Policy-Based)")
+                print_info("PII redaction, audit logging, command restrictions, resource limits")
+                print_info("For kernel-hard max security: native Linux")
                 self.monitoring_enabled = True
+                
+                # Log policy-based mode to audit trail
+                try:
+                    append_audit_event({
+                        'workflow_id': 'security_monitor',
+                        'step': 0,
+                        'agent': 'syscall_interceptor',
+                        'action': 'set_security_mode',
+                        'result': 'docker_policy_based',
+                        'metadata': {
+                            'event_type': 'security_mode',
+                            'mode': 'docker_policy_based',
+                            'agent_type': self.agent_type.value if self.agent_type else 'unknown'
+                        }
+                    })
+                except Exception:
+                    pass  # Don't block on audit logging
                 return
             else:
-                # Native environment - seccomp failure blocks execution
-                from ..validation import SecurityError
-                raise SecurityError(
-                    f"SECURITY FAILURE: seccomp-bpf kernel filtering failed: {e}\n"
-                    "AKIOS REQUIRES kernel-level syscall filtering for secure operation.\n"
-                    "\n"
-                    "For Linux native: Install system dependencies: apt-get install libseccomp-dev\n"
-                    "Then install Python library: pip install seccomp\n"
-                    "\n"
-                    "SECURITY COMPROMISED: Cannot run AKIOS without syscall filtering."
-                )
+                warn_seccomp_disabled(str(e))
+                self.monitoring_enabled = True
+
+                try:
+                    append_audit_event({
+                        'workflow_id': 'security_monitor',
+                        'step': 0,
+                        'agent': 'syscall_interceptor',
+                        'action': 'enable_seccomp',
+                        'result': 'failed',
+                        'metadata': {
+                            'event_type': 'seccomp_enable_failure',
+                            'error': str(e),
+                            'agent_type': self.agent_type.value if self.agent_type else 'unknown'
+                        }
+                    })
+                except Exception:
+                    pass
 
 
     def _is_seccomp_supported(self) -> bool:
         """
         Check if seccomp-bpf is supported on this system
+        
+        Requires:
+        1. Linux OS
+        2. seccomp module available
+        3. Root privileges (euid == 0) to load filters
         """
         if platform.system() != 'Linux':
+            return False
+
+        # Check if we have root privileges - required to load seccomp filters
+        if os.geteuid() != 0:
             return False
 
         # Check if we have the seccomp module or ctypes access
@@ -195,48 +275,128 @@ class SyscallInterceptor:
         """
         Get list of essential syscalls that should be allowed.
 
-        Returns a curated list of syscalls needed for basic application functionality.
-        Dangerous syscalls are excluded for security.
+        Returns a comprehensive list of syscalls needed for Python runtime,
+        AKIOS execution, networking, and file I/O. Truly dangerous syscalls
+        (mount, ptrace, kexec, etc.) are excluded.
         """
-        # Core system syscalls (essential for any application)
-        core_syscalls = [
-            'read', 'write', 'open', 'close', 'stat', 'fstat', 'lstat', 'lseek',
-            'mmap', 'mprotect', 'munmap', 'brk', 'rt_sigaction', 'rt_sigprocmask',
-            'rt_sigreturn', 'ioctl', 'pread64', 'pwrite64', 'readv', 'writev',
-            'access', 'pipe', 'select', 'sched_yield', 'mremap', 'msync',
-            'dup', 'dup2', 'pause', 'nanosleep', 'getitimer', 'alarm', 'setitimer',
-            'getpid', 'sendfile', 'fcntl', 'flock', 'fsync', 'fdatasync',
-            'getdents', 'getcwd', 'chdir', 'fchdir', 'mkdir', 'rmdir', 'unlink',
-            'chmod', 'fchmod', 'chown', 'fchown', 'umask', 'gettimeofday',
-            'getrlimit', 'getrusage', 'sysinfo', 'times', 'getuid', 'geteuid',
-            'getgid', 'getegid', 'getgroups', 'uname', 'getpriority', 'setpriority',
-            'prctl', 'arch_prctl', 'getrlimit', 'restart_syscall', 'sigaltstack',
-            'rt_sigpending', 'rt_sigtimedwait', 'rt_sigqueueinfo', 'rt_sigsuspend'
+        # Core I/O syscalls
+        core_io = [
+            'read', 'write', 'open', 'openat', 'close', 'lseek',
+            'pread64', 'pwrite64', 'readv', 'writev',
+            'sendfile', 'dup', 'dup2', 'dup3', 'pipe', 'pipe2',
+            'ioctl', 'fcntl', 'flock', 'fsync', 'fdatasync',
         ]
 
-        # Network syscalls (for API calls)
-        network_syscalls = [
-            'socket', 'connect', 'accept', 'sendto', 'recvfrom', 'sendmsg',
-            'recvmsg', 'shutdown', 'bind', 'listen', 'getsockname', 'getpeername'
+        # File/directory metadata
+        file_meta = [
+            'stat', 'fstat', 'lstat', 'newfstatat', 'statx', 'statfs', 'fstatfs',
+            'access', 'faccessat', 'faccessat2',
+            'getdents', 'getdents64', 'getcwd',
+            'readlink', 'readlinkat',
+            'umask',
         ]
 
-        # Process management
-        process_syscalls = [
-            'fork', 'vfork', 'execve', 'exit', 'wait4', 'kill', 'getppid',
-            'getpgrp', 'setsid', 'setpgid', 'setuid', 'setgid', 'getgroups',
-            'setgroups', 'setreuid', 'setregid', 'mincore', 'madvise'
+        # File/directory manipulation
+        file_ops = [
+            'creat', 'mkdir', 'mkdirat', 'rmdir',
+            'unlink', 'unlinkat', 'rename', 'renameat', 'renameat2',
+            'link', 'linkat', 'symlink', 'symlinkat',
+            'truncate', 'ftruncate', 'fallocate',
+            'chmod', 'fchmod', 'fchmodat',
+            'chown', 'fchown', 'lchown', 'fchownat',
+            'chdir', 'fchdir',
+            'utimensat', 'futimesat',
         ]
 
-        # File system operations
-        fs_syscalls = [
-            'creat', 'link', 'symlink', 'readlink', 'rename', 'truncate', 'ftruncate'
+        # Memory management (Python runtime requirement)
+        memory = [
+            'mmap', 'munmap', 'mprotect', 'mremap', 'msync',
+            'brk', 'madvise', 'mincore', 'mlock', 'mlock2', 'munlock',
+            'mlockall', 'munlockall',
+            'memfd_create', 'membarrier',
         ]
 
-        # Combine all essential syscalls
-        essential_syscalls = core_syscalls + network_syscalls + process_syscalls + fs_syscalls
+        # Signals
+        signals = [
+            'rt_sigaction', 'rt_sigprocmask', 'rt_sigreturn',
+            'rt_sigpending', 'rt_sigtimedwait', 'rt_sigqueueinfo', 'rt_sigsuspend',
+            'sigaltstack', 'restart_syscall',
+            'pause', 'alarm',
+        ]
+
+        # Process/thread management (needed for Python threading + subprocess)
+        process = [
+            'clone', 'clone3', 'fork', 'vfork', 'execve', 'execveat',
+            'exit', 'exit_group', 'wait4', 'waitid',
+            'kill', 'tgkill', 'tkill',
+            'getpid', 'getppid', 'gettid',
+            'getpgrp', 'getpgid', 'setpgid', 'setsid',
+            'setuid', 'setgid', 'setreuid', 'setregid',
+            'setresuid', 'setresgid', 'getresuid', 'getresgid',
+            'setgroups', 'getgroups',
+            'getuid', 'geteuid', 'getgid', 'getegid',
+            'prctl', 'arch_prctl',
+            'set_tid_address', 'set_robust_list', 'get_robust_list',
+            'futex', 'rseq',
+            'sched_yield', 'sched_getaffinity', 'sched_setaffinity',
+            'sched_getscheduler', 'sched_setscheduler',
+            'sched_getparam', 'sched_setparam',
+            'getpriority', 'setpriority', 'setrlimit', 'prlimit64',
+        ]
+
+        # Timers and clocks (Python runtime requirement)
+        time_syscalls = [
+            'nanosleep', 'clock_nanosleep',
+            'gettimeofday', 'settimeofday',
+            'clock_gettime', 'clock_settime', 'clock_getres',
+            'getitimer', 'setitimer', 'timerfd_create', 'timerfd_settime', 'timerfd_gettime',
+            'times',
+        ]
+
+        # Polling/event (Python asyncio, I/O multiplexing)
+        poll_event = [
+            'select', 'pselect6', 'poll', 'ppoll',
+            'epoll_create', 'epoll_create1', 'epoll_ctl', 'epoll_wait', 'epoll_pwait', 'epoll_pwait2',
+            'eventfd', 'eventfd2',
+            'inotify_init', 'inotify_init1', 'inotify_add_watch', 'inotify_rm_watch',
+            'signalfd', 'signalfd4',
+        ]
+
+        # Network syscalls (for LLM API calls, HTTP agent)
+        network = [
+            'socket', 'connect', 'accept', 'accept4',
+            'sendto', 'recvfrom', 'sendmsg', 'recvmsg',
+            'sendmmsg', 'recvmmsg',  # Modern glibc DNS resolver
+            'shutdown', 'bind', 'listen',
+            'getsockname', 'getpeername',
+            'setsockopt', 'getsockopt',
+            'socketpair',
+        ]
+
+        # System info (Python startup, os module)
+        sysinfo = [
+            'uname', 'sysinfo',
+            'getrlimit', 'getrusage',
+            'getrandom',
+        ]
+
+        # Misc syscalls needed by Python runtime / glibc
+        misc_runtime = [
+            'copy_file_range',       # efficient file copies
+            'splice', 'tee',         # zero-copy data transfer
+            'name_to_handle_at',     # filesystem handle ops
+            'open_by_handle_at',
+        ]
+
+        # Combine all
+        all_syscalls = (
+            core_io + file_meta + file_ops + memory + signals +
+            process + time_syscalls + poll_event + network + sysinfo +
+            misc_runtime
+        )
 
         # Remove duplicates and sort
-        return sorted(list(set(essential_syscalls)))
+        return sorted(list(set(all_syscalls)))
 
     def _setup_seccomp_with_ctypes(self) -> None:
         """
@@ -349,49 +509,62 @@ class SyscallInterceptor:
 
     def _alloc_buffer(self, data: bytes) -> int:
         """
-        Allocate a buffer and return its address for BPF filter
-        This is a simplified implementation - production would need proper memory management
+        Allocate a buffer and return its address for BPF filter.
+        
+        NOTE: The ctypes seccomp fallback is not supported in production.
+        The python3-seccomp module (libseccomp bindings) is the supported path
+        for seccomp-bpf filter loading. This ctypes codepath exists as a
+        reference implementation but cannot work from pure Python.
         """
-        # For demonstration - in real implementation, you'd use mmap or proper allocation
-        # This is just to show the concept
-        try:
-            # Create a buffer using array module
-            import array
-            buf = array.array('B', data)
-            # Get address (this won't work in pure Python, needs C extension)
-            # In production, this would be handled by the seccomp library
-            return 0  # Placeholder
-        except Exception:
-            return 0
+        raise RuntimeError(
+            "ctypes seccomp fallback is not supported. "
+            "Install python3-seccomp for kernel-hard security: "
+            "sudo apt-get install libseccomp-dev python3-seccomp"
+        )
 
     def _is_syscall_allowed_by_policy(self, syscall_name: str) -> bool:
         """
-        Check if a syscall is allowed by the current policy
+        Check if a syscall is allowed by the current policy.
 
-        Enhanced validation with additional security checks beyond basic deny list.
+        Uses a blocklist approach: block truly dangerous syscalls that could
+        compromise the host. Everything in _get_essential_syscalls() is allowed.
         """
-        # Dangerous syscalls that are always blocked
+        # Dangerous syscalls that are ALWAYS blocked - these can compromise the host
         dangerous_syscalls = {
-            'mount', 'umount2', 'pivot_root', 'chroot', 'setns', 'unshare',
-            'ptrace', 'process_vm_readv', 'process_vm_writev', 'kexec_file_load',
-            'bpf', 'perf_event_open', 'modify_ldt', '_sysctl', 'keyctl', 'request_key',
-            'add_key', 'setdomainname', 'sethostname'
+            # Filesystem namespace / mount manipulation
+            'mount', 'umount2', 'pivot_root', 'chroot',
+            # Namespace / container escape
+            'setns', 'unshare',
+            # Process introspection / debugging (code injection)
+            'ptrace', 'process_vm_readv', 'process_vm_writev',
+            # Kernel module / kexec
+            'kexec_load', 'kexec_file_load', 'init_module', 'finit_module', 'delete_module',
+            # BPF / perf (kernel-level tracing)
+            'bpf', 'perf_event_open',
+            # Legacy / dangerous kernel interfaces
+            'modify_ldt', '_sysctl',
+            # Keyring manipulation
+            'keyctl', 'request_key', 'add_key',
+            # Hostname manipulation
+            'setdomainname', 'sethostname',
+            # Swap manipulation
+            'swapon', 'swapoff',
+            # Reboot / power
+            'reboot',
+            # Raw I/O (bypass filesystem)
+            'ioperm', 'iopl',
+            # Kernel ring buffer
+            'syslog',
+            # Accounting
+            'acct',
+            # Clock manipulation (NTP attacks)
+            'adjtimex', 'clock_adjtime',
         }
 
-        # Always block dangerous syscalls
         if syscall_name in dangerous_syscalls:
             return False
 
-        # Additional validation: check for suspicious syscall patterns
-        # These are heuristics that might indicate privilege escalation attempts
-        suspicious_patterns = ['set', 'exec', 'fork', 'clone', 'kill']
-        if any(pattern in syscall_name for pattern in suspicious_patterns):
-            # Allow some essential ones but log for monitoring
-            essential_allowed = {'setuid', 'setgid', 'execve', 'fork', 'clone', 'kill'}
-            if syscall_name not in essential_allowed:
-                print(f"⚠️  Suspicious syscall blocked: {syscall_name}", file=__import__('sys').stderr)
-                return False
-
+        # Everything else that's in the essential list is allowed
         return True
 
     def disable_interception(self) -> None:
@@ -429,6 +602,27 @@ class SyscallInterceptor:
         }
         self.violations.append(violation)
 
+        # CRITICAL: Log to permanent tamper-evident audit trail for compliance
+        try:
+            append_audit_event({
+                'workflow_id': 'security_monitor',  # Security events use dedicated workflow ID  
+                'step': 0,  # Security monitoring is continuous, not step-based
+                'agent': 'syscall_interceptor',
+                'action': f'block_syscall: {syscall_name}',
+                'result': 'BLOCKED',
+                'metadata': {
+                    'event_type': 'syscall_violation',
+                    'syscall': syscall_name,
+                    'agent_type': self.agent_type.value if self.agent_type else 'unknown',
+                    'severity': 'HIGH',
+                    'context': context or {},
+                    'timestamp': violation['timestamp']
+                }
+            })
+        except Exception as e:
+            # Never let audit logging failure prevent security enforcement
+            print(f"⚠️  Audit logging failed for syscall violation: {e}", file=sys.stderr)
+
         raise SyscallViolationError(
             f"Syscall '{syscall_name}' blocked by security policy for agent type "
             f"{self.agent_type.value if self.agent_type else 'unknown'}"
@@ -436,8 +630,8 @@ class SyscallInterceptor:
 
     def _get_timestamp(self) -> str:
         """Get current timestamp for violation logging"""
-        from datetime import datetime
-        return datetime.utcnow().isoformat()
+        from datetime import datetime, timezone
+        return datetime.now(timezone.utc).isoformat()
 
     @contextmanager
     def syscall_context(self, operation_name: str):

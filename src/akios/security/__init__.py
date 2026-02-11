@@ -23,16 +23,52 @@ Every execution path must pass through this module before any action is allowed.
 # Import the main enforcement functions
 from .sandbox.manager import create_sandboxed_process, destroy_sandboxed_process
 from .sandbox.quotas import enforce_hard_limits
-from .syscall.interceptor import apply_syscall_policy
+from .syscall.interceptor import apply_syscall_policy, create_syscall_interceptor
+from .syscall.policy import AgentType
 from .pii.redactor import apply_pii_redaction
 
 # Security validation functions
 from .validation import validate_all_security, validate_startup_security
 
-# Legacy compatibility - these will be removed in future versions
-def enforce_sandbox():
-    """Legacy function - use enforce_hard_limits instead"""
-    return enforce_hard_limits()
+import platform
+import os
+
+
+def _is_running_in_container() -> bool:
+    """Check if running inside Docker/container"""
+    return os.path.exists('/.dockerenv') or os.path.exists('/run/.containerenv')
+
+
+def enforce_sandbox(agent_type: AgentType = AgentType.TOOL_EXECUTOR):
+    """
+    Apply comprehensive sandbox security.
+    
+    On Docker: Apply cgroups (policy-based security)
+    On Native Linux: Apply cgroups + syscall filtering (kernel-hard security)
+    
+    Args:
+        agent_type: Type of agent for syscall policy (default: TOOL_EXECUTOR)
+    
+    Returns:
+        None (raises exception if security fails)
+    """
+    from akios.config import get_settings
+    settings = get_settings()
+    
+    # Always apply resource limits (cgroups)
+    enforce_hard_limits()
+    
+    # Apply syscall filtering on native Linux only (not Docker/macOS/Windows)
+    if settings.sandbox_enabled and platform.system() == 'Linux' and not _is_running_in_container():
+        try:
+            interceptor = create_syscall_interceptor(agent_type=agent_type)
+            interceptor.enable_interception()
+        except Exception as e:
+            # If syscall filtering fails, log but don't crash (graceful degradation)
+            # User still gets cgroups + command restrictions + PII redaction
+            import logging
+            logging.warning(f"Syscall filtering failed (falling back to policy-based): {e}")
+
 
 __all__ = [
     "enforce_hard_limits",
@@ -42,5 +78,5 @@ __all__ = [
     "apply_pii_redaction",
     "validate_all_security",
     "validate_startup_security",
-    "enforce_sandbox"  # Legacy
+    "enforce_sandbox"  # Now includes syscall filtering
 ]

@@ -29,10 +29,8 @@ from typing import List, Optional, Dict, Any
 from ...config import get_settings
 from .events import AuditEvent, create_audit_event
 
-logger = logging.getLogger(__name__)
 from .merkle import MerkleTree
 
-# Configure audit logger
 logger = logging.getLogger(__name__)
 
 
@@ -45,6 +43,7 @@ class AuditLedger:
         audit_path.mkdir(parents=True, exist_ok=True)
 
         self.ledger_file = audit_path / "audit_events.jsonl"
+        self.ledger_file.touch(exist_ok=True)
         self.events: List[AuditEvent] = []
         self.merkle_tree = MerkleTree()
 
@@ -92,7 +91,8 @@ class AuditLedger:
             return
 
         # Just store file info, don't load all events into memory
-        self._event_count = sum(1 for _ in open(self.ledger_file, 'r', encoding='utf-8'))
+        with open(self.ledger_file, 'r', encoding='utf-8') as f:
+            self._event_count = sum(1 for _ in f)
 
     def _load_all_events(self) -> None:
         """Load all events into memory when needed"""
@@ -159,7 +159,8 @@ class AuditLedger:
                 # Note: Old events remain on disk, just not in memory
                 excess_count = len(self.events) - self._max_memory_events
                 self.events = self.events[excess_count:]
-                # Note: Merkle tree becomes invalid after trimming - would need rebuild in production
+                # Rebuild Merkle tree to maintain integrity after trimming
+                self._rebuild_merkle_tree()
 
         # Buffer events for performance optimization (thread-safe)
         event_json = event.to_json()

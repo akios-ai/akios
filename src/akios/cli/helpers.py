@@ -20,11 +20,13 @@ Keep this tiny and focused.
 """
 
 import json
+import os
 import sys
 from typing import Any, Dict, Optional, List
 
 from akios._version import __version__
 from ..config import get_settings
+from ..core.ui.rich_output import get_theme_color
 
 
 class CLIError(Exception):
@@ -32,6 +34,15 @@ class CLIError(Exception):
     def __init__(self, message: str, exit_code: int = 1):
         super().__init__(message)
         self.exit_code = exit_code
+
+
+def get_command_prefix() -> str:
+    """
+    Get the correct command prefix based on environment.
+    Delegates to the canonical implementation in core.ui.commands.
+    """
+    from ..core.ui.commands import get_command_prefix as _get_prefix
+    return _get_prefix()
 
 
 def output_result(result: Any, json_mode: bool = False, success_message: Optional[str] = None) -> None:
@@ -50,16 +61,61 @@ def output_result(result: Any, json_mode: bool = False, success_message: Optiona
             json.dump({"result": result}, sys.stdout, indent=2)
         print()  # Add newline
     else:
+        try:
+            from rich.console import Console
+            from rich.syntax import Syntax
+            import json as json_module
+            from ..core.ui.rich_output import get_theme_color
+            _console = Console()
+        except ImportError:
+            _console = None
+        
         if isinstance(result, dict):
-            for key, value in result.items():
-                print(f"{key}: {value}")
+            if _console:
+                # Format dict with proper colors for readability
+                for key, value in result.items():
+                    # Format key
+                    key_str = f"[bold {get_theme_color('warning')}]{key}:[/bold {get_theme_color('warning')}]"
+                    
+                    # Format value based on type
+                    if isinstance(value, (dict, list)):
+                        # For complex types, show as formatted JSON
+                        value_str = json_module.dumps(value, indent=2)
+                        # Limit length for very large outputs
+                        if len(value_str) > 1000:
+                            value_str = value_str[:1000] + "...\\n(truncated)"
+                        _console.print(f"{key_str}")
+                        syntax = Syntax(value_str, "json", theme="monokai", word_wrap=True)
+                        _console.print(syntax)
+                    elif isinstance(value, bool):
+                        color = get_theme_color('success') if value else get_theme_color('error')
+                        value_str = f"[bold {color}]{value}[/]"
+                        _console.print(f"{key_str} {value_str}")
+                    elif isinstance(value, (int, float)):
+                        value_str = f"[bold {get_theme_color('info')}]{value}[/]"
+                        _console.print(f"{key_str} {value_str}")
+                    else:
+                        value_str = f"[{get_theme_color('info')}]{value}[/]"
+                        _console.print(f"{key_str} {value_str}")
+            else:
+                for key, value in result.items():
+                    print(f"{key}: {value}")
         elif isinstance(result, str):
-            print(result)
+            if _console:
+                _console.print(f"[{get_theme_color('info')}]{result}[/{get_theme_color('info')}]")
+            else:
+                print(result)
         else:
-            print(str(result))
+            if _console:
+                _console.print(f"[{get_theme_color('info')}]{str(result)}[/{get_theme_color('info')}]")
+            else:
+                print(str(result))
         
         if success_message:
-            print(success_message)
+            if _console:
+                _console.print(f"[bold {get_theme_color('success')}]✓[/bold {get_theme_color('success')}] [{get_theme_color('success')}]{success_message}[/{get_theme_color('success')}]")
+            else:
+                print(success_message)
 
 
 def handle_cli_error(error: Exception, json_mode: bool = False) -> int:
@@ -114,7 +170,8 @@ def handle_cli_error(error: Exception, json_mode: bool = False) -> int:
             json.dump(error_data, sys.stderr, indent=2)
             print(file=sys.stderr)
         else:
-            print(f"Error: {message}", file=sys.stderr)
+            from ..core.ui.semantic_colors import print_error
+            print_error(message)
 
     return exit_code
 
@@ -152,11 +209,12 @@ def get_version_info() -> Dict[str, str]:
 
 def _determine_ai_mode(status_data: Dict[str, Any]) -> str:
     """Determine the AI mode string for status display."""
+    from ..core.ui.rich_output import get_theme_color
     api_keys_status = status_data.get('api_keys_setup', {})
     mock_mode = api_keys_status.get('mock_mode_enabled', True)
 
     if mock_mode:
-        return "🎭 MOCK MODE - Safe Testing (No Costs)"
+        return f"[{get_theme_color('warning')}]🎭 MOCK MODE[/{get_theme_color('warning')}] - [dim]Safe Testing (No Costs)[/dim]"
 
     settings = get_settings()
     provider = getattr(settings, 'llm_provider', None)
@@ -170,26 +228,43 @@ def _determine_ai_mode(status_data: Dict[str, Any]) -> str:
             "mistral": "Mistral",
             "gemini": "Gemini"
         }.get(provider, provider.title())
-        return f"Real API ({provider_label} {model})"
+        return f"[{get_theme_color('success')}]Real API[/{get_theme_color('success')}] ([{get_theme_color('primary')}]{provider_label} {model}[/{get_theme_color('primary')}])"
 
     detected_providers = status_data.get('api_keys_detected', [])
     if detected_providers:
         provider_names = [p.title() for p in detected_providers[:2]]
-        return f"Real API ({', '.join(provider_names)} ready)"
+        return f"[{get_theme_color('success')}]Real API[/{get_theme_color('success')}] ([{get_theme_color('primary')}]{', '.join(provider_names)} ready[/{get_theme_color('primary')}])"
 
-    return "Real API (needs setup)"
+    return f"[{get_theme_color('success')}]Real API[/{get_theme_color('success')}] [dim](needs setup)[/dim]"
 
 
 def _format_budget_status(cost_summary: Dict[str, Any]) -> str:
     """Format budget status string."""
+    from ..core.ui.rich_output import get_theme_color
     settings = get_settings()
     total_cost = cost_summary.get('total_cost', 0.0)
 
     if settings.cost_kill_enabled:
-        budget_remaining = max(0, settings.budget_limit_per_run - total_cost)
-        return f"${budget_remaining:.2f} remaining"
+        # Use actual remaining budget from workflow metadata if available
+        # Otherwise calculate from total cost
+        budget_remaining = cost_summary.get('remaining_budget')
+        if budget_remaining is None:
+            # For per-run budget, available budget is always the full limit when starting
+            budget_remaining = settings.budget_limit_per_run
+        
+        # Color code based on remaining budget percentage
+        budget_limit = settings.budget_limit_per_run
+        pct_remaining = (budget_remaining / budget_limit * 100) if budget_limit > 0 else 100
+        
+        if pct_remaining > 50:
+            color = get_theme_color('success')
+        elif pct_remaining > 20:
+            color = get_theme_color('warning')
+        else:
+            color = get_theme_color('error')
+        return f"[bold {color}]${budget_remaining:.4f}[/bold {color}] [dim]remaining (${budget_limit:.2f} budget)[/dim]"
 
-    return "Cost controls disabled"
+    return "[dim]Cost controls disabled[/dim]"
 
 
 def _format_last_run_info(status_data: Dict[str, Any]) -> str:
@@ -269,8 +344,6 @@ def format_status_info(status_data: Dict[str, Any], workflow_filter: str = None,
         Formatted status string
     """
     lines = []
-    lines.append("AKIOS Status")
-    lines.append("=============")
 
     workflow_info = status_data.get('workflow_info', {})
     cost_summary = workflow_info.get('cost_summary', {})
@@ -290,16 +363,32 @@ def format_status_info(status_data: Dict[str, Any], workflow_filter: str = None,
     lines.append(last_run_info)
 
     # Security status
-    import os
-    if os.path.exists('/.dockerenv'):
-        lines.append("🔒 Security: Docker (Policy-Based) — PII/Audit/Command Limits Active")
-    else:
-        lines.append("🔒 Security: Linux (Kernel-Hardened) — PII/Audit/Command Limits Active")
+    from ..config import get_settings
+    settings = get_settings()
+    
+    # Determine posture based on key variables
+    # Strict means: No network, PII enabled, Low budget (< $5)
+    is_strict = (
+        not settings.network_access_allowed and 
+        settings.pii_redaction_enabled and 
+        settings.budget_limit_per_run <= 5.0
+    )
+    
+    posture = "ELEVATED (STRICT)" if is_strict else "RELAXED (DEV)"
+    posture_color = "success" if is_strict else "warning"
+    
+    lines.append(f"🔒 Security: [{get_theme_color(posture_color)}]{posture}[/{get_theme_color(posture_color)}]")
+    
+    # Add concise details line
+    net_status = "BLOCKED" if not settings.network_access_allowed else "ALLOWED"
+    pii_status = "ENABLED" if settings.pii_redaction_enabled else "DISABLED"
+    
+    lines.append(f"   [dim]• Network: {net_status} | PII: {pii_status} | Budget: ${settings.budget_limit_per_run:.2f}[/dim]")
 
     # Output location hint
     has_run_timestamp = ('last_run_timestamp' in status_data and
                         status_data['last_run_timestamp'])
-    output_hint = "📁 Output: Ready (check data/output/)" if has_run_timestamp else "📁 Output: No results yet"
+    output_hint = f"📁 Output: [{get_theme_color('success')}]Ready[/{get_theme_color('success')}] [dim](check data/output/)[/dim]" if has_run_timestamp else "📁 Output: [dim]No results yet[/dim]"
     lines.append(output_hint)
 
     # Verbose mode details
@@ -311,10 +400,11 @@ def format_status_info(status_data: Dict[str, Any], workflow_filter: str = None,
 
     # Next steps hint
     lines.append("")
+    from ..core.ui.commands import suggest_command
     if mock_mode:
-        lines.append("💡 Next: Run 'akios setup' to configure real AI providers")
+        lines.append(f"💡 [dim]Next:[/dim] Run [{get_theme_color('info')}]'{suggest_command('setup')}'[/{get_theme_color('info')}] to configure real AI providers")
     else:
-        lines.append("💡 Next: Run 'akios run templates/hello-workflow.yml' to test AI")
+        lines.append(f"💡 [dim]Next:[/dim] Run [{get_theme_color('info')}]'{suggest_command('run templates/hello-workflow.yml')}'[/{get_theme_color('info')}] to test AI")
 
     return "\n".join(lines)
 
@@ -377,10 +467,9 @@ def check_project_context() -> None:
     Verify we're in a valid AKIOS project directory.
 
     Checks for required project files and directories.
-    Exits with error message if not in valid project context.
 
     Raises:
-        SystemExit: If not in valid project directory
+        CLIError: If not in valid project directory
     """
     import os
     from pathlib import Path
@@ -390,16 +479,14 @@ def check_project_context() -> None:
     templates_dir_exists = Path("templates").is_dir()
 
     if not (config_exists and templates_dir_exists):
-        print("⚠️  WARNING: This command should be run from inside an AKIOS project directory.")
-        print("")
-        print("To get started:")
-        print("  1. Create a project: akios init my-project")
-        print("  2. Enter the project: cd my-project")
-        print("  3. Run commands from there (e.g. akios run workflow.yml)")
-        print("")
-        print("Running from current directory may give unexpected results.")
-        import sys
-        sys.exit(1)
+        raise CLIError(
+            "This command should be run from inside an AKIOS project directory.\n\n"
+            "To get started:\n"
+            "  1. Create a project: akios init my-project\n"
+            "  2. Enter the project: cd my-project\n"
+            "  3. Run commands from there (e.g. akios run workflow.yml)",
+            exit_code=1
+        )
 
 
 def format_logs_info(logs_data: Dict[str, Any]) -> str:
@@ -413,12 +500,12 @@ def format_logs_info(logs_data: Dict[str, Any]) -> str:
         Formatted logs string
     """
     lines = []
-    lines.append("Recent Logs")
-    lines.append("=" * 11)
+    lines.append(f"[{get_theme_color('header')}]Recent Logs[/{get_theme_color('header')}]")
+    lines.append("[dim]" + "=" * 11 + "[/dim]")
 
     events = logs_data.get("events", [])
     if not events:
-        lines.append("No recent logs found")
+        lines.append(f"[{get_theme_color('warning')}]No recent logs found[/{get_theme_color('warning')}]")
     else:
         for i, event in enumerate(events[-10:], 1):  # Show last 10 events
             timestamp = event.get("timestamp", "unknown")[:19]  # YYYY-MM-DDTHH:MM:SS
@@ -426,7 +513,14 @@ def format_logs_info(logs_data: Dict[str, Any]) -> str:
             action = event.get("action", "unknown")
             result = event.get("result", "unknown")
 
-            status = "✓" if result == "success" else "✗"
-            lines.append(f"{i:2d}: {timestamp} {agent}.{action} -> {status} {result}")
+            # Color code the result
+            if result == "success":
+                status = f"[bold {get_theme_color('success')}]✓[/bold {get_theme_color('success')}]"
+                result_colored = f"[{get_theme_color('success')}]" + result + f"[/{get_theme_color('success')}]"
+            else:
+                status = f"[bold {get_theme_color('error')}]✗[/bold {get_theme_color('error')}]"
+                result_colored = f"[{get_theme_color('error')}]" + result + f"[/{get_theme_color('error')}]"
+            
+            lines.append(f"{i:2d}: [dim]{timestamp}[/dim] [{get_theme_color('info')}]{agent}[/{get_theme_color('info')}].[{get_theme_color('info')}]{action}[/{get_theme_color('info')}] -> {status} {result_colored}")
 
     return "\n".join(lines)

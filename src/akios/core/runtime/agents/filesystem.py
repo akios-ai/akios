@@ -268,7 +268,7 @@ class FilesystemAgent(BaseAgent):
                     return 'docx'
                 else:
                     return 'text'  # Default to text
-            except:
+            except Exception:
                 return 'text'  # Default to text on error
 
     def _read_text_file(self, path: Path) -> Dict[str, Any]:

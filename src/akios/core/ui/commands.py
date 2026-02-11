@@ -30,18 +30,19 @@ def get_command_prefix() -> str:
     Returns:
         str: "./akios" for Docker mode, "akios" for native Linux mode
     """
-    # Check if we're in a container environment (Docker)
+    # Check env var first (set by Docker wrapper script)
+    if os.environ.get('AKIOS_DOCKER_WRAPPER') == '1':
+        return "./akios"
+
+    # Check container marker files
     docker_indicators = [
         '/.dockerenv',
         '/run/.containerenv'
     ]
-
-    is_docker = any(os.path.exists(indicator) for indicator in docker_indicators)
-
-    if is_docker:
+    if any(os.path.exists(indicator) for indicator in docker_indicators):
         return "./akios"
-    else:
-        return "akios"
+
+    return "akios"
 
 
 def suggest_command(command: str) -> str:
@@ -59,7 +60,7 @@ def suggest_command(command: str) -> str:
 
 
 # Common command suggestions
-SETUP_COMMAND = suggest_command("setup --force")
+SETUP_COMMAND = suggest_command("setup")
 HELLO_WORKFLOW_COMMAND = suggest_command("run templates/hello-workflow.yml")
 DOCUMENT_INGESTION_COMMAND = suggest_command("run templates/document_ingestion.yml")
 BATCH_PROCESSING_COMMAND = suggest_command("run templates/batch_processing.yml")

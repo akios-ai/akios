@@ -23,7 +23,6 @@ import os
 import re
 import yaml
 import json
-import hashlib
 from pathlib import Path
 from typing import Dict, List, Any, Optional
 
@@ -62,7 +61,7 @@ def _substitute_env_vars(data: Any) -> Any:
                 return default_value if default_value else 'mock'
 
             # Get environment variable, use default if not set or empty
-            env_value = os.getenv(var_name, default_value)
+            env_value = os.getenv(var_name) or default_value
             if not env_value:
                 # If env var is not set and no default, treat as missing
                 raise ValueError(f"Missing environment variable '{var_name}' required for workflow execution. Please set it with: export {var_name}='your-value'")

@@ -25,6 +25,10 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from ...core.config.first_run import SetupWizard
+from ..helpers import handle_cli_error, CLIError
+from ..rich_helpers import output_with_mode
+
 
 def register_setup_command(subparsers: argparse._SubParsersAction) -> None:
     """
@@ -86,11 +90,7 @@ def run_setup_command(args: argparse.Namespace) -> int:
         # Determine project root
         project_root = _find_project_root()
         if not project_root:
-            from ..helpers import handle_cli_error, CLIError
             return handle_cli_error(CLIError("Not in an AKIOS project directory. Run 'akios init <project-name>' to create a new project first.", exit_code=1), json_mode=False)
-
-        # Import here to avoid circular imports
-        from ...core.config.first_run import SetupWizard
 
         # Create wizard instance
         wizard = SetupWizard(project_root)
@@ -101,66 +101,113 @@ def run_setup_command(args: argparse.Namespace) -> int:
 
         # Handle non-interactive flag
         if args.non_interactive:
-            print("ℹ️  Non-interactive mode: Skipping setup wizard")
+            output_with_mode(
+                message="Non-interactive mode: Skipping setup wizard",
+                output_type="info"
+            )
             # Mark setup as complete to skip future prompts
             wizard.detector._mark_setup_complete()
             return 0
 
         # Handle defaults flag (auto-answer with recommended defaults)
         if args.defaults:
-            print("🚀 Using recommended defaults for automated setup...")
-            success = wizard.run_defaults_setup()
+            output_with_mode(
+                message="Using recommended defaults for automated setup...",
+                output_type="info"
+            )
+            success = wizard.run_wizard(force=args.force, defaults=True)
             if success:
-                print("\n🎯 Setup completed with defaults!")
+                output_with_mode(
+                    message="Setup completed with defaults!",
+                    output_type="success"
+                )
                 return 0
             else:
-                print("\n❌ Setup failed.")
+                output_with_mode(
+                    message="Setup failed.",
+                    output_type="error"
+                )
                 return 1
 
         # Handle provider selection (enables non-interactive setup)
         if args.provider or args.mock_mode:
-            print("⚙️  Non-interactive setup with pre-selected options...")
-            provider = args.provider if args.provider else None
-            use_mock = args.mock_mode
-            success = wizard.run_configured_setup(provider=provider, use_mock=use_mock)
+            output_with_mode(
+                message="Non-interactive setup with pre-selected options...",
+                output_type="info"
+            )
+            success = wizard.run_wizard(force=args.force, mock_mode=args.mock_mode, provider=args.provider)
             if success:
-                print("\n🎯 Setup completed successfully!")
+                output_with_mode(
+                    message="Setup completed successfully!",
+                    output_type="success"
+                )
                 return 0
             else:
-                print("\n❌ Setup failed.")
+                output_with_mode(
+                    message="Setup failed.",
+                    output_type="error"
+                )
                 return 1
 
         # Require interactive input for setup
         if not wizard.detector._is_interactive():
-            print("ℹ️  Non-interactive environment detected. Setup wizard requires a TTY.")
-            print("   Configure .env manually or run on a native Linux host with an interactive terminal.")
+            output_with_mode(
+                message="Non-interactive environment detected. Setup wizard requires a TTY.",
+                output_type="warning"
+            )
+            output_with_mode(
+                message="Configure .env manually or run on a native Linux host with an interactive terminal.",
+                output_type="info"
+            )
             return 1
 
         # Check if we should show wizard
         if not wizard.detector.should_show_wizard():
             if args.force:
-                print("🔄 Force mode: Running setup wizard anyway...")
+                output_with_mode(
+                    message="Force mode: Running setup wizard anyway...",
+                    output_type="info"
+                )
             else:
-                print("✅ AKIOS is already configured!")
-                print("   Use '--force' to run setup again.")
-                print("   Or edit .env and config.yaml manually.")
+                output_with_mode(
+                    message="AKIOS is already configured!",
+                    output_type="success"
+                )
+                output_with_mode(
+                    message="Use '--force' to run setup again.",
+                    output_type="info"
+                )
+                output_with_mode(
+                    message="Or edit .env and config.yaml manually.",
+                    output_type="info"
+                )
                 return 0
 
         # Run the wizard
         success = wizard.run_wizard(force=args.force)
 
         if success:
-            print("\n🎯 Setup completed successfully!")
+            output_with_mode(
+                message="Setup completed successfully!",
+                output_type="success"
+            )
             return 0
         else:
-            print("\n❌ Setup was cancelled or failed.")
+            output_with_mode(
+                message="Setup was cancelled or failed.",
+                output_type="error"
+            )
             return 1
 
     except KeyboardInterrupt:
-        print("\n\n⚠️  Setup interrupted by user.")
+        output_with_mode(
+            message="Setup interrupted by user.",
+            output_type="warning"
+        )
         return 1
     except Exception as e:
-        print(f"❌ Setup failed: {e}", file=sys.stderr)
+        import sys
+        sys.stderr.write(f"Setup failed: {e}\n")
         return 1
 
 

@@ -1,6 +1,6 @@
-# 📚 AKIOS v1.0 - Documentation
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# 📚 AKIOS v1.0.5 - Documentation
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 **Complete user guide for AKIOS - Secure AI Workflow Execution**
 
@@ -18,15 +18,21 @@ Welcome to the official AKIOS documentation! This section contains all the guide
 
 ## 📖 User Guides
 
-### Configuration & Usage
+### Getting Started & Configuration
+- **[quickstart.md](quickstart.md)** - Complete setup and usage guide
 - **[configuration.md](configuration.md)** - All configuration options documented
-- **[CONFIG.md](CONFIG.md)** - Configuration file reference and schema
 - **[cli-reference.md](cli-reference.md)** - Complete command-line interface guide
-- **[security.md](security.md)** - Security features and compliance information
 
-### Deployment & Operations  
+### Environment & Accessibility
+- **[detection-system.md](detection-system.md)** - How AKIOS auto-detects your environment (Docker, Kubernetes, CI/CD, TTY, Unicode) 🆕
+- **[accessibility-guide.md](accessibility-guide.md)** - Symbol modes, colorblind support, Unicode, screen readers 🆕
+- **[theme-customization.md](theme-customization.md)** - Create and customize color themes 🆕
+- **[examples.md](examples.md)** - Real-world usage examples and tutorials 🆕
+
+### Security & Deployment
+- **[security.md](security.md)** - Security features and compliance information
 - **[deployment.md](deployment.md)** - Production deployment and scaling best practices
-- **[ec2-performance-testing.md](ec2-performance-testing.md)** - Complete AWS EC2 testing guide with performance validation, instance recommendations, and cost estimation ⭐ **NEW**
+- **[ec2-performance-testing.md](ec2-performance-testing.md)** - Complete AWS EC2 testing guide with performance validation, instance recommendations, and cost estimation
 - **[troubleshooting.md](troubleshooting.md)** - Common issues and solutions
 - **[migration-guide.md](migration-guide.md)** - Migrate to hybrid distribution
 
@@ -55,10 +61,14 @@ All templates produce **real AI output** from live LLM providers with full audit
 |---------------------|-------------|
 | **First time setup** | [quickstart.md](quickstart.md) |
 | **Choose installation method** | [quickstart.md](quickstart.md#choose-your-installation-method) |
-| **Migrate to v1.0** | **[migration-guide.md](migration-guide.md)** |
+| **Understand environment detection** | **[detection-system.md](detection-system.md)** 🆕 |
+| **Accessibility & colorblind support** | **[accessibility-guide.md](accessibility-guide.md)** 🆕 |
+| **Create custom color themes** | **[theme-customization.md](theme-customization.md)** 🆕 |
+| **See real-world examples** | **[examples.md](examples.md)** 🆕 |
+| **Migrate to v1.0** | [migration-guide.md](migration-guide.md) |
 | **Configure settings** | [configuration.md](configuration.md) |
 | **Run commands** | [cli-reference.md](cli-reference.md) |
-| **Test on AWS EC2** | **[ec2-performance-testing.md](ec2-performance-testing.md)** - Instance selection, setup, validation, troubleshooting |
+| **Test on AWS EC2** | [ec2-performance-testing.md](ec2-performance-testing.md) |
 | **Workflow syntax** | [workflow-schema.md](workflow-schema.md) |
 | **Process documents** | [integration/document-processing.md](integration/document-processing.md) |
 | **Integrate APIs** | [integration/api-integration.md](integration/api-integration.md) |
@@ -84,4 +94,4 @@ All templates produce **real AI output** from live LLM providers with full audit
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS v1.0 - Where AI meets unbreakable security*
+*AKIOS v1.0.5 - Where AI meets unbreakable security*

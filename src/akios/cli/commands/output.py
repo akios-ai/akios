@@ -21,10 +21,20 @@ List, clean, and archive workflow outputs.
 """
 
 import argparse
+import json
+import os
 from pathlib import Path
 
+try:
+    from rich.console import Console
+    _console = Console()
+except ImportError:
+    _console = None
+
 from ...core.runtime.output.manager import get_output_manager
+from ...core.ui.rich_output import print_panel, get_theme_color
 from ..helpers import CLIError, output_result, handle_cli_error, check_project_context
+from ..rich_helpers import output_with_mode, is_json_mode
 
 
 def register_output_command(subparsers: argparse._SubParsersAction) -> None:
@@ -62,6 +72,13 @@ def register_output_command(subparsers: argparse._SubParsersAction) -> None:
         help="Output in JSON format"
     )
     list_parser.set_defaults(func=run_output_list)
+
+    # output latest
+    latest_parser = subparsers_output.add_parser(
+        "latest",
+        help="Get the most recent workflow output in JSON"
+    )
+    latest_parser.set_defaults(func=run_output_latest)
 
     # output clean
     clean_parser = subparsers_output.add_parser(
@@ -140,22 +157,34 @@ def run_output_list(args: argparse.Namespace) -> int:
             outputs = manager.get_workflow_outputs(args.workflow)
             if not outputs:
                 if args.json:
-                    output_result({"workflow": args.workflow, "outputs": []}, format_json=True)
+                    output_result({"workflow": args.workflow, "outputs": []}, json_mode=True)
                 else:
-                    print(f"No outputs found for workflow '{args.workflow}'")
+                    output_with_mode(
+                        message=f"No outputs found for workflow '{args.workflow}'",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
                 return 0
 
             if args.json:
                 output_result({
                     "workflow": args.workflow,
                     "outputs": outputs
-                }, format_json=True)
+                }, json_mode=True)
             else:
-                print(f"Outputs for workflow '{args.workflow}':")
+                output_with_mode(
+                    message=f"Outputs for workflow '[{get_theme_color('info')}]{args.workflow}[/{get_theme_color('info')}]'",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="info"
+                )
                 for output in outputs:
                     size_mb = output['total_size'] / (1024 * 1024)
-                    print(f"  • {output['execution_id']} - {output['file_count']} files, {size_mb:.1f} MB")
-
+                    if _console:
+                        _console.print(f"  [{get_theme_color('info')}]•[/{get_theme_color('info')}] [bold]{output['execution_id']}[/bold] [dim]-[/dim] [{get_theme_color('info')}]{output['file_count']} files[/{get_theme_color('info')}], [{get_theme_color('warning')}]{size_mb:.1f} MB[/{get_theme_color('warning')}]")
+                    else:
+                        print(f"  • {output['execution_id']} - {output['file_count']} files, {size_mb:.1f} MB")
         else:
             # List all workflow outputs
             all_outputs = manager.get_all_outputs()
@@ -164,16 +193,35 @@ def run_output_list(args: argparse.Namespace) -> int:
                 output_result({"workflows": all_outputs}, json_mode=True)
             else:
                 if not all_outputs:
-                    print("No workflow outputs found")
+                    output_with_mode(
+                        message="No workflow outputs found",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
                 else:
-                    print("Workflow Outputs:")
+                    output_with_mode(
+                        message="Workflow Outputs",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="info"
+                    )
                     for workflow, outputs in all_outputs.items():
-                        print(f"  {workflow}/ ({len(outputs)} executions)")
+                        if _console:
+                            _console.print(f"  [bold {get_theme_color('header')}]{workflow}/[/bold {get_theme_color('header')}] [dim]({len(outputs)} executions)[/dim]")
+                        else:
+                            print(f"  {workflow}/ ({len(outputs)} executions)")
                         for output in outputs[:3]:  # Show latest 3
                             size_mb = output['total_size'] / (1024 * 1024)
-                            print(f"    • {output['execution_id']} - {output['file_count']} files, {size_mb:.1f} MB")
+                            if _console:
+                                _console.print(f"    [{get_theme_color('info')}]•[/{get_theme_color('info')}] [bold]{output['execution_id']}[/bold] [dim]-[/dim] [{get_theme_color('info')}]{output['file_count']} files[/{get_theme_color('info')}], [{get_theme_color('warning')}]{size_mb:.1f} MB[/{get_theme_color('warning')}]")
+                            else:
+                                print(f"    • {output['execution_id']} - {output['file_count']} files, {size_mb:.1f} MB")
                         if len(outputs) > 3:
-                            print(f"    ... and {len(outputs) - 3} more")
+                            if _console:
+                                _console.print(f"    [dim]... and {len(outputs) - 3} more[/dim]")
+                            else:
+                                print(f"    ... and {len(outputs) - 3} more")
 
         return 0
 
@@ -205,16 +253,24 @@ def run_output_clean(args: argparse.Namespace) -> int:
         )
 
         if args.json:
-            output_result(result, format_json=True)
+            output_result(result, json_mode=True)
         else:
             action = "Would clean" if args.dry_run else "Cleaned"
             size_mb = result['size_freed'] / (1024 * 1024)
-            print(f"{action} {result['cleaned']} execution(s) from '{args.workflow}'")
-            print(f"  • Scanned: {result['scanned']} total executions")
-            print(f"  • Space freed: {size_mb:.1f} MB")
-
+            details = [
+                f"Scanned: {result['scanned']} total executions",
+                f"Space freed: {size_mb:.1f} MB"
+            ]
             if args.dry_run:
-                print("\nUse --dry-run=false to actually perform cleanup")
+                details.append("Use --dry-run=false to actually perform cleanup")
+            
+            output_with_mode(
+                message=f"{action} {result['cleaned']} execution(s) from '{args.workflow}'",
+                details=details,
+                json_mode=False,
+                quiet_mode=False,
+                output_type="success" if not args.dry_run else "info"
+            )
 
         return 0
 
@@ -248,10 +304,15 @@ def run_output_archive(args: argparse.Namespace) -> int:
                 "workflow": args.workflow,
                 "archive_path": archive_path,
                 "status": "created"
-            }, format_json=True)
+            }, json_mode=True)
         else:
-            print(f"✅ Archived outputs for workflow '{args.workflow}'")
-            print(f"   Archive: {archive_path}")
+            output_with_mode(
+                message=f"Archived outputs for workflow '[{get_theme_color('info')}]{args.workflow}[/{get_theme_color('info')}]'",
+                details=[f"Archive: [{get_theme_color('warning')}]{archive_path}[/{get_theme_color('warning')}]"],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="success"
+            )
 
         return 0
 
@@ -270,20 +331,67 @@ def run_output_help(args: argparse.Namespace) -> int:
     Returns:
         Exit code
     """
-    print("AKIOS Output Management")
-    print("=======================")
-    print()
-    print("Manage workflow outputs with organization and cleanup capabilities.")
-    print()
-    print("Commands:")
-    print("  list [workflow]              List workflow outputs")
-    print("  clean <workflow>             Clean old workflow outputs")
-    print("  archive <workflow>           Archive workflow outputs")
-    print()
-    print("Examples:")
-    print("  akios output list                           # List all workflow outputs")
-    print("  akios output list fraud-detection          # List specific workflow")
-    print("  akios output clean fraud-detection --dry-run # Preview cleanup")
-    print("  akios output archive fraud-detection       # Create archive")
+    help_content = """Commands:
+  list [workflow]              List workflow outputs
+  clean <workflow>             Clean old workflow outputs
+  archive <workflow>           Archive workflow outputs
+
+Examples:
+  akios output list                           # List all workflow outputs
+  akios output list fraud-detection          # List specific workflow
+  akios output clean fraud-detection --dry-run # Preview cleanup
+  akios output archive fraud-detection       # Create archive"""
+
+    print_panel(
+        "AKIOS Output Management",
+        "Manage workflow outputs with organization and cleanup capabilities.\n\n" + help_content,
+        style=None
+    )
 
     return 0
+
+
+def run_output_latest(args: argparse.Namespace) -> int:
+    """
+    Execute the output latest command.
+    """
+    check_project_context()
+    
+    output_dir = Path("./data/output")
+    if not output_dir.exists():
+        raise CLIError("No output directory found")
+        
+    # Find all run directories
+    runs = sorted([d for d in output_dir.iterdir() if d.is_dir() and d.name.startswith("run_")])
+    
+    if not runs:
+        raise CLIError("No workflow runs found")
+        
+    latest_run = runs[-1]
+    
+    # Try to find a JSON output file
+    # Usually outputs are in the run directory.
+    # We look for the main output file.
+    
+    # Priority:
+    # 1. output.json
+    # 2. *.json (first one found)
+    
+    output_file = latest_run / "output.json"
+    if not output_file.exists():
+        json_files = list(latest_run.glob("*.json"))
+        if json_files:
+            output_file = json_files[0]
+        else:
+            raise CLIError(f"No JSON output found in {latest_run}")
+            
+    try:
+        with open(output_file, "r") as f:
+            data = json.load(f)
+            
+        # Print raw JSON for piping
+        print(json.dumps(data, indent=2))
+        return 0
+        
+    except Exception as e:
+        raise CLIError(f"Failed to read output: {str(e)}")

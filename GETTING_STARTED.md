@@ -1,6 +1,6 @@
-# 🚀 AKIOS v1.0 - Get Started in 3 Minutes
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# 🚀 AKIOS v1.0.5 - Get Started in 3 Minutes
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 **Secure AI workflows made simple.**
 
@@ -10,6 +10,17 @@
 
 ### 🐧 **Pip Package** (Recommended - Python Developers)
 **Native Python installation with full ecosystem integration**
+
+⚠️ **LINUX USERS: Pre-install system packages BEFORE `pip install`**
+```bash
+# Ubuntu/Debian - REQUIRED for kernel-hard security
+sudo apt-get update
+sudo apt-get install libseccomp-dev python3-seccomp
+
+# Fedora/RHEL - REQUIRED for kernel-hard security
+sudo dnf install libseccomp-devel python3-seccomp
+```
+
 ```bash
 # Ubuntu 24.04+ users: Use pipx instead of pip due to PEP 668
 sudo apt install pipx
@@ -19,7 +30,7 @@ pipx install akios
 pip install akios
 
 # Or install a specific version:
-pip install akios==1.0.4
+pip install akios==1.0.5
 
 # Verify installation
 akios --version
@@ -32,20 +43,21 @@ akios init my-project
 **Containerized deployment works everywhere - no Python/dependencies needed**
 ```bash
 # Pull the Docker image
-docker pull akiosai/akios:v1.0.4
+docker pull akiosai/akios:v1.0.5
 
 # Initialize a new project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
 
 # Run workflows
 cd my-project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 run templates/hello-workflow.yml
 ```
 
 **OR use the wrapper script for easier commands:**
 ```bash
 # Create wrapper script (one-time setup)
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 
 # Now use ./akios like native installation
@@ -63,7 +75,19 @@ AKIOS_FORCE_PULL=1 ./akios status
 
 ## ⚡ Quick Start (Pip)
 
-### 1. Install AKIOS
+### 1. Install System Dependencies (Linux Only)
+⚠️ **This is required for full security. Skip if using Docker.**
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install libseccomp-dev python3-seccomp
+
+# Fedora/RHEL
+sudo dnf install libseccomp-devel python3-seccomp
+```
+
+### 2. Install AKIOS
 ```bash
 # Using pip (most systems)
 pip install akios
@@ -71,9 +95,59 @@ pip install akios
 # OR using pipx (Ubuntu 24.04+ recommended)
 sudo apt install pipx
 pipx install akios
+
+# For maximum security on Linux, run workflows with sudo:
+# sudo akios run templates/hello-workflow.yml
 ```
 
-### 2. Create Your Project
+### 3. Security Cage Quick Start
+
+**AKIOS provides a security cage for AI workflows:**
+
+```bash
+# Activate security cage (PII redaction, network lock, audit)
+akios cage up
+
+# Check security status
+akios cage status
+
+# Run your workflow
+akios run workflow.yml
+
+# Deactivate cage and destroy all session data
+akios cage down
+
+# OR keep data for debugging (dev mode only)
+akios cage down --keep-data
+```
+
+**⚠️ WARNING:** `cage down` permanently destroys:
+- `audit/` — All audit logs and Merkle proofs
+- `data/output/` — All workflow outputs
+- `data/input/` — All input files
+
+**After cage down, ZERO data remains.**
+
+### 4. HTTPS Domain Whitelist (Optional)
+
+**Allow HTTP agent to access specific domains while maintaining security:**
+
+```yaml
+# config.yaml
+network_access_allowed: true
+allowed_domains:
+  - api.salesforce.com
+  - api.mycompany.com
+```
+
+**Or via environment variable:**
+```bash
+export AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.example.com"
+```
+
+**Note:** LLM APIs (OpenAI, Anthropic, Grok, Mistral, Gemini) always bypass the whitelist.
+
+### 3. Create Your Project
 ```bash
 # Initialize a new project
 akios init my-project
@@ -126,8 +200,20 @@ akios status
 # View detailed security information
 akios status --security
 
+# View budget dashboard and cost tracking
+akios status --budget
+
+# Scan text for PII
+akios protect scan "Patient John Smith, NPI 1234567893"
+
+# Preview the exact prompt sent to the LLM
+akios protect show-prompt workflow.yml
+
+# Make secure HTTP requests (requires cage up + domain whitelist)
+akios http GET https://api.example.com/data
+
 # Clean up old runs when disk space gets low
-akios clean --old-runs
+akios clean
 ```
 
 ---
@@ -155,4 +241,4 @@ akios clean --old-runs
 
 ---
 
-*AKIOS v1.0 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0.5 - Where AI meets unbreakable security* 🛡️🤖

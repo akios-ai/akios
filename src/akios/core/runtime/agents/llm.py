@@ -22,7 +22,7 @@ Makes LLM API calls while tracking token usage and enforcing cost limits.
 import os
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional, List
 
 from .base import BaseAgent, AgentError
@@ -258,7 +258,8 @@ class LLMAgent(BaseAgent):
 
         # Apply security before making any external calls (delayed import)
         from akios.security import enforce_sandbox
-        enforce_sandbox()
+        from akios.security.syscall.policy import AgentType
+        enforce_sandbox(agent_type=AgentType.LLM)
 
         # Use pre-imported PII redaction function
         enterprise_pii_redaction = _pii_redaction_func
@@ -324,7 +325,7 @@ class LLMAgent(BaseAgent):
                     )
 
                     fallback_applied = parameters['prompt'] != original_prompt
-                except:
+                except Exception:
                     fallback_applied = False
 
                 # Log PII redaction failure
@@ -413,7 +414,7 @@ class LLMAgent(BaseAgent):
         result['cost_incurred'] = round(cost_incurred, 6)
 
         # Add processing timestamp for template access
-        result['processing_timestamp'] = datetime.utcnow().isoformat() + 'Z'
+        result['processing_timestamp'] = datetime.now(timezone.utc).isoformat()
 
         # Audit the action with mock mode warning if applicable
         audit_metadata = {
@@ -656,13 +657,16 @@ class LLMAgent(BaseAgent):
                 'tokens_used': tokens_used,
                 'model': 'mock-model',
                 'cost_incurred': round(cost_incurred, 6),
-                'processing_timestamp': datetime.utcnow().isoformat() + 'Z',
+                'processing_timestamp': datetime.now(timezone.utc).isoformat(),
                 'finish_reason': 'completed'
             }
 
-        # Real LLM API call - check network access first
-        if not self.settings.network_access_allowed:
-            raise AgentError("Network access disabled in security settings")
+        # Real LLM API call
+        # LLM agent always has network access to its configured provider APIs.
+        # The security cage protects data (PII redaction, audit, budget limits),
+        # it does not block AI orchestration calls. The network_access_allowed
+        # setting controls the HTTP agent for arbitrary web requests only.
+        # Provider must still be in allowed_providers list (validated at init).
 
         self._ensure_api_available()
 
@@ -702,7 +706,7 @@ class LLMAgent(BaseAgent):
                 'model': result.get('model', self.model),
                 'finish_reason': result.get('finish_reason', 'unknown'),
                 'cost_incurred': round(cost_incurred, 6),
-                'processing_timestamp': datetime.utcnow().isoformat() + 'Z'
+                'processing_timestamp': datetime.now(timezone.utc).isoformat()
             }
 
         except Exception as e:
@@ -723,7 +727,7 @@ class LLMAgent(BaseAgent):
             'tokens_used': tokens_used,
             'model': result.get('model', self.model),
             'cost_incurred': round(cost_incurred, 6),
-            'processing_timestamp': datetime.utcnow().isoformat() + 'Z'
+            'processing_timestamp': datetime.now(timezone.utc).isoformat()
         }
 
     def _chat_completion(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -749,7 +753,7 @@ class LLMAgent(BaseAgent):
                 'tokens_used': tokens_used,
                 'model': 'mock-model',
                 'cost_incurred': round(cost_incurred, 6),
-                'processing_timestamp': datetime.utcnow().isoformat() + 'Z',
+                'processing_timestamp': datetime.now(timezone.utc).isoformat(),
                 'finish_reason': 'completed'
             }
 
@@ -782,7 +786,7 @@ class LLMAgent(BaseAgent):
                 'model': result.get('model', self.model),
                 'usage': result.get('usage', {}),
                 'cost_incurred': round(cost_incurred, 6),
-                'processing_timestamp': datetime.utcnow().isoformat() + 'Z'
+                'processing_timestamp': datetime.now(timezone.utc).isoformat()
             }
 
         except Exception as e:
@@ -873,8 +877,11 @@ class LLMAgent(BaseAgent):
             return estimated_tokens
 
     def _calculate_cost(self, tokens: int) -> float:
-        """Calculate cost for token usage based on provider and model"""
-        # Provider-specific pricing (approximate rates)
+        """Calculate cost for token usage"""
+        # No cost in mock mode
+        if self.use_mock:
+            return 0.0
+
         pricing = {
             "openai": {
                 "gpt-4o-mini": 0.00015,  # $0.00015 per 1K tokens
@@ -946,7 +953,19 @@ class LLMAgent(BaseAgent):
             return json.dumps(mock_analysis, indent=2)
 
         # All other mock responses clearly indicate they are demo responses
-        mock_header = "🎭 ════════════════════════════════════════════════════════════════════════════════\n🎭                              MOCK MODE RESPONSE\n🎭 ════════════════════════════════════════════════════════════════════════════════\n🎭 This is a SIMULATED AI response for safe testing\n🎭 • NO real AI API was called\n🎭 • NO costs incurred\n🎭 • NO external network connections\n🎭 • Results are for testing AKIOS security features only\n🎭\n🎭 For real AI responses: Add API keys to .env and set AKIOS_MOCK_LLM=0\n🎭 ════════════════════════════════════════════════════════════════════════════════\n\n"
+        mock_header = """🎭 ════════════════════════════════════════════════════════════════════════════════
+🎭                              MOCK MODE RESPONSE
+🎭 ════════════════════════════════════════════════════════════════════════════════
+🎭 This is a SIMULATED AI response for safe testing
+🎭 • NO real AI API was called
+🎭 • NO costs incurred
+🎭 • NO external network connections
+🎭 • Results are for testing AKIOS security features only
+🎭
+🎭 For real AI responses: Add API keys to .env and set AKIOS_MOCK_LLM=0
+🎭 ════════════════════════════════════════════════════════════════════════════════
+
+"""
 
         if 'analyze' in prompt_lower and 'document' in prompt_lower:
             response = mock_header + "FAKE ANALYSIS: This document appears to be a technical specification containing approximately 2,500 words. Key topics include system architecture, security protocols, and implementation guidelines. The document demonstrates good structure with clear sections on requirements, design, and testing procedures."

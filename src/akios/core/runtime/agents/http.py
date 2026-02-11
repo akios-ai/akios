@@ -71,11 +71,26 @@ class HTTPAgent(BaseAgent):
 
         # Apply security before making network calls (delayed import)
         from akios.security import enforce_sandbox, apply_pii_redaction
-        enforce_sandbox()
+        from akios.security.syscall.policy import AgentType
+        enforce_sandbox(agent_type=AgentType.HTTP)
 
         # Check network access is allowed
         if not self.settings.network_access_allowed:
-            raise AgentError("Network access disabled in security settings")
+            # MANAGED ACCESS: Check allowlist if global access is disabled
+            allowed = False
+            request_host = urlparse(parameters.get('url', '')).netloc
+            
+            if self.settings.allowed_domains:
+                for domain in self.settings.allowed_domains:
+                    if domain == request_host or request_host.endswith('.' + domain):
+                        allowed = True
+                        break
+            
+            if not allowed:
+                raise AgentError(
+                    f"Network access denied. Host '{request_host}' is not in allowed_domains. "
+                    f"Enable AKIOS_NETWORK_ACCESS_ALLOWED=true or add to AKIOS_ALLOWED_DOMAINS."
+                )
 
         # Check rate limits
         self._check_rate_limits()
@@ -126,7 +141,9 @@ class HTTPAgent(BaseAgent):
 
         # Execute the request
         start_time = time.time()
-        result = self._execute_request(action, url, headers, data, params, auth_params)
+        workflow_id = parameters.get('workflow_id', 'unknown')
+        step = parameters.get('step', 0)
+        result = self._execute_request(action, url, headers, data, params, auth_params, workflow_id, step)
         execution_time = time.time() - start_time
 
         # Update rate limiting (thread-safe)
@@ -136,8 +153,8 @@ class HTTPAgent(BaseAgent):
 
         # Audit the request
         append_audit_event({
-            'workflow_id': parameters.get('workflow_id', 'unknown'),
-            'step': parameters.get('step', 0),
+            'workflow_id': workflow_id,
+            'step': step,
             'agent': 'http',
             'action': action,
             'result': 'success' if result.get('status_code', 0) < 400 else 'error',
@@ -154,7 +171,8 @@ class HTTPAgent(BaseAgent):
         return result
 
     def _execute_request(self, method: str, url: str, headers: Dict[str, str],
-                        data: Any, params: Dict[str, Any], auth_params: Any = None) -> Dict[str, Any]:
+                        data: Any, params: Dict[str, Any], auth_params: Any = None,
+                        workflow_id: str = 'unknown', step: int = 0) -> Dict[str, Any]:
         """Execute the HTTP request using httpx"""
         try:
             import httpx
@@ -169,9 +187,7 @@ class HTTPAgent(BaseAgent):
                 'url': url,
                 'headers': headers or {},
                 'params': params or {},
-                'timeout': self.timeout,
-                'follow_redirects': True,
-                'max_redirects': self.max_redirects
+                'timeout': self.timeout
             }
 
             # Add authentication if provided
@@ -191,7 +207,8 @@ class HTTPAgent(BaseAgent):
                     request_kwargs['content'] = str(data)
 
             # Make the request based on method
-            with httpx.Client() as client:
+            # Configure redirects on the client
+            with httpx.Client(follow_redirects=True, max_redirects=self.max_redirects) as client:
                 if method.upper() == 'GET':
                     response = client.get(**request_kwargs)
                 elif method.upper() == 'POST':
@@ -229,8 +246,8 @@ class HTTPAgent(BaseAgent):
 
                 if content_redacted or headers_redacted:
                     append_audit_event({
-                        'workflow_id': parameters.get('workflow_id', 'unknown'),
-                        'step': parameters.get('step', 0),
+                        'workflow_id': workflow_id,
+                        'step': step,
                         'agent': 'http',
                         'action': 'pii_redaction_output',
                         'result': 'success',
@@ -256,7 +273,7 @@ class HTTPAgent(BaseAgent):
                         'headers': redacted_headers,
                         'url': str(response.url)
                     }
-                except:
+                except Exception:
                     return {
                         'status_code': response.status_code,
                         'content': response_content,

@@ -40,9 +40,23 @@ Send private reports to: **security@akioud.ai**
 ## 🛡️ What We Protect In v1.0
 - Security sandboxing (kernel-hard on native Linux, strong policy-based in Docker)
 - Syscall interception & resource quotas
-- Real-time PII redaction
-- Enforced cost & loop kill-switches
+- Real-time PII redaction (including healthcare: NPI, DEA, Medical Record Numbers)
+- Enforced cost & infinite loop kill-switches
 - Merkle tamper-evident audit ledger
+- **Cage down data destruction** — complete session data wipe (audit, outputs, inputs)
+- **HTTPS domain whitelist** — selective network access for HTTP agent
+- **`--exec` rejection** — shell-injection trap blocks arbitrary command execution
+- **`akios http`** — secure HTTP requests with domain whitelisting & PII redaction
+- **`akios protect show-prompt`** — preview interpolated + redacted LLM prompts
+
+**Security Cage Lifecycle:**
+- `cage up` → activate protections → workflows execute → data generated
+- `cage down` → **all data destroyed** (audit/, data/output/, data/input/) → zero residue
+
+**Network Security:**
+- Default: All network access blocked
+- `allowed_domains` whitelist for HTTP agent (specific domains only)
+- LLM APIs always permitted (OpenAI, Anthropic, Grok, Mistral, Gemini)
 
 **No guarantees**: No software is 100% secure.  
 Users must secure their environment and validate outputs.

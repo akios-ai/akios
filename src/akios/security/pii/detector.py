@@ -124,7 +124,8 @@ class PIIDetector:
         return FallbackSettings()
 
     def detect_pii(self, text: str, categories: Optional[List[str]] = None,
-                   sensitivity_levels: Optional[List[str]] = None) -> Dict[str, List[str]]:
+                   sensitivity_levels: Optional[List[str]] = None,
+                   force_detection: bool = False) -> Dict[str, List[str]]:
         """
         Detect PII in text using compliance patterns
 
@@ -132,11 +133,14 @@ class PIIDetector:
             text: Text to analyze for PII
             categories: Optional list of categories to check ('personal', 'financial', etc.)
             sensitivity_levels: Optional list of sensitivity levels ('high', 'medium', 'low')
+            force_detection: If True, detect PII even when pii_redaction_enabled is False.
+                           Used by protect scan/preview which should always detect regardless
+                           of cage state.
 
         Returns:
             Dict mapping PII type names to lists of detected values
         """
-        if not self.settings.pii_redaction_enabled:
+        if not force_detection and not self.settings.pii_redaction_enabled:
             return {}
 
         detected_pii = defaultdict(list)
@@ -145,7 +149,9 @@ class PIIDetector:
         patterns_to_check = self._filter_patterns(categories, sensitivity_levels)
 
         for pattern_name, pattern in patterns_to_check.items():
-            matches = pattern.compiled_pattern.findall(text)
+            # Use finditer to get full match text (findall with groups returns
+            # tuples of group values which lose the actual matched string)
+            matches = [m.group(0) for m in pattern.compiled_pattern.finditer(text)]
             if matches:
                 # Clean and deduplicate matches
                 cleaned_matches = self._clean_matches(matches, pattern_name)

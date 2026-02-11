@@ -1,6 +1,6 @@
-# AKIOS v1.0 – Configuration Reference
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# AKIOS v1.0.5 – Configuration Reference
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 **Complete configuration guide for the AKIOS security cage.**
 
@@ -51,9 +51,12 @@ AKIOS_LLM_PROVIDER=grok
 GROK_API_KEY=xai-your-key-here
 AKIOS_LLM_MODEL=grok-3
 
+# Network Configuration
+AKIOS_NETWORK_ACCESS_ALLOWED=false     # Allow external HTTP API calls
+AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.mycompany.com"  # HTTPS whitelist for HTTP agent
+
 # Mode Settings
 AKIOS_MOCK_LLM=0              # 0=real LLM calls, 1=mock LLM output
-AKIOS_NETWORK_ACCESS_ALLOWED=1 # Allow external API calls
 
 # Docker Wrapper Controls
 AKIOS_FORCE_PULL=1            # Always pull the latest image before running
@@ -65,6 +68,10 @@ GROK_API_KEY=xai-...
 MISTRAL_API_KEY=your-mistral-key...
 GEMINI_API_KEY=your-gemini-key...
 ```
+
+**Network whitelist environment variable:**
+- `AKIOS_NETWORK_ACCESS_ALLOWED=true` to enable HTTP agent
+- `AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.example.com"` to whitelist domains (comma-separated)
 
 ### Real API Mode Flag
 
@@ -212,6 +219,42 @@ network_access_allowed: false  # Block all network access (secure)
 network_access_allowed: true   # Allow HTTP agent network calls
 ```
 
+### `allowed_domains`
+**Type:** `list of strings`  
+**Default:** `[]` (empty — only LLM APIs allowed)  
+**Description:** HTTPS domains whitelist for HTTP agent requests
+
+**Important:** LLM APIs (OpenAI, Anthropic, Grok, Mistral, Gemini) **always pass through** regardless of this setting — they are core to AKIOS functionality and never blocked.
+
+This setting controls only the **HTTP agent** for custom API calls (CRM, data services, 3rd-party APIs).
+
+**Example: Allow Salesforce and Custom API:**
+```yaml
+network_access_allowed: true
+allowed_domains:
+  - "api.salesforce.com"
+  - "api.mycompany.com"
+  - "data.example.org"
+```
+
+**All requests to domains NOT in this list will be blocked** (except LLM APIs).
+
+**Via Environment Variable:**
+```bash
+# Single domain
+AKIOS_ALLOWED_DOMAINS="api.salesforce.com"
+
+# Multiple domains (comma-separated)
+AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.mycompany.com,data.example.org"
+```
+
+**Security Note:** Each domain is checked against the whitelist. Subdomains are NOT automatically allowed — add them explicitly:
+```yaml
+allowed_domains:
+  - "api.salesforce.com"
+  - "analytics.salesforce.com"  # Must add separately
+```
+
 ## 🛡️ PII & Compliance Settings
 
 ### `pii_redaction_enabled`
@@ -226,6 +269,9 @@ Automatically detects and redacts sensitive data in prompts and messages:
 - Credit card numbers
 - IP addresses
 - API keys and passwords
+- NPI (National Provider Identifier)
+- DEA Registration Numbers
+- Medical Record Numbers (MRN-prefixed)
 
 ```yaml
 pii_redaction_enabled: true  # Recommended: always true
@@ -311,6 +357,8 @@ Automatically terminates workflows that exceed cost limits.
 budget_limit_per_run: 1.0   # $1.00 per workflow (recommended)
 budget_limit_per_run: 5.0   # $5.00 for complex workflows
 ```
+
+> **Tip:** Run `akios status --budget` to view current spend vs. configured limit in real time.
 
 ##  Audit & Logging Settings
 

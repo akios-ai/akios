@@ -40,17 +40,33 @@ class PIIRedactor:
     using configurable redaction strategies.
     """
 
-    def __init__(self):
+    def __init__(self, marker_style: str = "bracket"):
+        """
+        Initialize PII redactor.
+
+        Args:
+            marker_style: Placeholder marker style.
+                - "bracket": [PII_TYPE] (default, for internal/log use)
+                - "guillemet": «PII_TYPE» (CLI-safe, avoids Rich markup conflicts)
+        """
         # Delay config and detector loading to avoid import-time validation
         self._settings = None
         self._detector = None
+        self._marker_style = marker_style
 
         # Placeholder templates for different strategies - ENSURE ALWAYS SET
-        self.placeholders = {
-            'mask': '[PII_TYPE]',
-            'remove': '',
-            'hash': '[HASHED_PII_TYPE]'
-        }
+        if marker_style == "guillemet":
+            self.placeholders = {
+                'mask': '«PII_TYPE»',
+                'remove': '',
+                'hash': '«HASHED_PII_TYPE»'
+            }
+        else:
+            self.placeholders = {
+                'mask': '[PII_TYPE]',
+                'remove': '',
+                'hash': '[HASHED_PII_TYPE]'
+            }
 
     @property
     def settings(self):
@@ -100,7 +116,8 @@ class PIIRedactor:
         return MinimalDetector()
 
     def redact_text(self, text: str, strategy: Optional[str] = None,
-                   categories: Optional[List[str]] = None) -> str:
+                   categories: Optional[List[str]] = None,
+                   force_redaction: bool = False) -> str:
         """
         Redact PII from text using specified strategy
 
@@ -108,6 +125,9 @@ class PIIRedactor:
             text: Input text containing potential PII
             strategy: Redaction strategy ('mask', 'remove', 'hash')
             categories: Optional categories to redact
+            force_redaction: If True, redact even when pii_redaction_enabled is False.
+                           Used by protect scan/preview which should always redact
+                           regardless of cage state.
 
         Returns:
             Text with PII redacted
@@ -117,13 +137,21 @@ class PIIRedactor:
         """
         # Ensure placeholders are always available
         if not hasattr(self, 'placeholders'):
-            self.placeholders = {
-                'mask': '[PII_TYPE]',
-                'remove': '',
-                'hash': '[HASHED_PII_TYPE]'
-            }
+            marker_style = getattr(self, '_marker_style', 'bracket')
+            if marker_style == "guillemet":
+                self.placeholders = {
+                    'mask': '«PII_TYPE»',
+                    'remove': '',
+                    'hash': '«HASHED_PII_TYPE»'
+                }
+            else:
+                self.placeholders = {
+                    'mask': '[PII_TYPE]',
+                    'remove': '',
+                    'hash': '[HASHED_PII_TYPE]'
+                }
 
-        if not self.settings.pii_redaction_enabled:
+        if not force_redaction and not self.settings.pii_redaction_enabled:
             return text
 
         if strategy is None:
@@ -134,7 +162,7 @@ class PIIRedactor:
 
         try:
             # Detect PII in the text
-            detected_pii = self.detector.detect_pii(text, categories)
+            detected_pii = self.detector.detect_pii(text, categories, force_detection=force_redaction)
 
             if not detected_pii:
                 return text  # No PII found
@@ -215,6 +243,9 @@ class PIIRedactor:
         hash_obj = hashlib.sha256(value.encode('utf-8'))
         hash_suffix = hash_obj.hexdigest()[:8].upper()
 
+        marker_style = getattr(self, '_marker_style', 'bracket')
+        if marker_style == "guillemet":
+            return f"«HASHED_{pii_type.upper()}_{hash_suffix}»"
         return f"[HASHED_{pii_type.upper()}_{hash_suffix}]"
 
     def redact_structured_data(self, data: Any, strategy: Optional[str] = None) -> Any:
@@ -239,13 +270,15 @@ class PIIRedactor:
         else:
             return data
 
-    def preview_redaction(self, text: str, strategy: Optional[str] = None) -> Dict[str, Any]:
+    def preview_redaction(self, text: str, strategy: Optional[str] = None,
+                         force_redaction: bool = False) -> Dict[str, Any]:
         """
         Preview what would be redacted without actually redacting
 
         Args:
             text: Text to analyze
             strategy: Redaction strategy to preview
+            force_redaction: If True, always redact regardless of settings
 
         Returns:
             Dict with preview information
@@ -253,8 +286,8 @@ class PIIRedactor:
         if strategy is None:
             strategy = self.settings.redaction_strategy
 
-        detected_pii = self.detector.detect_pii(text)
-        redacted_preview = self.redact_text(text, strategy)
+        detected_pii = self.detector.detect_pii(text, force_detection=force_redaction)
+        redacted_preview = self.redact_text(text, strategy, force_redaction=force_redaction)
 
         return {
             'original_text': text,
@@ -288,14 +321,18 @@ class PIIRedactor:
         }
 
 
-def create_pii_redactor() -> PIIRedactor:
+def create_pii_redactor(marker_style: str = "bracket") -> PIIRedactor:
     """
     Create a PII redactor instance
+
+    Args:
+        marker_style: Placeholder marker style ("bracket" or "guillemet").
+            Use "guillemet" for CLI display to avoid Rich markup conflicts.
 
     Returns:
         Configured PIIRedactor instance
     """
-    return PIIRedactor()
+    return PIIRedactor(marker_style=marker_style)
 
 
 def apply_pii_redaction(data, strategy: Optional[str] = None):

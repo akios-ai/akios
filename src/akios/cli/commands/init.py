@@ -24,10 +24,17 @@ from pathlib import Path
 import argparse
 import logging
 
+try:
+    from rich.console import Console
+    _console = Console()
+except ImportError:
+    _console = None
+
 logger = logging.getLogger(__name__)
 
 from ...config import get_settings
 from ..helpers import CLIError, output_result
+from ..rich_helpers import output_with_mode, is_json_mode, is_quiet_mode
 from ...core.ui.commands import (
     SETUP_COMMAND, HELLO_WORKFLOW_COMMAND, DOCUMENT_INGESTION_COMMAND,
     BATCH_PROCESSING_COMMAND, FILE_ANALYSIS_COMMAND, STATUS_COMMAND, HELP_COMMAND,
@@ -92,12 +99,31 @@ def run_init_command(args: argparse.Namespace) -> int:
         Exit code
     """
     try:
-        result = create_project_structure(project_name=args.project_name, force=args.force)
-        output_result(result, json_mode=args.json, success_message="Project initialized successfully")
+        # Show logo on first init (before any output)
+        if not getattr(args, 'json', False):
+            try:
+                from ...core.ui.logo import should_show_logo, show_logo, mark_initialized
+                if should_show_logo():
+                    show_logo()
+                    mark_initialized()
+            except Exception:
+                # Silent fail - never break CLI on logo display
+                pass
+
+        result = create_project_structure(project_name=args.project_name, force=args.force, json_mode=getattr(args, 'json', False))
+        
+        # Only output raw result in JSON mode to keep CLI clean
+        if getattr(args, 'json', False):
+            output_result(result, json_mode=True, success_message="Project initialized successfully")
 
         # Run setup wizard if requested
         if getattr(args, 'wizard', False):
-            print("\n🔧 Running setup wizard...")
+            output_with_mode(
+                message="Initializing Security Configuration Wizard...",
+                json_mode=is_json_mode(getattr(args, 'json', False)),
+                quiet_mode=False,
+                output_type="info"
+            )
             try:
                 from ...core.config.first_run import SetupWizard
                 from pathlib import Path
@@ -110,49 +136,86 @@ def run_init_command(args: argparse.Namespace) -> int:
 
                 wizard = SetupWizard(project_dir)
                 if wizard.run_wizard():
-                    print("✅ Setup wizard completed successfully!")
+                    output_with_mode(
+                        message="Security configuration completed successfully.",
+                        json_mode=is_json_mode(getattr(args, 'json', False)),
+                        quiet_mode=False,
+                        output_type="success"
+                    )
                 else:
-                    print("❌ Setup wizard was cancelled or failed.")
+                    output_with_mode(
+                        message="Security configuration cancelled or incomplete.",
+                        json_mode=is_json_mode(getattr(args, 'json', False)),
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
                     return 1
             except Exception as e:
-                print(f"❌ Setup wizard failed: {e}")
+                output_with_mode(
+                    message="Security configuration failed.",
+                    details=[str(e)],
+                    json_mode=is_json_mode(getattr(args, 'json', False)),
+                    quiet_mode=False,
+                    output_type="error"
+                )
                 return 1
 
         # Add welcoming post-init message for better UX (unless --quiet or --json)
         if not getattr(args, 'quiet', False) and not getattr(args, 'json', False):
-            print(f"""
-🎉 Welcome to AKIOS! Your secure AI workspace is ready.
+            # Minimalist welcome message
+            from ...core.ui.rich_output import get_theme_color
+            cyan = get_theme_color("info")
+            
+            # Determine next steps based on whether we created a subdirectory
+            project_dir = args.project_name
+            
+            steps = []
+            if project_dir and project_dir != ".":
+                steps.append(f"[{cyan}]cd {project_dir}[/{cyan}]         [dim]Enter project directory[/dim]")
+            
+            steps.append(f"[{cyan}]{SETUP_COMMAND}[/{cyan}]    [dim]Configure API provider[/dim]")
+            steps.append(f"[{cyan}]{HELLO_WORKFLOW_COMMAND}[/{cyan}]  [dim]Run first workflow[/dim]")
+            
+            steps_text = "\n  • ".join(steps)
+            
+            welcome_message = f"""[bold]Your secure AI workspace is ready.[/bold]
 
-🚀 Quick Start:
-   {SETUP_COMMAND}    # Configure API (1 min)
-   {HELLO_WORKFLOW_COMMAND}  # First AI run
+[bold {cyan}]Quick Start[/bold {cyan}]
+  • {steps_text}
 
-📖 Next: {SETUP_COMMAND}
-""")
+[dim]Run '{SETUP_COMMAND}' to get started.[/dim]"""
+
+            output_with_mode(
+                title="AKIOS Initialized",
+                message=welcome_message,
+                json_mode=False,
+                quiet_mode=False,
+                output_type="panel"
+            )
 
         return 0
 
     except CLIError as e:
-        print(f"Error: {e}", file=__import__("sys").stderr)
+        output_with_mode(
+            message=f"Error: {e}",
+            json_mode=is_json_mode(getattr(args, 'json', False)),
+            quiet_mode=False,
+            output_type="error"
+        )
         return e.exit_code
     except Exception as e:
         from ..helpers import handle_cli_error
         return handle_cli_error(e, json_mode=args.json)
 
 
-def create_project_structure(project_name: str = None, force: bool = False) -> dict:
+def create_project_structure(project_name: str = None, force: bool = False, json_mode: bool = False) -> dict:
     """
     Create minimal project structure.
 
     Args:
         project_name: Name of project directory (optional)
         force: If True, overwrite existing files
-
-    Returns:
-        Dict with creation results
-
-    Raises:
-        CLIError: If creation fails
+        json_mode: If True, suppress console output for warnings
     """
     # Determine base path
     base_path = Path(project_name) if project_name else Path(".")
@@ -191,46 +254,66 @@ def create_project_structure(project_name: str = None, force: bool = False) -> d
     else:
         skipped_files.append(str(config_path))
 
-    # Create project launcher script for navigation consistency
-    # Copy from Docker image (single source of truth) to avoid version drift
-    launcher_script = base_path / "akios"
-    if not launcher_script.exists() or force:
-        # Copy wrapper from Docker image location (/app/akios)
-        docker_wrapper_path = Path("/app/akios")
-        if os.environ.get('AKIOS_DEBUG_ENABLED') == '1':
-            logger.debug(f"Checking for wrapper at {docker_wrapper_path}")
-        if docker_wrapper_path.exists():
-            if os.environ.get('AKIOS_DEBUG_ENABLED') == '1':
-                logger.debug(f"Wrapper exists, copying to {launcher_script}")
-            try:
-                import shutil
-                shutil.copy2(docker_wrapper_path, launcher_script)
-                launcher_script.chmod(0o755)
-                created_files.append(str(launcher_script))
-                if os.environ.get('AKIOS_DEBUG_ENABLED') == '1':
-                    logger.debug("Wrapper copied successfully")
-            except (OSError, IOError) as e:
-                print(f"Warning: Could not copy launcher script from Docker image: {e}")
-        else:
-            if os.environ.get('AKIOS_DEBUG_ENABLED') == '1':
-                logger.debug(f"Wrapper not found at {docker_wrapper_path}")
-            # Fallback: create a basic launcher
-            launcher_content = '''#!/bin/bash
-set -e
-IMAGE="akiosai/akios:v1.0.4"
+    # Create project launcher script ONLY in Docker environments.
+    # On native Linux (pip install), the `akios` command is already on PATH —
+    # creating a ./akios wrapper would shadow it and break the experience.
+    _is_docker = (
+        os.environ.get('AKIOS_DOCKER_WRAPPER') == '1'
+        or os.path.exists('/.dockerenv')
+        or os.path.exists('/run/.containerenv')
+    )
 
+    if _is_docker:
+        from ..._version import __version__
+        launcher_script = base_path / "akios"
+        if not launcher_script.exists() or force:
+            # Copy wrapper from Docker image location (/app/akios)
+            docker_wrapper_path = Path("/app/akios")
+            if docker_wrapper_path.exists():
+                try:
+                    import shutil
+                    shutil.copy2(docker_wrapper_path, launcher_script)
+                    launcher_script.chmod(0o755)
+                    created_files.append(str(launcher_script))
+                except shutil.SameFileError:
+                    # Source and destination are the same file (e.g., /app/akios → ./akios)
+                    # This is expected when running init from the project root — silently skip
+                    skipped_files.append(str(launcher_script))
+                except (OSError, IOError) as e:
+                    output_with_mode(
+                        message=f"Could not copy launcher script from Docker image: {e}",
+                        json_mode=json_mode,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
+            else:
+                # Fallback: Read wrapper from package data
+                try:
+                    try:
+                        from importlib.resources import files
+                        wrapper_content = files('akios.cli.data').joinpath('wrapper.sh').read_text()
+                    except (ImportError, AttributeError):
+                        from importlib.resources import read_text
+                        wrapper_content = read_text('akios.cli.data', 'wrapper.sh')
+
+                    launcher_script.write_text(wrapper_content)
+                    launcher_script.chmod(0o755)
+                    created_files.append(str(launcher_script))
+                except Exception as e:
+                    # Last-resort minimal wrapper with dynamic version
+                    minimal_wrapper = f'''#!/bin/bash
+set -e
 if ! command -v docker >/dev/null 2>&1; then
   echo "Docker is required to run AKIOS from this project."
   exit 1
 fi
-
-exec docker run --rm -v "$(pwd):/app" -w /app "$IMAGE" "$@"
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v{__version__} "$@"
 '''
-            launcher_script.write_text(launcher_content)
-            launcher_script.chmod(0o755)
-            created_files.append(str(launcher_script))
-    else:
-        skipped_files.append(str(launcher_script))
+                    launcher_script.write_text(minimal_wrapper)
+                    launcher_script.chmod(0o755)
+                    created_files.append(str(launcher_script))
+        else:
+            skipped_files.append(str(launcher_script))
 
     # Create example workflows (copy from source templates)
     import shutil
@@ -259,15 +342,25 @@ exec docker run --rm -v "$(pwd):/app" -w /app "$IMAGE" "$@"
                                 f.write(content)
                             created_files.append(str(dest_file))
                         except Exception as e:
-                            print(f"Warning: Could not copy template {filename}: {e}", file=__import__("sys").stderr)
-                            print(f"Info: Will create basic template instead for {filename}", file=__import__("sys").stderr)
+                            output_with_mode(
+                                message=f"Could not copy template {filename}: {e}",
+                                details=[f"Will create basic template instead for {filename}"],
+                                json_mode=json_mode,
+                                quiet_mode=False,
+                                output_type="warning"
+                            )
         else:
             # Fallback: create basic templates inline
             create_basic_templates(base_path, created_files, force)
     except Exception as e:
         # If copying fails, create basic templates inline
-        print(f"Warning: Could not copy built-in templates ({e})", file=__import__("sys").stderr)
-        print("Info: Creating basic example templates instead. You can customize them as needed.", file=__import__("sys").stderr)
+        output_with_mode(
+            message=f"Could not copy built-in templates ({e})",
+            details=["Creating basic example templates instead. You can customize them as needed."],
+            json_mode=json_mode,
+            quiet_mode=False,
+            output_type="warning"
+        )
         create_basic_templates(base_path, created_files, force)
 
     # Create .gitignore if it doesn't exist
@@ -277,12 +370,12 @@ exec docker run --rm -v "$(pwd):/app" -w /app "$IMAGE" "$@"
         gitignore_path.write_text(gitignore_content)
         created_files.append(str(gitignore_path))
 
-    # Create sample .env file
-    akios_env_path = base_path / ".env"
-    if not akios_env_path.exists():
-        akios_env_content = create_akios_env()
-        akios_env_path.write_text(akios_env_content)
-        created_files.append(str(akios_env_path))
+    # Create sample .env file - SKIPPED for fresh init to allow setup wizard to run correctly
+    # akios_env_path = base_path / ".env"
+    # if not akios_env_path.exists():
+    #     akios_env_content = create_akios_env()
+    #     akios_env_path.write_text(akios_env_content)
+    #     created_files.append(str(akios_env_path))
 
     # Create .env.example template
     env_example_path = base_path / ".env.example"
@@ -379,7 +472,13 @@ sandbox_enabled: true
 cpu_limit: 0.8
 memory_limit_mb: 256
 max_open_files: 100
+
+# Network control
+# LLM API calls always pass through (AI orchestration is the purpose).
+# This setting controls the HTTP agent for arbitrary web requests only.
 network_access_allowed: false
+# Whitelist specific domains for HTTP agent when network_access_allowed is false:
+# allowed_domains: ["api.salesforce.com", "api.example.com"]
 
 # PII & compliance
 pii_redaction_enabled: true
@@ -498,9 +597,9 @@ steps:
   - step: 2
     agent: llm
     config:
-      provider: openai  # Options: openai, anthropic, grok, mistral, gemini
-      api_key: "${OPENAI_API_KEY}"  # Or ${ANTHROPIC_API_KEY}, ${GROK_API_KEY}, ${MISTRAL_API_KEY}, ${GEMINI_API_KEY}
-      model: "gpt-4o-mini"  # Or claude-3.5-sonnet, grok-4.1-fast
+      provider: grok  # Options: openai, anthropic, grok, mistral, gemini
+      api_key: "${GROK_API_KEY}"  # Or ${OPENAI_API_KEY}, ${ANTHROPIC_API_KEY}, ${MISTRAL_API_KEY}, ${GEMINI_API_KEY}
+      model: "grok-3"  # Or gpt-4o-mini, claude-3.5-sonnet
     action: complete
     parameters:
       prompt: |
@@ -554,6 +653,10 @@ def create_akios_env() -> str:
 # Use mock responses for testing (no API calls) - WARNING: Not for production!
 AKIOS_MOCK_LLM=1
 
+# NOTE: For local development, edit the LOCAL_DEV_MODE variable in the wrapper script
+# Set LOCAL_DEV_MODE=1 in ./akios wrapper to use akios:latest (local dev build)
+# Default LOCAL_DEV_MODE=0 uses akiosai/akios:vX.X.X (stable Docker Hub release)
+
 # === SECURITY ===
 # PII redaction settings
 # AKIOS_PII_REDACTION_ENABLED=true
@@ -576,7 +679,7 @@ def create_env_example() -> str:
 # ANTHROPIC_API_KEY=sk-ant-your-anthropic-key-here
 
 # Grok/xAI: https://console.x.ai/
-GROK_API_KEY=xai-your-grok-key-here
+# GROK_API_KEY=xai-your-grok-key-here
 
 # Mistral AI: https://console.mistral.ai/
 # MISTRAL_API_KEY=your-mistral-key-here
@@ -596,6 +699,16 @@ AKIOS_LLM_MODEL=grok-3   # Provider-specific models
 # Security & Performance
 # AKIOS_BUDGET_LIMIT_PER_RUN=1.0    # Cost limit per workflow ($)
 # AKIOS_MAX_TOKENS_PER_CALL=500     # Token limit per API call
+
+# === SECURITY CAGE ===
+# These settings are managed by 'akios cage up/down' but can be set manually
+AKIOS_PII_REDACTION_ENABLED=true     # Auto PII masking on inputs/outputs
+AKIOS_NETWORK_ACCESS_ALLOWED=false   # Block external HTTPS (LLM APIs pass through)
+AKIOS_SANDBOX_ENABLED=true           # Process isolation (always recommended)
+AKIOS_AUDIT_ENABLED=true             # Cryptographic audit logging
+
+# Whitelisted domains (comma-separated, allowed even when network is locked)
+# AKIOS_ALLOWED_DOMAINS=api.example.com,data.example.org
 """
 
 
@@ -636,7 +749,7 @@ Thumbs.db
 
 def create_readme() -> str:
     """Create README.md content for the project"""
-    return """# AKIOS Project
+    return f"""# AKIOS Project
 
 Welcome to your AKIOS (AI Knowledge & Intelligence Operating System) project! This is a secure, sandboxed environment for running AI workflows with military-grade security.
 
@@ -651,7 +764,7 @@ Welcome to your AKIOS (AI Knowledge & Intelligence Operating System) project! Th
 
    **Direct Docker (if you do not have `{get_command_prefix()}`):**
    ```bash
-   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 run templates/hello-workflow.yml
+   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 run templates/hello-workflow.yml
    ```
 
 2. **Configure for API workflows** (if using batch_processing.yml):
@@ -720,7 +833,7 @@ AKIOS comes with 4 pre-built workflow templates. Here's what each one does:
 {FILE_ANALYSIS_COMMAND}
 
 # Direct Docker (if you do not have {get_command_prefix()})
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 run templates/hello-workflow.yml
 ```
 
 ### Creating Custom Workflows
@@ -728,6 +841,64 @@ docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 run templates/hell
 1. Run a template: {HELLO_WORKFLOW_COMMAND}
 2. Edit the created workflow.yml: `nano workflow.yml`
 3. Run your customized version: {get_command_prefix()} run workflow.yml
+
+## 📖 Command Reference
+
+AKIOS provides 18 commands organized by function:
+
+### Project Management
+| Command | Description |
+|---------|-------------|
+| `{get_command_prefix()} init` | Create a new AKIOS project with config, templates, and sample data |
+| `{get_command_prefix()} setup` | Interactive setup wizard for API keys and preferences |
+| `{get_command_prefix()} status` | Show system status, last run summary, and budget info |
+| `{get_command_prefix()} doctor` | Run diagnostics and security checks |
+
+### Workflow Execution
+| Command | Description |
+|---------|-------------|
+| `{get_command_prefix()} run <workflow.yml>` | Execute a workflow with full security sandboxing |
+| `{get_command_prefix()} templates list` | List available workflow templates |
+| `{get_command_prefix()} templates select` | Interactively select and run a template |
+
+### Security Cage
+| Command | Description |
+|---------|-------------|
+| `{get_command_prefix()} cage up` | Activate full security cage (PII redaction, HTTPS lock, sandbox) |
+| `{get_command_prefix()} cage down` | Relax security for development (sandbox stays on) |
+| `{get_command_prefix()} cage status` | Show current cage posture and protection status |
+| `{get_command_prefix()} security` | Alias for `cage` — same commands available |
+
+### PII Protection
+| Command | Description |
+|---------|-------------|
+| `{get_command_prefix()} protect preview <file>` | Preview PII detection on a workflow file |
+| `{get_command_prefix()} protect scan <file>` | Scan a file for PII and show redaction results |
+
+### Audit & Compliance
+| Command | Description |
+|---------|-------------|
+| `{get_command_prefix()} audit export` | Export cryptographic audit reports (JSON) |
+| `{get_command_prefix()} audit verify` | Verify Merkle-chain integrity of audit trail |
+| `{get_command_prefix()} audit log` | View recent audit log entries |
+| `{get_command_prefix()} compliance report <file>` | Generate compliance reports (basic/detailed/executive) |
+| `{get_command_prefix()} logs` | Show recent workflow execution logs |
+
+### File Management
+| Command | Description |
+|---------|-------------|
+| `{get_command_prefix()} files` | Show available input and output files |
+| `{get_command_prefix()} output list` | List workflow outputs |
+| `{get_command_prefix()} output clean <workflow>` | Clean old outputs |
+| `{get_command_prefix()} output archive <workflow>` | Archive outputs to tarball |
+
+### Utilities
+| Command | Description |
+|---------|-------------|
+| `{get_command_prefix()} clean` | Remove old workflow runs (default: >7 days) |
+| `{get_command_prefix()} docs` | View documentation with Markdown rendering |
+| `{get_command_prefix()} timeline` | View workflow execution timeline |
+| `{get_command_prefix()} testing` | View environment notes and testing context |
 
 ## 🔑 API Configuration
 

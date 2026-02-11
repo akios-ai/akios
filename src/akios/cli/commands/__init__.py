@@ -77,8 +77,24 @@ def register_all_commands(subparsers: argparse._SubParsersAction) -> None:
     compliance_module = _import_command_module('compliance')
     compliance_module.register_compliance_command(subparsers)
 
+    security_module = _import_command_module('security')
+    security_module.register_security_command(subparsers)
+    security_module.register_cage_command(subparsers)  # Alias for security command
+
+    protect_module = _import_command_module('protect')
+    protect_module.register_protect_command(subparsers)
+
+    http_module = _import_command_module('http')
+    http_module.register_http_command(subparsers)
+
     output_module = _import_command_module('output')
     output_module.register_output_command(subparsers)
+
+    docs_module = _import_command_module('docs')
+    docs_module.register_docs_command(subparsers)
+
+    timeline_module = _import_command_module('timeline')
+    timeline_module.register_timeline_command(subparsers)
 
     # workflow_module = _lazy_import_command('workflow')
     # workflow_module.register_workflow_command(subparsers)  # Removed for minimal scope
@@ -105,7 +121,12 @@ def get_command_descriptions() -> Dict[str, str]:
         "files": "Show available input and output files",
         "compliance": "Generate compliance reports",
         "output": "Manage workflow outputs",
-        # "workflow": "Manage workflow instances"  # Removed for minimal scope
+        "docs": "View documentation with beautiful Markdown rendering",
+        "timeline": "View workflow execution timeline with performance analysis",
+        "security": "Manage security cage (up/down/status)",
+        "cage": "Manage security cage (alias for security)",
+        "protect": "Analyze and preview PII protection for workflows",
+        "http": "Make secure HTTP requests through the security cage",
     }
 
 

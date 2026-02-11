@@ -113,7 +113,11 @@ class SyscallPolicy:
         }
 
         # Add network-related syscalls if network is disabled
-        if not self.settings.network_access_allowed:
+        # MANAGED ACCESS: Don't block network at kernel level for agents that need managed access (LLM, HTTP)
+        # They will enforce their own strict application-level policies (Allowlists, Provider-only)
+        needs_network = self.agent_type in (AgentType.LLM, AgentType.HTTP)
+        
+        if not self.settings.network_access_allowed and not needs_network:
             network_blocked = {
                 'socket', 'socketpair', 'bind', 'listen', 'accept', 'accept4',
                 'connect', 'getsockname', 'getpeername', 'sendto', 'recvfrom',
@@ -142,15 +146,18 @@ class SyscallPolicy:
 
         elif self.agent_type == AgentType.HTTP:
             # HTTP agent needs network operations
-            if self.settings.network_access_allowed:
-                agent_allowed.update({
-                    'socket', 'connect', 'sendto', 'recvfrom',
-                    'sendmsg', 'recvmsg', 'shutdown', 'setsockopt', 'getsockopt',
-                })
+            # Always allow network syscalls for HTTP agent (application layer handles filtering)
+            agent_allowed.update({
+                'socket', 'connect', 'sendto', 'recvfrom',
+                'sendmsg', 'recvmsg', 'shutdown', 'setsockopt', 'getsockopt',
+            })
 
         elif self.agent_type == AgentType.LLM:
-            # LLM agent is relatively restricted - mostly just needs basic I/O
-            pass  # Uses base policy only
+            # LLM agent needs network for API calls
+            agent_allowed.update({
+                'socket', 'connect', 'sendto', 'recvfrom',
+                'sendmsg', 'recvmsg', 'shutdown', 'setsockopt', 'getsockopt',
+            })
 
         elif self.agent_type == AgentType.TOOL_EXECUTOR:
             # Tool executor needs to be very restricted to prevent code execution

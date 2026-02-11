@@ -1,10 +1,10 @@
-# AKIOS v1.0 CLI Reference
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# AKIOS v1.0.5 CLI Reference
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS V1.0.O supports three deployment methods:
+AKIOS v1.0.5 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -22,7 +22,8 @@ akios run templates/hello-workflow.yml
 
 ### Docker (Cross-Platform)
 ```bash
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 ./akios init my-project
 cd my-project
@@ -33,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -88,6 +89,9 @@ akios init --quiet
 
 # Initialize in specific subdirectory
 akios init my-project
+
+# Initialize and run setup wizard immediately
+akios init --wizard
 ```
 
 This creates:
@@ -97,6 +101,12 @@ This creates:
 - `.env.example` - Template file with placeholder keys (safe to commit)
 - `data/` - Input/output directories with sample data for testing
 - `audit/` - Security audit logs
+
+**Options:**
+- `--force`: Overwrite existing files
+- `--quiet`: Suppress welcome message and success output
+- `--json`: Output in JSON format
+- `--wizard`: Run the setup wizard after project initialization
 
 **API Key Setup:**
 ```bash
@@ -212,27 +222,35 @@ AKIOS_JSON_MODE=1 AKIOS_LLM_PROVIDER=openai AKIOS_LLM_MODEL=grok-3 ./akios statu
 # Output: {"error": true, "message": "Model 'grok-3' is not valid...", "type": "configuration_error"}
 ```
 
-### `akios templates list` - List Available Templates
+### `akios templates` - Manage Templates
 
-Show all available workflow templates with descriptions.
+Manage and list workflow templates.
 
 ```bash
+# List available templates
 akios templates list
+
+# Select a template interactively (with fuzzy search)
+akios templates select
+
+# Select a template without fuzzy search
+akios templates select --no-search
 ```
 
-Displays:
-```
-Available Templates
-===================
-🌐 hello-workflow.yml      Hello World Example - Basic AI workflow demonstration with LLM interaction (requires network)
-🌐 document_ingestion.yml  Document Analysis Pipeline - Processes documents with PII redaction and AI summarization (requires network)
-💾 batch_processing.yml    Secure Batch Processing - Multi-file AI analysis with cost tracking and PII protection (local only)
-💾 file_analysis.yml       File Security Scanner - Analyzes files with security-focused AI insights (local only)
-```
+**Subcommands:**
 
-**Network Requirements:**
-- 🌐 Templates marked with this icon require internet access for AI API calls
-- 💾 Templates marked with this icon work offline with local processing only
+#### `list`
+List available templates with descriptions.
+
+**Options:**
+- `--json`: Output in JSON format
+
+#### `select`
+Interactively select a template.
+
+**Options:**
+- `--no-search`: Disable fuzzy search
+- `--json`: Output selected template in JSON format
 
 ### `akios files` - Show Available Files
 
@@ -291,11 +309,12 @@ akios run workflow.yml --force
 ```
 
 **Options:**
-- `--verbose, -v`: Enable detailed execution logging
-- `--quiet, -q`: Suppress informational banners and non-error output
+- `--verbose`: Enable detailed execution logging
+- `--quiet`: Suppress informational banners and non-error output
 - `--real-api`: Enable real API mode with interactive API key setup (sets AKIOS_MOCK_LLM=0, network_access_allowed=true, prompts for missing keys)
-- `--force, -f`: Skip confirmation prompts for template switches
+- `--force`: Skip confirmation prompts for template switches
 - `--debug`: Enable debug logging for troubleshooting
+- `--exec`: **Security trap** — hidden flag that rejects with error "Direct shell execution is not permitted inside the security cage". Exists to block shell-injection attempts.
 
 ### `akios audit export` - Export Audit Reports
 
@@ -309,34 +328,30 @@ akios audit export
 
 # Export with custom filename
 akios audit export --output audit-report.json
-
-# Export specific task
-akios audit export --task workflow-123 --output audit.json
 ```
 
 **Options:**
-- `--task, -t`: Specific task ID to export (default: latest)
-- `--format, -f`: Export format: json (default: json)
-- `--output, -o`: Output file path (default: auto-generated timestamp filename)
+- `--format`: Export format: json (default: json)
+- `--output`: Output file path (default: auto-generated timestamp filename)
 
 ### `akios logs` - View Execution Logs
 
 Show recent workflow execution logs.
 
 ```bash
-# Show recent logs
+# Show recent logs (default: 10)
 akios logs
 
 # Show logs for specific task
 akios logs --task workflow-123
 
-# Filter by log level
-akios logs --level ERROR
+# Show 50 log entries
+akios logs --limit 50
 ```
 
 **Options:**
 - `--task, -t`: Filter by specific task ID
-- `--level, -l`: Filter by log level (INFO, ERROR, etc.)
+- `--limit, -n`: Number of log entries to show (default: 10)
 
 ### `akios status` - Show System Status
 
@@ -363,10 +378,10 @@ akios status --security --json
 ```
 
 **Options:**
-- `--budget, -b`: Show detailed budget tracking and spending breakdown
-- `--json, -j`: Output in machine-readable JSON format
-- `--verbose, -v`: Show detailed technical information and metrics
-- `--security, -s`: Show detailed security status and active protections
+- `--budget`: Show detailed budget tracking and spending breakdown
+- `--json`: Output in machine-readable JSON format
+- `--verbose`: Show detailed technical information and metrics
+- `--security`: Show detailed security status and active protections
 - `--debug`: Enable debug logging for troubleshooting
 
 ### `akios doctor` - Run Diagnostics
@@ -382,29 +397,33 @@ akios doctor --json
 ```
 
 **Options:**
-- `--json, -j`: Output in machine-readable JSON format
-- `--verbose, -v`: Show detailed technical information and metrics
+- `--json`: Output in machine-readable JSON format
+- `--verbose`: Show detailed technical information and metrics
 
 ### `akios clean` - Clean Project Data
 
 Remove old workflow runs and free up disk space while preserving recent data.
 
 ```bash
-# Clean runs older than 7 days (default)
-akios clean --old-runs
+# Clean runs older than 7 days (default behavior)
+akios clean
 
 # Clean runs older than 30 days
 akios clean --old-runs 30
 
+# Clean ALL runs
+akios clean --all
+
 # See what would be cleaned without deleting
-akios clean --old-runs 7 --dry-run
+akios clean --dry-run
 
 # Get JSON output for scripting
-akios clean --old-runs 7 --json
+akios clean --json
 ```
 
 **Options:**
-- `--old-runs DAYS`: Remove runs older than DAYS (default: 7)
+- `--old-runs`: Remove runs older than N days (default: 7)
+- `--all`: Clean all runs regardless of age
 - `--dry-run`: Show what would be cleaned without actually deleting
 - `--yes`: Run without confirmation prompts
 - `--json`: Output in JSON format
@@ -430,9 +449,9 @@ akios compliance report workflow.yml --type executive --format txt
 ```
 
 **Options:**
-- `--type, -t`: Report type (basic, detailed, executive) - default: basic
-- `--format, -f`: Export format (json, txt) - default: json
-- `--output, -o`: Output file path (default: auto-generated filename)
+- `--type`: Report type (basic, detailed, executive) - default: basic
+- `--format`: Export format (json, txt) - default: json
+- `--output`: Output file path (default: auto-generated filename)
 
 **Report Types:**
 - `basic`: Security validation summary and compliance status
@@ -444,36 +463,308 @@ akios compliance report workflow.yml --type executive --format txt
 Manage and organize workflow outputs with advanced file operations.
 
 ```bash
-# Show all output files and directories
-akios output
+# Get the latest workflow output as deployable JSON
+akios output latest
+
+# List all workflow outputs
+akios output list
 
 # List outputs for specific workflow
-akios output --workflow hello-workflow.yml
+akios output list hello-workflow.yml
 
-# Clean old outputs (keep last 10 runs)
-akios output clean --keep 10
+# Clean old outputs for a workflow
+akios output clean hello-workflow.yml --max-age 7
 
-# Archive outputs to compressed file
-akios output archive --output archive-2026-01-24.tar.gz
+# Archive outputs for a workflow
+akios output archive hello-workflow.yml --name archive.tar.gz
+```
 
-# Export outputs in structured format
-akios output export --format json --output outputs.json
+**Subcommands:**
+
+#### `latest`
+Retrieve the most recent workflow execution result as structured JSON — designed for CI/CD pipeline integration.
+
+The output includes:
+- **Metadata**: `akios_version`, `workflow_name`, `workflow_id`, `timestamp`
+- **Execution**: `status`, `steps_executed`, `execution_time_seconds`
+- **Security**: `pii_redaction`, `audit_enabled`, `sandbox_enabled`
+- **Cost**: `total_cost`, `budget_limit`, `remaining_budget`, `over_budget`
+- **Results**: Per-step array with `agent`, `action`, `status`, `execution_time`, `output`
+- **Path**: `output_directory`
+
+Example output:
+```json
+{
+  "akios_version": "1.0.5",
+  "workflow_name": "Hello World Workflow",
+  "status": "completed",
+  "steps_executed": 3,
+  "execution_time_seconds": 2.68,
+  "cost": { "total_cost": 0.00083, "budget_limit": 1.0, "over_budget": false },
+  "results": [
+    { "step": 1, "agent": "llm", "action": "complete", "output": "Hello from AKIOS..." },
+    { "step": 2, "agent": "filesystem", "action": "write", "output": "Written to hello-ai.txt (324 bytes)" }
+  ]
+}
+```
+
+#### `list`
+List workflow outputs.
+
+**Arguments:**
+- `workflow` (optional): Workflow name to filter by
+
+**Options:**
+- `--json`: Output in JSON format
+
+#### `clean`
+Clean old workflow outputs.
+
+**Arguments:**
+- `workflow` (required): Workflow name to clean
+
+**Options:**
+- `--max-age`: Maximum age in days (default: 30)
+- `--max-count`: Maximum executions to keep (default: 50)
+- `--dry-run`: Show what would be cleaned without actually cleaning
+- `--json`: Output in JSON format
+
+#### `archive`
+Archive workflow outputs.
+
+**Arguments:**
+- `workflow` (required): Workflow name to archive
+
+**Options:**
+- `--name`: Archive filename (optional - auto-generated if not specified)
+- `--json`: Output in JSON format
+
+### `akios cage` / `akios security` - Security Cage Management
+
+Manage the AKIOS security cage — control PII redaction, network access, sandboxing, and audit logging. `cage` and `security` are interchangeable aliases.
+
+```bash
+# Activate full security (PII redaction, HTTPS lock, sandbox, audit)
+akios cage up
+
+# Relax security for development (sandbox stays on)
+akios cage down
+
+# Show current cage posture and protection status
+akios cage status
+
+# Same commands via 'security' alias
+akios security up
+akios security down
+akios security status
+```
+
+**Subcommands:**
+
+#### `up`
+Activate the full security cage. Sets:
+- PII Redaction: **ENABLED**
+- HTTPS Network: **LOCKED** (LLM APIs and user-defined `allowed_domains` pass through)
+- Sandbox: **ENFORCED**
+- Audit Logging: **ENABLED**
+
+#### `down`
+Deactivate the security cage and **destroy all session data**. This is the cage's core promise: when the cage goes down, nothing is left.
+
+**Data destroyed:**
+- `audit/` — All Merkle-chained audit logs
+- `data/output/` — All workflow execution outputs (including `output.json`)
+- `data/input/` — All user-provided input files
+
+The `.env` file is reset to relaxed defaults (PII off, network open).
+
+**Options:**
+- `--keep-data`: Relax protections without wiping data (development convenience)
+
+```bash
+# Full cage down — destroy all data (default)
+akios cage down
+
+# Dev mode — relax protections, keep data for debugging
+akios cage down --keep-data
+```
+
+> **Security guarantee**: Default `cage down` ensures zero data residue. Use `--keep-data` only during active development when you need to inspect outputs.
+
+#### `status`
+Show current cage posture (ACTIVE / RELAXED / CUSTOM) and protection table.
+
+**How it works:** `cage up/down` writes to your project's `.env` file. The AKIOS engine reads these values at workflow runtime via `dotenv.load_dotenv()`. In Docker, restart the container for changes to take effect.
+
+**Data lifecycle:** `cage up` → protections active → workflows generate data → `cage down` → all data destroyed. This guarantees no sensitive artifacts survive a cage session.
+
+### `akios protect` - PII Protection Analysis
+
+Analyze workflows and files for PII exposure before execution.
+
+```bash
+# Preview PII detection on a workflow (default: workflow.yml)
+akios protect preview
+
+# Preview on a specific workflow file
+akios protect preview templates/hello-workflow.yml
+
+# Scan a file for PII and show redaction results
+akios protect scan data/input/document.txt
+
+# JSON output for scripting
+akios protect preview --json
+akios protect scan data/input/document.txt --json
+```
+
+**Subcommands:**
+
+#### `preview`
+Scan workflow inputs for PII and show safe prompt construction.
+
+**Arguments:**
+- `workflow` (optional): Workflow file to analyze (default: `workflow.yml`)
+
+**Options:**
+- `--json`: Output in JSON format
+
+#### `scan`
+Scan a file for PII and display detected sensitive data categories.
+
+**Arguments:**
+- `file` (required): File to scan for PII
+
+**Options:**
+- `--json`: Output in JSON format
+
+#### `show-prompt`
+Display the fully interpolated and PII-redacted prompt that would be sent to the LLM.
+
+```bash
+# Show the exact prompt the LLM will receive
+akios protect show-prompt workflow.yml
+
+# Show prompt for a healthcare template
+akios protect show-prompt templates/healthcare.yml
+```
+
+**Arguments:**
+- `workflow` (required): Workflow file to inspect
+
+**What it shows:**
+- Template variables resolved with actual input data
+- PII automatically redacted with typed markers
+- The exact text that would be sent to the LLM provider
+
+### `akios http` - Secure HTTP Requests
+
+Make HTTP requests through the security cage with domain whitelisting and automatic PII redaction.
+
+```bash
+# GET request
+akios http GET https://api.example.com/status
+
+# POST with body and headers
+akios http POST https://api.example.com/data \
+  --body '{"key": "value"}' \
+  --header "Authorization: Bearer $TOKEN" \
+  --header "Content-Type: application/json"
+
+# With timeout and JSON output
+akios http GET https://api.example.com/report --timeout 60 --json-output
+```
+
+**Arguments:**
+- `method` (required): HTTP method (GET, POST, PUT, DELETE, PATCH, HEAD, OPTIONS)
+- `url` (required): Target URL (must be in HTTPS whitelist when cage is active)
+
+**Options:**
+- `--body`: Request body for POST/PUT/PATCH
+- `--header`: HTTP header (repeatable)
+- `--timeout`: Request timeout in seconds (default: 30)
+- `--json-output`: Format response as structured JSON
+
+**Security:**
+- All requests pass through domain whitelist enforcement
+- Request/response bodies scanned for PII and redacted in audit logs
+- Only HTTPS URLs permitted when cage is active
+- Full audit trail of all HTTP activity
+
+### `akios audit verify` - Verify Audit Integrity
+
+Verify the Merkle-chain integrity of the cryptographic audit trail.
+
+```bash
+# Verify audit trail integrity
+akios audit verify
+
+# Verify with JSON output
+akios audit verify --json
 ```
 
 **Options:**
-- `--workflow, -w`: Filter by specific workflow name
-- `--clean, -c`: Clean old outputs (specify --keep to set retention)
-- `--keep, -k`: Number of recent runs to keep (default: 10)
-- `--archive, -a`: Create compressed archive of outputs
-- `--export, -e`: Export output metadata in specified format
-- `--format, -f`: Export format (json, csv, txt)
-- `--output, -o`: Output file path for export/archive operations
+- `--json`: Output in machine-readable JSON format
 
-**Features:**
-- **Automatic Organization**: Outputs organized in timestamped directories
-- **Retention Management**: Configurable cleanup of old runs
-- **Archive Support**: Compress and backup workflow outputs
-- **Metadata Export**: Structured data about all workflow executions
+**Returns:** Chain integrity status, hash verification results, and tamper detection.
+
+### `akios audit log` - View Audit Log
+
+View recent entries from the cryptographic audit log.
+
+```bash
+# View recent audit log entries
+akios audit log
+
+# View last 20 entries
+akios audit log --limit 20
+```
+
+**Options:**
+- `--limit, -n`: Number of entries to show (default: 10)
+- `--json`: Output in JSON format
+
+### `akios docs` - View Documentation
+
+View AKIOS documentation with beautiful Markdown rendering directly in the terminal.
+
+```bash
+# Open documentation viewer
+akios docs
+
+# View specific documentation topic
+akios docs security
+akios docs workflows
+```
+
+### `akios timeline` - Workflow Timeline
+
+View workflow execution timeline with performance analysis and step-by-step timing.
+
+```bash
+# Show execution timeline for last run
+akios timeline
+
+# Show timeline with detailed performance metrics
+akios timeline --verbose
+
+# JSON output for scripting
+akios timeline --json
+```
+
+**Options:**
+- `--verbose`: Show detailed performance metrics
+- `--json`: Output in JSON format
+
+### `akios testing` - Testing Context
+
+View environment notes and testing context for the current project.
+
+```bash
+# Show testing context and environment info
+akios testing
+```
+
+Displays mock mode status, API key availability, and testing recommendations.
 
 ## Quick Start Examples
 
@@ -500,7 +791,7 @@ akios run templates/hello-workflow.yml
 akios status
 
 # 5. Clean up old runs (optional)
-akios clean --old-runs
+akios clean
 
 # 6. Export audit proof
 akios audit export --format json --output proof.json
@@ -509,8 +800,8 @@ akios audit export --format json --output proof.json
 ### Docker Installation (Cross-Platform)
 ```bash
 # Download wrapper
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 
 # 1. Initialize a new project
@@ -527,7 +818,7 @@ cd my-project
 ./akios status
 
 # 5. Clean up old runs (optional)
-./akios clean --old-runs
+./akios clean
 
 # 6. Export audit proof
 ./akios audit export --format json --output proof.json
@@ -575,8 +866,6 @@ Commands run inside Docker containers with:
 - **Same cost controls and resource limits**
 
 **Both deployment methods provide strong security** - Native offers maximum security, Docker offers reliable cross-platform security.
-
-For detailed design constraints and scope limitations, see [CLI Scope & Boundaries](cli-scope-boundaries.md).
 
 ---
 

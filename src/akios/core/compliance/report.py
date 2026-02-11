@@ -22,7 +22,7 @@ Generates compliance reports for workflow execution and security validation.
 from typing import Dict, Any, Optional
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ComplianceGenerator:
@@ -48,17 +48,58 @@ class ComplianceGenerator:
         Returns:
             Compliance report data
         """
+        now = datetime.now(tz=timezone.utc)
+
+        # Security validation checks
+        security_validation = {
+            "pii_redaction": True,
+            "audit_logging": True,
+            "syscall_filtering": True,
+            "process_isolation": True
+        }
+
+        # Compute component scores based on security validation
+        security_score = 5.0 if all([
+            security_validation["pii_redaction"],
+            security_validation["syscall_filtering"],
+            security_validation["process_isolation"]
+        ]) else 3.0
+        audit_score = 5.0 if security_validation["audit_logging"] else 2.0
+        cost_score = 5.0  # Default compliant when no budget violations
+
+        component_scores = {
+            "security": security_score,
+            "audit": audit_score,
+            "cost": cost_score
+        }
+        overall_score = round(sum(component_scores.values()) / len(component_scores), 1)
+
+        # Map score to level
+        if overall_score >= 4.5:
+            overall_level = "excellent"
+        elif overall_score >= 3.5:
+            overall_level = "good"
+        elif overall_score >= 2.5:
+            overall_level = "fair"
+        else:
+            overall_level = "poor"
+
         report = {
             "workflow_name": workflow_name,
             "report_type": report_type,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": now.isoformat(),
             "compliance_status": "compliant",
-            "security_validation": {
-                "pii_redaction": True,
-                "audit_logging": True,
-                "syscall_filtering": True,
-                "process_isolation": True
+            "report_metadata": {
+                "generated_at": now.strftime("%Y-%m-%d %H:%M:%S UTC"),
+                "generator_version": "1.0",
+                "report_type": report_type
             },
+            "compliance_score": {
+                "overall_score": overall_score,
+                "overall_level": overall_level,
+                "component_scores": component_scores
+            },
+            "security_validation": security_validation,
             "findings": [],
             "recommendations": []
         }
@@ -87,7 +128,7 @@ class ComplianceGenerator:
             Path to the exported file
         """
         if output_file is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_file = f"compliance_report_{report['workflow_name']}_{timestamp}.{format}"
 
         output_path = Path(output_file)

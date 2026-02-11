@@ -26,6 +26,8 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from ...core.ui.rich_output import print_panel, print_table, print_success, print_error, print_warning
+
 
 def show_notes(args):
     """Display environment notes and testing context."""
@@ -55,55 +57,54 @@ def show_notes(args):
 
         elif format_type == 'summary':
             summary = tracker.get_summary()
-            print("📋 Environment & Testing Notes Summary")
-            print("=" * 50)
-            print(f"Environment Notes: {summary['unique_issues']}")
-            print(f"Total Observations: {summary['total_occurrences']}")
-            print(f"Session Duration: {summary['session_duration']:.1f}s")
-            print(f"Platform: {summary['platform_info']['system']} {summary['platform_info']['release']}")
-
-            print(f"\nBy Type (Environment Notes):")
+            
+            content = f"Environment Notes: {summary['unique_issues']}\n"
+            content += f"Total Observations: {summary['total_occurrences']}\n"
+            content += f"Session Duration: {summary['session_duration']:.1f}s\n"
+            content += f"Platform: {summary['platform_info']['system']} {summary['platform_info']['release']}\n\n"
+            
+            content += "[bold]By Type (Environment Notes):[/bold]\n"
             for sev, count in summary['by_severity'].items():
-                print(f"  {sev.capitalize()}: {count}")
-
-            print(f"\nBy Category:")
+                content += f"  {sev.capitalize()}: {count}\n"
+            
+            content += "\n[bold]By Category:[/bold]\n"
             for cat, count in summary['by_category'].items():
-                print(f"  {cat.capitalize()}: {count}")
+                content += f"  {cat.capitalize()}: {count}\n"
+                
+            print_panel("Environment & Testing Notes Summary", content)
 
         else:  # table format
             if not issues:
-                print("✅ Environment fully compatible - no special notes.")
+                print_success("Environment fully compatible - no special notes.")
                 return
 
-            print("📋 Environment & Testing Notes")
-            print("=" * 80)
-            print("💡 These notes help you understand your current setup:")
-            print()
-
-            for i, issue in enumerate(issues, 1):
-                auto_marker = "[AUTO]" if issue.get('auto_detected') else "[MANUAL]"
-                severity_marker = {
+            # Prepare table data
+            issues_data = []
+            for issue in issues:
+                severity_icon = {
                     'minor': '🟡',
                     'important': '🟠',
                     'critical': '🔴'
                 }.get(issue.get('severity'), '⚪')
-
-                # Show occurrence count for duplicate issues
+                
+                auto_marker = "[AUTO]" if issue.get('auto_detected') else "[MANUAL]"
                 occurrence_count = issue.get('occurrence_count', 1)
                 occurrence_info = f" (x{occurrence_count})" if occurrence_count > 1 else ""
-
-                print(f"{i}. {severity_marker} {auto_marker} {issue.get('title', 'Unknown')}{occurrence_info}")
-                print(f"   Category: {issue.get('category', 'unknown').capitalize()}")
-                print(f"   Severity: {issue.get('severity', 'unknown').capitalize()}")
-                print(f"   Description: {issue.get('description', 'No description')}")
-                if issue.get('impact'):
-                    print(f"   Impact: {issue.get('impact')}")
-                if issue.get('recommendation'):
-                    print(f"   Recommendation: {issue.get('recommendation')}")
-                print()
+                
+                issues_data.append({
+                    "severity": severity_icon,
+                    "type": auto_marker,
+                    "title": issue.get('title', 'Unknown') + occurrence_info,
+                    "category": issue.get('category', 'unknown').capitalize(),
+                    "description": issue.get('description', 'No description')[:50] + "..."
+                })
+            
+            if issues_data:
+                print_table(issues_data, title="📋 Environment & Testing Notes",
+                           columns=["severity", "type", "title", "category", "description"])
 
     except ImportError:
-        print("❌ Testing tracker not available.", file=sys.stderr)
+        print_error("Testing tracker not available.")
         sys.exit(1)
 
 
@@ -119,10 +120,10 @@ def clear_notes(args):
         tracker.issues.clear()
         tracker._save_issues()
 
-        print(f"✅ Cleared {issue_count} environment notes.")
+        print_success(f"Cleared {issue_count} environment notes.")
 
     except ImportError:
-        print("❌ Testing tracker not available.", file=sys.stderr)
+        print_error("Testing tracker not available.")
         sys.exit(1)
 
 
@@ -144,10 +145,10 @@ def log_issue(args):
             auto_detected=False
         )
 
-        print("✅ Testing issue logged manually.")
+        print_success("Testing issue logged manually.")
 
     except ImportError:
-        print("❌ Testing tracker not available.", file=sys.stderr)
+        print_error("Testing tracker not available.")
         sys.exit(1)
 
 

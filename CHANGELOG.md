@@ -1,11 +1,129 @@
 # Changelog
-**Document Version:** 1.0  
-**Date:** 2026-01-29  
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.5] - 2026-02-07
+
+### Added
+- **🔒 Cage Down Data Wipe**
+  - `cage down` now destroys all session data by default (audit logs, outputs, inputs)
+  - Core security promise: "nothing is left" when cage goes down
+  - `--keep-data` flag for development convenience (relax without wiping)
+  - Detailed wipe summary showing files/bytes destroyed per category
+- **📦 Deployable JSON Output (`output.json`)**
+  - Every workflow run generates structured `output.json` with full metadata
+  - Per-step results: agent, action, status, timing, output text
+  - Security posture, cost breakdown, budget tracking included
+  - `akios output latest` retrieves deployable JSON for CI/CD integration
+- **🎨 PII Visibility Improvements**
+  - PII markers now use magenta `«PII_TYPE»` guillemet format for instant identification
+  - 6+ PII types detected and highlighted: EMAIL, PHONE, SSN, NAME, ADDRESS, DOB
+  - Healthcare-specific classifiers: US_NPI, US_DEA, MEDICAL_RECORD_NUMBER
+  - Improved scan output readability (removed dim styling)
+- **🌐 HTTP Agent CLI (`akios http`)**
+  - `akios http <METHOD> <URL>` for secure API calls with domain whitelisting
+  - Supports GET, POST, PUT, DELETE with headers, body, and JSON payloads
+  - Rate limiting (10 req/min), HTTPS enforcement, PII redaction on all data
+- **🔍 Prompt Inspection (`akios protect show-prompt`)**
+  - Preview exactly what the LLM will receive after PII redaction
+  - Color-split legend: original text vs. redacted markers
+  - Critical for HIPAA/GDPR compliance verification before execution
+- **🛡️ `--exec` Security Trap**
+  - `akios run --exec` is a honeypot that blocks shell-injection attempts
+  - Returns "Direct shell execution is not permitted inside the security cage"
+  - Logged as a security event in audit trail
+- **🏭 Multi-Sector Support (6 Industries)**
+  - Healthcare, banking, insurance, accounting, legal, government
+  - Dedicated demo scripts (EN + FR) with sector-specific PII patterns
+  - Headless test scripts (`demo-test.sh` + `demo-test-fr.sh`) for CI/CD
+  - Edge case test suite (`edge-tests.sh`) for release verification
+- **🔇 Suppressed `google.generativeai` FutureWarning**
+  - No more noisy warnings on every command when Gemini SDK is installed
+- **🎨 ASCII Logo on First Run**
+  - Professional AKIOS logo displays once on first run (like Anthropic Claude CLI)
+  - Rich-styled panel with cyan brand colors (#04B1DC)
+  - First-run detection via `~/.akios/.initialized` marker
+  - TTY detection (never shows in piped/scripted contexts)
+  - CI/CD detection (suppresses in GitHub Actions, GitLab CI, etc.)
+  - Graceful fallback to plain ANSI colors if Rich unavailable
+  - Zero performance overhead on repeat runs (<1ms file check)
+  - Works identically in native and Docker environments
+- **🎨 Professional Terminal UI with Rich Integration**
+  - Rich 13.7.0 dependency for beautiful CLI output
+  - `rich_output` module with styled panels, colored tables, and message formatting
+  - `pii_display` module for professional PII detection visualization
+  - Colored severity indicators (🟢 🟡 🔴 ⛔) for quick status recognition
+  - Professional data tables for structured CLI output
+  - Styled success/warning/error/info messages
+  - Code syntax highlighting with line numbers
+  - Progress indicators for long-running operations
+- **🔍 Enhanced PII Detection Visualization**
+  - Summary display with file status
+  - Detailed candidate tables with line numbers and confidence scores
+  - Type breakdown with percentage distributions
+  - Comprehensive scan reports with severity levels
+  - CSV export functionality for compliance reporting
+  - Remediation guidance with specific recommendations
+- **CLI Command Enhancements**
+  - `akios status`: Security & budget dashboards with Rich panels and tables
+  - `akios files`: Professional file listing with formatted tables
+  - `akios testing`: Issue tracking display using Rich formatting
+  - Graceful fallback to plain text if Rich is unavailable
+- **✅ Comprehensive Testing**
+  - 14 unit tests for rich_output module (100% passing)
+  - 17 unit tests for pii_display module (100% passing)
+  - Integration tests for combined UI functions
+  - CSV export and remediation guidance tests
+- **📚 Complete Documentation**
+  - New `docs/rich-ui.md` comprehensive guide
+  - Updated README with Rich UI feature mention
+  - Module reference for all functions
+  - Styling examples and best practices
+  - Terminal compatibility information
+
+### Changed
+- Refactored CLI commands to use Rich output for professional appearance
+- Security dashboard now displays as formatted tables with color coding
+- Budget dashboard shows breakdown in professional table format
+- Testing notes display in Rich tables instead of plain text
+- All styled output respects terminal capabilities (automatic fallback)
+- **🐳 Docker wrapper gated behind container check**: `akios init` no longer creates a Docker wrapper script on native Linux/macOS installs — wrapper only created inside Docker containers where it's needed
+- **🔧 Unified command prefix**: `get_command_prefix()` centralized in `core/ui/commands.py` with env var + dockerenv checks, replacing scattered hardcoded `sudo akios` strings
+- **📋 Template defaults**: `document_ingestion.yml` now defaults to `grok`/`grok-3`; `healthcare-patient-intake.yml` updated from deprecated `gpt-4` to `gpt-4o-mini`
+- **🏷️ Logo tagline**: Updated to v1.0.5
+
+### Fixed
+- **🔒 Seccomp SIGTRAP crash**: `sudo akios run` no longer crashes with signal 5 — expanded syscall allowlist by ~40 essential syscalls and switched policy filter from allowlist to blocklist approach
+- **🐳 Container detection false-positive on EC2**: Native EC2 instances no longer misidentified as Docker containers — tightened `/proc/1/cgroup` matching to path-based patterns and removed unreliable hostname/cgroup-write heuristics
+- **📁 Root cache directory creation**: `_save_security_cache()` now creates `/root/.akios/` directory automatically when running with sudo
+- **🔧 ctypes seccomp fallback**: `_alloc_buffer()` now raises `RuntimeError` with guidance instead of silently returning NULL pointer
+- **📧 Security contact email**: Standardized to `security@akioud.ai` across all documentation (was inconsistent between docs)
+- **📖 Documentation accuracy**: Removed overstated "100% accuracy" and "Non-Bypassable" claims from security README; qualified with actual behavior
+- **🧪 Test suite hardened**: Added 6 new kernel-hard security tests (Phase 5b) covering sudo execution, seccomp audit logs, and security mode differentiation (28→34 tests)
+- **🌐 Seccomp DNS resolution**: Added `sendmmsg` and `recvmmsg` to essential syscall allowlist — fixes DNS resolution failure when calling real LLM APIs (Grok, OpenAI, etc.) with sandbox enabled on Ubuntu 24.04 ARM64 (glibc uses these for DNS)
+- **🎨 Rich markup stripping in plain-text fallback**: All CLI output functions (`print_success`, `print_error`, `print_warning`, `print_info`, `print_panel`, `print_banner`, `output_with_mode`) now strip Rich markup tags (`[bold]`, `[dim]`, `[#04B1DC]`, etc.) when Rich is unavailable, preventing raw markup from appearing in terminal output
+- **🤖 LLM SDK validation expanded**: `validate_llm_sdk()` now checks all 5 supported providers (openai, anthropic, xai/grok, mistralai, google-generativeai) and automatically bypasses validation when `AKIOS_MOCK_LLM=1` is set
+- **📌 Version import in status command**: `akios status` now correctly imports `__version__` from `akios._version` instead of using stale hardcoded version string
+- **♻️ Removed duplicate GPU/platform block**: `run.py` had a duplicated 30-line GPU detection block that ran twice per execution
+- **🛡️ Guarded psutil import**: `run.py` now gracefully handles missing `psutil` with `try/except ImportError` fallback
+- **🗑️ Removed dead code**: Deleted unused `run_security_dashboard()` function from `status.py`
+- **🔑 Grok model duplicate key fix**: `first_run.py` model config had duplicate `"model"` key for Grok provider — consolidated to single entry
+- **💥 Rich crash fallback**: `first_run.py` now catches `Exception` when importing Rich and falls back to plain-text output instead of crashing
+- **🧪 Test updates**: Updated 4 test assertions for v1.0.5 version bump (status, helpers, init); launcher script test now correctly expects no wrapper on native installs
+- **📢 Diagnostic banners to stderr**: Security mode banners (`🔒 Security Mode: ...`) now print to stderr instead of stdout, fixing `--json` flag contamination across all CLI commands
+- **⏱️ LLM timeout consistency**: All 5 providers (OpenAI, Anthropic, Grok, Mistral, Gemini) now use 120-second timeout; previously Gemini had no timeout set
+
+### EC2 Deployment Scripts
+- Fixed shebang line in `01a-create-instance.sh` (`#!/usr/bin/env bash`)
+- Fixed metadata file paths in `08-test-ssh.sh` and `09-setup-server.sh` to use correct directory structure
+- Fixed API key provisioning in EC2 setup scripts
+- Updated EC2 README with correct paths and instructions
+- Added EC2 `.gitignore` with updated paths
 
 ## [1.0.4] - 2026-01-29
 
@@ -121,7 +239,7 @@ Planned directions (non-binding, community-driven):
 ## Support & Community
 
 - GitHub Discussions & Issues
-- Security reports: hello@akios.ai (private only)
+- Security reports: security@akioud.ai (private only)
 - See README.md for current scope & limits
 
 *For the complete history, see the [Git repository](https://github.com/akios-ai/akios/commits/main).*

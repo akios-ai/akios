@@ -116,8 +116,9 @@ class ToolExecutorAgent(BaseAgent):
 
         # Apply security before executing commands (delayed import)
         from akios.security import enforce_sandbox
+        from akios.security.syscall.policy import AgentType
         apply_pii_redaction = _pii_redaction_func
-        enforce_sandbox()
+        enforce_sandbox(agent_type=AgentType.TOOL_EXECUTOR)
 
         # Extract args from parameters
         args = parameters.get('args', [])

@@ -45,37 +45,69 @@ else:
 
 def show_version() -> None:
     """Show enhanced version information with build details."""
-    version_info = f"AKIOS {__version__}"
-    try:
-        # Try to get git commit hash
-        import subprocess
-        result = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
-                              capture_output=True, text=True, cwd='.')
-        if result.returncode == 0:
-            commit_hash = result.stdout.strip()
-            version_info += f" (commit: {commit_hash})"
-    except:
-        pass  # Gracefully ignore if git not available
+    from ..core.ui.rich_output import _should_use_rich
+    
+    if _should_use_rich():
+        from ..core.ui.rich_output import get_theme_color
+        version_info = f"[bold {get_theme_color('header')}]AKIOS[/bold {get_theme_color('header')}] [bold]{__version__}[/bold]"
+        try:
+            # Try to get git commit hash
+            import subprocess
+            result = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
+                                  capture_output=True, text=True, cwd='.')
+            if result.returncode == 0:
+                commit_hash = result.stdout.strip()
+                version_info += f" [dim](commit: {commit_hash})[/dim]"
+        except (Exception, KeyboardInterrupt):
+            pass  # Gracefully ignore if git not available
 
-    try:
-        # Try to get build date from git
-        import subprocess
-        result = subprocess.run(['git', 'log', '-1', '--format=%ci'],
-                              capture_output=True, text=True, cwd='.')
-        if result.returncode == 0:
-            build_date = result.stdout.strip().split()[0]  # Just the date part
-            version_info += f" (built: {build_date})"
-    except:
-        pass  # Gracefully ignore if git not available
+        try:
+            # Try to get build date from git
+            import subprocess
+            result = subprocess.run(['git', 'log', '-1', '--format=%ci'],
+                                  capture_output=True, text=True, cwd='.')
+            if result.returncode == 0:
+                build_date = result.stdout.strip().split()[0]  # Just the date part
+                version_info += f" [dim](built: {build_date})[/dim]"
+        except (Exception, KeyboardInterrupt):
+            pass  # Gracefully ignore if git not available
+        
+        # Use Rich console for colored output
+        from ..core.ui.rich_output import _get_console
+        console = _get_console()
+        console.print(version_info)
+    else:
+        # Plain text fallback
+        version_info = f"AKIOS {__version__}"
+        try:
+            import subprocess
+            result = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'],
+                                  capture_output=True, text=True, cwd='.')
+            if result.returncode == 0:
+                commit_hash = result.stdout.strip()
+                version_info += f" (commit: {commit_hash})"
+        except (Exception, KeyboardInterrupt):
+            pass
 
-    print(version_info)
+        try:
+            import subprocess
+            result = subprocess.run(['git', 'log', '-1', '--format=%ci'],
+                                  capture_output=True, text=True, cwd='.')
+            if result.returncode == 0:
+                build_date = result.stdout.strip().split()[0]
+                version_info += f" (built: {build_date})"
+        except (Exception, KeyboardInterrupt):
+            pass
+        
+        print(version_info)
 
 
 class CustomHelpFormatter(argparse.RawDescriptionHelpFormatter):
     """
-    Custom help formatter that modifies argument parsing display text.
+    Custom help formatter with color support.
 
-    Overrides formatting methods to customize help output presentation.
+    Adds ANSI color codes to help output for better readability.
+    Colors automatically disabled in non-TTY environments.
     """
 
     def _format_usage(self, usage, actions, groups, prefix):
@@ -84,9 +116,45 @@ class CustomHelpFormatter(argparse.RawDescriptionHelpFormatter):
         return result.replace('positional arguments', 'commands')
 
     def format_help(self):
-        """Override main help formatting to customize output."""
+        """Override main help formatting to add colors."""
         help_text = super().format_help()
-        return help_text.replace('positional arguments:', 'commands:')
+        help_text = help_text.replace('positional arguments:', 'commands:')
+        
+        # Add colors if terminal supports it
+        if sys.stdout.isatty() and os.environ.get('NO_COLOR') != '1':
+            from ..core.ui.rich_output import get_theme_ansi, ANSI_RESET
+            
+            # Semantic Theme Colors
+            HEADER_COLOR = get_theme_ansi('header')
+            SUCCESS_COLOR = get_theme_ansi('success')
+            WARNING_COLOR = get_theme_ansi('warning')
+            INFO_COLOR = get_theme_ansi('info')
+            DIM = "\033[2m"  # Standard ANSI dim style
+            RESET = ANSI_RESET
+            
+            # Color the main sections
+            help_text = help_text.replace('usage:', f'{INFO_COLOR}usage:{RESET}')
+            help_text = help_text.replace('AKIOS - Security-first AI agent runtime', 
+                                         f'{HEADER_COLOR}AKIOS{RESET} - {DIM}Security-first AI agent runtime{RESET}')
+            help_text = help_text.replace('commands:', f'{SUCCESS_COLOR}commands:{RESET}')
+            help_text = help_text.replace('options:', f'{SUCCESS_COLOR}options:{RESET}')
+            help_text = help_text.replace('Examples:', f'{WARNING_COLOR}Examples:{RESET}')
+            
+            # Color command names in examples (lines starting with akios)
+            lines = help_text.split('\n')
+            colored_lines = []
+            for line in lines:
+                # Color 'akios' command in examples
+                if '  akios ' in line and not line.strip().startswith('#'):
+                    line = line.replace('akios ', f'{INFO_COLOR}akios{RESET} ')
+                    # Color comments
+                    if '#' in line:
+                        parts = line.split('#', 1)
+                        line = parts[0] + f'{DIM}#{parts[1]}{RESET}'
+                colored_lines.append(line)
+            help_text = '\n'.join(colored_lines)
+        
+        return help_text
 
     def _format_action(self, action):
         """Override action formatting to customize help output."""
@@ -195,7 +263,8 @@ def _validate_configuration(args: argparse.Namespace) -> None:
 
 def _run_first_run_wizard(args: argparse.Namespace) -> None:
     """Run first-run detection and setup wizard."""
-    if args.command == 'init' and getattr(args, 'non_interactive', False) is False:
+    # Only run setup wizard if explicitly requested with --wizard flag
+    if args.command == 'init' and getattr(args, 'wizard', False) is True:
         try:
             from pathlib import Path
             if getattr(sys, 'frozen', False):

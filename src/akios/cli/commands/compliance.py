@@ -21,7 +21,16 @@ Compliance reporting and status dashboard for workflow isolation.
 
 import argparse
 
+try:
+    from rich.console import Console
+    _console = Console()
+except ImportError:
+    _console = None
+
 from ...core.compliance.report import get_compliance_generator
+from ...core.ui.rich_output import (
+    print_panel, print_success, print_error, print_warning, print_info, get_theme_color
+)
 from ..helpers import CLIError, output_result, handle_cli_error
 
 
@@ -119,14 +128,19 @@ def run_compliance_report(args: argparse.Namespace) -> int:
                     "status": "exported"
                 }, json_mode=True)
             else:
-                print(f"✅ Generated compliance report for workflow '{args.workflow}'")
-                print(f"   Report Type: {args.type}")
-                print(f"   Export Format: {args.format}")
-                print(f"   File: {export_path}")
-
+                print_success(
+                    message=f"Generated compliance report for workflow '{args.workflow}'",
+                    details=[
+                        f"Report Type: {args.type}",
+                        f"Export Format: {args.format}",
+                        f"File: {export_path}"
+                    ]
+                )
+                
                 # Show key metrics
                 score = report.get('compliance_score', {})
-                print(f"   Compliance Score: {score.get('overall_score', 'N/A')}/5.0 ({score.get('overall_level', 'unknown')})")
+                score_text = f"Compliance Score: {score.get('overall_score', 'N/A')}/5.0 ({score.get('overall_level', 'unknown')})"
+                print_info(score_text)
         else:
             # Just display the report
             if args.json:
@@ -135,20 +149,20 @@ def run_compliance_report(args: argparse.Namespace) -> int:
                 # Show summary
                 metadata = report.get('report_metadata', {})
                 score = report.get('compliance_score', {})
+                
+                # Prepare report content
+                report_title = f"Compliance Report - {args.workflow}"
+                report_content = f"""Generated: {metadata.get('generated_at', 'unknown')}
+Report Type: {args.type}
 
-                print(f"Compliance Report for '{args.workflow}'")
-                print(f"Generated: {metadata.get('generated_at', 'unknown')}")
-                print(f"Report Type: {args.type}")
-                print()
-                print(f"Overall Score: {score.get('overall_score', 'N/A')}/5.0 ({score.get('overall_level', 'unknown')})")
-                print()
+Overall Score: {score.get('overall_score', 'N/A')}/5.0 ({score.get('overall_level', 'unknown')})
 
-                # Show component scores
-                components = score.get('component_scores', {})
-                print("Component Scores:")
-                print(f"  Security: {components.get('security', 'N/A')}/5.0")
-                print(f"  Audit: {components.get('audit', 'N/A')}/5.0")
-                print(f"  Cost: {components.get('cost', 'N/A')}/5.0")
+Component Scores:
+  Security: {score.get('component_scores', {}).get('security', 'N/A')}/5.0
+  Audit: {score.get('component_scores', {}).get('audit', 'N/A')}/5.0
+  Cost: {score.get('component_scores', {}).get('cost', 'N/A')}/5.0"""
+                
+                print_panel(report_title, report_content, style=get_theme_color("info"))
 
         return 0
 
@@ -168,26 +182,27 @@ def run_compliance_help(args: argparse.Namespace) -> int:
     Returns:
         Exit code
     """
-    print("AKIOS Compliance Reporting")
-    print("==========================")
-    print()
-    print("Generate compliance reports and view compliance status for workflows.")
-    print()
-    print("Commands:")
-    print("  report <workflow>        Generate compliance report")
-    print()
-    print("Report Types:")
-    print("  basic      - Cost, audit, and security compliance summary")
-    print("  detailed   - Includes execution breakdown and model usage")
-    print("  executive  - High-level compliance overview")
-    print()
-    print("Export Formats:")
-    print("  json       - Structured JSON format")
-    print("  txt        - Human-readable text format")
-    print()
-    print("Examples:")
-    print("  akios compliance report fraud-detection                    # Basic JSON report")
-    print("  akios compliance report fraud-detection --type detailed   # Detailed analysis")
-    print("  akios compliance report fraud-detection --format txt      # Text export")
+    help_content = """Commands:
+  report <workflow>        Generate compliance report
+
+Report Types:
+  basic      - Cost, audit, and security compliance summary
+  detailed   - Includes execution breakdown and model usage
+  executive  - High-level compliance overview
+
+Export Formats:
+  json       - Structured JSON format
+  txt        - Human-readable text format
+
+Examples:
+  akios compliance report fraud-detection                    # Basic JSON report
+  akios compliance report fraud-detection --type detailed    # Detailed analysis
+  akios compliance report fraud-detection --format txt       # Text export"""
+
+    print_panel(
+        "AKIOS Compliance Reporting",
+        "Generate compliance reports and view compliance status for workflows.\n\n" + help_content,
+        style=get_theme_color("info")
+    )
 
     return 0

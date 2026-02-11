@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import List, Tuple
 
 from ..helpers import CLIError, check_project_context
+from ...core.ui.rich_output import print_panel, print_table, print_info, get_theme_color
 
 
 def register_files_command(subparsers: argparse._SubParsersAction) -> None:
@@ -186,29 +187,33 @@ def format_timestamp(timestamp: float) -> str:
 def print_files_display(input_files: List[Tuple[str, str, str]],
                        output_files: List[Tuple[str, str, str]],
                        category: str) -> None:
-    """Print formatted files display."""
-    if category in ["input", "all"] and input_files:
-        print("📁 Input Files")
-        print("=" * 13)
-        for name, size, modified in input_files:
-            print(f"  {name:<30} {size:>8}  {modified}")
-        print()
-
-    if category in ["output", "all"] and output_files:
-        print("📤 Recent Output Runs")
-        print("=" * 20)
-        for run_name, file_count, modified in output_files:
-            print(f"  {run_name:<25} {file_count:>10}  {modified}")
-        print()
-
+    """Print formatted files display with Rich UI and colors."""
     if not input_files and not output_files:
-        print("No files found in data directories.")
-        print("💡 Tip: Add files to data/input/ and run workflows to create outputs")
+        print_panel("📁 Data Files", f"[{get_theme_color('warning')}]No files found[/{get_theme_color('warning')}] [dim]in data directories.\nAdd files to[/dim] [{get_theme_color('info')}]data/input/[/{get_theme_color('info')}] [dim]and run workflows to create outputs[/dim]", style=get_theme_color("warning"))
         return
 
-    # Show usage tips
+    # Display input files with colored metadata
+    if category in ["input", "all"] and input_files:
+        input_data = [
+            {"file": name, "size": f"[{get_theme_color('info')}]{size}[/{get_theme_color('info')}]", "modified": f"[dim]{modified}[/dim]"}
+            for name, size, modified in input_files
+        ]
+        print_table(input_data, title="📁 Input Files", columns=["file", "size", "modified"])
+
+    # Display output files with colored metadata
+    if category in ["output", "all"] and output_files:
+        output_data = [
+            {"run": f"[bold]{run_name}[/bold]", "files": f"[{get_theme_color('success')}]{file_count}[/{get_theme_color('success')}]", "modified": f"[dim]{modified}[/dim]"}
+            for run_name, file_count, modified in output_files
+        ]
+        print_table(output_data, title="📤 Recent Output Runs", columns=["run", "files", "modified"])
+
+    # Show usage tips with colors
+    tips_text = ""
     if input_files:
-        print("💡 To use input files in workflows, reference them in your YAML templates:")
-        print("   path: \"./data/input/your-file.txt\"")
+        tips_text += f"[{get_theme_color('success')}]✓[/{get_theme_color('success')}] [dim]Reference input files in templates:[/dim] [{get_theme_color('info')}]path: \"./data/input/your-file.txt\"[/{get_theme_color('info')}]\n"
     if output_files:
-        print("💡 To view output files: ls data/output/run_*/")
+        tips_text += f"[{get_theme_color('success')}]✓[/{get_theme_color('success')}] [dim]View outputs:[/dim] [{get_theme_color('info')}]ls data/output/run_*/[/{get_theme_color('info')}]"
+    
+    if tips_text:
+        print_info(tips_text.strip())

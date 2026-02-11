@@ -23,6 +23,8 @@ import argparse
 from pathlib import Path
 
 from ..helpers import CLIError, output_result, check_project_context
+from ..template_picker import run_template_picker
+from ...core.ui.rich_output import get_theme_color
 
 
 def register_templates_command(subparsers: argparse._SubParsersAction) -> None:
@@ -57,6 +59,26 @@ def register_templates_command(subparsers: argparse._SubParsersAction) -> None:
 
     list_parser.set_defaults(func=run_templates_list)
 
+    # templates select subcommand with fuzzy search
+    select_parser = subparsers_templates.add_parser(
+        "select",
+        help="Interactively select a template"
+    )
+
+    select_parser.add_argument(
+        "--no-search",
+        action="store_true",
+        help="Disable fuzzy search"
+    )
+
+    select_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output selected template in JSON format"
+    )
+
+    select_parser.set_defaults(func=run_templates_select)
+
 
 def run_templates_list(args: argparse.Namespace) -> int:
     """
@@ -76,13 +98,24 @@ def run_templates_list(args: argparse.Namespace) -> int:
         if args.json:
             output_result(templates_data, json_mode=args.json)
         else:
-            formatted = format_templates_list(templates_data)
-            print(formatted)
+            # Prepare data for table
+            table_data = []
+            for t in templates_data:
+                badge = f"[{get_theme_color('info')}]🌐[/{get_theme_color('info')}]" if t.get("network_required", True) else f"[{get_theme_color('success')}]💾[/{get_theme_color('success')}]"
+                table_data.append({
+                    "Type": badge,
+                    "Template": f"[bold]{t['name']}[/bold]",
+                    "Description": t["description"]
+                })
+            
+            from ...core.ui.rich_output import print_table
+            print_table(table_data, title="Available Templates")
 
         return 0
 
     except CLIError as e:
-        print(f"Error: {e}", file=__import__("sys").stderr)
+        from ...core.ui.rich_output import print_error
+        print_error(str(e))
         return e.exit_code
     except Exception as e:
         from ..helpers import handle_cli_error
@@ -123,47 +156,80 @@ def get_templates_list() -> list:
     return templates
 
 
-def format_templates_list(templates_data: list) -> str:
+def format_templates_list(templates: list) -> str:
     """
-    Format templates list for display with terminal width awareness.
+    Format templates list into a human-readable string.
 
     Args:
-        templates_data: List of template dictionaries
+        templates: List of template dictionaries with name/description
 
     Returns:
-        Formatted string
+        Formatted templates string
     """
-    import shutil
-    terminal_width = shutil.get_terminal_size().columns
-
     lines = []
     lines.append("Available Templates")
     lines.append("=" * 19)
+    lines.append("")
 
-    for template in templates_data:
-        name = template["name"]
-        description = template["description"]
-        network_required = template.get("network_required", True)
+    emoji_map = {
+        "hello-workflow.yml": "👋",
+        "document_ingestion.yml": "📄",
+        "batch_processing.yml": "⚙️",
+        "file_analysis.yml": "🔍",
+    }
 
-        # Add network requirement badge
-        if network_required:
-            badge = "🌐"
-            network_note = " (requires network)"
-        else:
-            badge = "💾"
-            network_note = " (local only)"
-
-        # Calculate available space for description
-        # badge (2) + space (1) + name (up to 25) + space (1) + description + network_note
-        name_width = min(25, len(name))
-        available_desc_width = terminal_width - 2 - 1 - name_width - 1 - len(network_note) - 5  # 5 for safety margin
-
-        # Truncate description if too long
-        if len(description) > available_desc_width and available_desc_width > 10:
-            truncated_desc = description[:available_desc_width-3] + "..."
-        else:
-            truncated_desc = description
-
-        lines.append(f"{badge} {name:<{name_width}} {truncated_desc}{network_note}")
+    for template in templates:
+        name = template.get("name", "unknown.yml")
+        description = template.get("description", "")
+        emoji = emoji_map.get(name, "📋")
+        lines.append(f"{emoji} {name}  {description}")
 
     return "\n".join(lines)
+
+
+def run_templates_select(args: argparse.Namespace) -> int:
+    """
+    Execute the templates select command.
+    
+    Launches interactive template picker with fuzzy search.
+
+    Args:
+        args: Parsed command line arguments
+
+    Returns:
+        Exit code
+    """
+    try:
+        # Verify we're in a valid project context
+        check_project_context()
+        templates_data = get_templates_list()
+
+        # Run interactive picker
+        enable_search = not args.no_search
+        selected = run_template_picker(templates_data, enable_search=enable_search)
+
+        if selected:
+            if args.json:
+                output_result(selected, json_mode=True)
+            else:
+                from ...core.ui.rich_output import print_panel
+                content = f"Template: [bold]{selected['name']}[/bold]\n"
+                content += f"Description: [dim]{selected.get('description', 'N/A')}[/dim]"
+                print_panel("Template Selected", content)
+            return 0
+        else:
+            # User cancelled selection
+            if not args.json:
+                from ...core.ui.rich_output import print_warning
+                print_warning("No template selected.")
+            return 1
+
+    except CLIError as e:
+        from ...core.ui.rich_output import print_error
+        print_error(str(e))
+        return e.exit_code
+    except Exception as e:
+        from ..helpers import handle_cli_error
+        return handle_cli_error(e, json_mode=args.json)
+
+# format_templates_list removed in favor of rich_output.print_table
