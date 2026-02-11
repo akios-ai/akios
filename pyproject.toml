@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.0.4"
+version = "1.0.5"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOS Team", email = "hello@akios.ai" },
@@ -20,7 +20,7 @@ dependencies = [
     "httpx>=0.25.0",
     "requests>=2.25.0",
 
-    # Security and compliance (REQUIRED for Linux security)
+    # Security and compliance
     "cryptography>=42.0.0",
     "psutil>=5.9.0",
 
@@ -37,6 +37,16 @@ dependencies = [
     "PyPDF2>=3.0.0",
     "pdfminer.six>=20231228",
     "python-docx>=1.1.0",
+
+    # Terminal UI (v1.0.5 - professional structured terminal output)
+    "rich>=13.7.0",
+
+    # Interactive wizards (v1.0.5 - Feature 1: Interactive Setup Wizard)
+    "questionary>=1.10.0",
+
+    # Template fuzzy search (v1.0.5 - Feature 2: Template Fuzzy Search)
+    "fuzzywuzzy>=0.18.0",
+    "python-Levenshtein>=0.21.0",  # Performance optimization for fuzzy matching
 ]
 
 [project.urls]
@@ -49,9 +59,15 @@ dependencies = [
 akios = "akios.cli.main:main"
 
 [project.optional-dependencies]
-# Kernel-hard security (native Linux only)
+# Kernel-hard security for native Linux (automatic with system packages)
+# On Linux: install libseccomp-dev and python3-seccomp system packages, then run with sudo
+# AKIOS gracefully degrades to policy-based security if seccomp unavailable
+# Users can verify: python3 -c "import seccomp; print('✅ seccomp available')"
+# On Ubuntu/Debian: sudo apt-get install libseccomp-dev python3-seccomp
+# On Fedora/RHEL: sudo dnf install libseccomp-devel python3-seccomp
 seccomp = [
-    "seccomp>=1.0.0",
+    # Note: seccomp is provided by system packages (python3-seccomp), not PyPI
+    # This optional dependency documents the requirement; actual installation via system package manager
 ]
 
 # Extended functionality (beyond core security/LLM requirements)
@@ -106,4 +122,4 @@ where = ["src"]
 include = ["akios*"]
 
 [tool.setuptools.package-data]
-akios = ["templates/*.yml", "templates/*.md", "cli/data/samples/document_examples/sample.*", "cli/data/samples/analysis_targets/sample.*", "core/schema/*.json"]
+akios = ["templates/*.yml", "templates/*.md", "cli/data/samples/document_examples/sample.*", "cli/data/samples/analysis_targets/sample.*", "cli/data/wrapper.sh", "core/schema/*.json", "VERSION"]

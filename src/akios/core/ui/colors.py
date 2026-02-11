@@ -24,51 +24,30 @@ import os
 import sys
 from typing import Optional
 
+try:
+    from .rich_output import get_theme_ansi, ANSI_RESET
+except ImportError:
+    # Fallback
+    def get_theme_ansi(name): return ""
+    ANSI_RESET = ""
 
 class Colors:
-    """ANSI color codes for CLI output formatting."""
-
-    # Basic colors
-    BLACK = '\033[30m'
-    RED = '\033[31m'
-    GREEN = '\033[32m'
-    YELLOW = '\033[33m'
-    BLUE = '\033[34m'
-    MAGENTA = '\033[35m'
-    CYAN = '\033[36m'
-    WHITE = '\033[37m'
-
-    # Bright colors
-    BRIGHT_RED = '\033[91m'
-    BRIGHT_GREEN = '\033[92m'
-    BRIGHT_YELLOW = '\033[93m'
-    BRIGHT_BLUE = '\033[94m'
-    BRIGHT_MAGENTA = '\033[95m'
-    BRIGHT_CYAN = '\033[96m'
-    WHITE_ON_RED = '\033[97;41m'
-
-    # Styles
-    BOLD = '\033[1m'
-    DIM = '\033[2m'
-    UNDERLINE = '\033[4m'
-    BLINK = '\033[5m'
-    REVERSE = '\033[7m'
-    STRIKETHROUGH = '\033[9m'
-
-    # Reset
-    RESET = '\033[0m'
-
-    # Background colors
-    BG_RED = '\033[41m'
-    BG_GREEN = '\033[42m'
-    BG_YELLOW = '\033[43m'
-    BG_BLUE = '\033[44m'
+    """
+    ANSI color codes for CLI output formatting.
+    DEPRECATED: Use semantic functions or rich_output instead.
+    Kept for backward compatibility.
+    """
+    RESET = ANSI_RESET
+    # We map these to theme colors where possible, or keep defaults if no mapping
+    # Note: These are not strictly theme-compliant if used directly.
+    # Users should use semantic methods.
+    pass
 
 
 class ColorFormatter:
     """
     Cross-platform color formatter for CLI output.
-
+    
     Automatically detects terminal capabilities and gracefully degrades
     when colors are not supported (Docker, CI/CD, redirected output).
     """
@@ -79,12 +58,6 @@ class ColorFormatter:
     def _should_enable_colors(self) -> bool:
         """
         Determine if colors should be enabled based on environment.
-
-        Colors are enabled when:
-        - Output is a TTY (interactive terminal)
-        - NO_COLOR environment variable is not set
-        - TERM is not 'dumb'
-        - Running in supported environments
         """
         # Respect NO_COLOR standard
         if os.environ.get('NO_COLOR'):
@@ -113,54 +86,58 @@ class ColorFormatter:
     def colorize(self, text: str, color: str, style: Optional[str] = None) -> str:
         """
         Apply color and style to text if colors are enabled.
-
-        Args:
-            text: Text to colorize
-            color: ANSI color code
-            style: Optional ANSI style code
-
-        Returns:
-            Colorized text or plain text
         """
         if not self._colors_enabled:
             return text
 
         if style:
-            return f"{style}{color}{text}{Colors.RESET}"
+            return f"{style}{color}{text}{ANSI_RESET}"
         else:
-            return f"{color}{text}{Colors.RESET}"
+            return f"{color}{text}{ANSI_RESET}"
 
     def success(self, text: str) -> str:
         """Format text as success (green)."""
-        return self.colorize(text, Colors.BRIGHT_GREEN)
+        if not self._colors_enabled: return text
+        return f"{get_theme_ansi('success')}{text}{ANSI_RESET}"
 
     def error(self, text: str) -> str:
         """Format text as error (red)."""
-        return self.colorize(text, Colors.BRIGHT_RED)
+        if not self._colors_enabled: return text
+        return f"{get_theme_ansi('error')}{text}{ANSI_RESET}"
 
     def warning(self, text: str) -> str:
         """Format text as warning (yellow)."""
-        return self.colorize(text, Colors.BRIGHT_YELLOW)
+        if not self._colors_enabled: return text
+        return f"{get_theme_ansi('warning')}{text}{ANSI_RESET}"
 
     def info(self, text: str) -> str:
-        """Format text as info (blue)."""
-        return self.colorize(text, Colors.BRIGHT_BLUE)
+        """Format text as info (cyan)."""
+        if not self._colors_enabled: return text
+        return f"{get_theme_ansi('info')}{text}{ANSI_RESET}"
 
     def bold(self, text: str) -> str:
         """Format text as bold."""
-        return self.colorize(text, Colors.BOLD)
+        if not self._colors_enabled: return text
+        # 'header' is bold cyan, but if we just want bold...
+        # The theme doesn't expose a generic 'bold'.
+        # We can use standard ANSI bold here as it's a style.
+        return f"\033[1m{text}{ANSI_RESET}"
 
     def dim(self, text: str) -> str:
         """Format text as dimmed."""
-        return self.colorize(text, Colors.DIM)
+        if not self._colors_enabled: return text
+        return f"\033[2m{text}{ANSI_RESET}"
 
     def header(self, text: str) -> str:
         """Format text as header (bold cyan)."""
-        return self.colorize(text, Colors.BRIGHT_CYAN, Colors.BOLD)
+        if not self._colors_enabled: return text
+        return f"{get_theme_ansi('header')}{text}{ANSI_RESET}"
 
     def highlight(self, text: str) -> str:
-        """Format text as highlight (bold white)."""
-        return self.colorize(text, Colors.WHITE, Colors.BOLD)
+        """Format text as highlight (bold white/purple)."""
+        if not self._colors_enabled: return text
+        return f"{get_theme_ansi('highlight')}{text}{ANSI_RESET}"
+
 
 
 # Global color formatter instance

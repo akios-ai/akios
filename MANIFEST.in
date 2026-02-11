@@ -27,7 +27,6 @@ include ROADMAP.md
 include pyproject.toml
 include requirements.txt
 include Dockerfile
-include .dockerignore
 
 # GitHub community files
 recursive-include .github/ISSUE_TEMPLATE *
@@ -44,9 +43,6 @@ recursive-include assets *
 
 # Templates (workflow examples)
 recursive-include templates *
-
-# Git files (for source distribution)
-include .gitignore
 
 # Exclude development/internal files
 exclude .env*

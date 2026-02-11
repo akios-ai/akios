@@ -29,8 +29,8 @@ steps:
   - step: 2
     agent: llm
     config:
-      provider: "${AKIOS_LLM_PROVIDER:-openai}"  # Env var override with default
-      model: "${AKIOS_LLM_MODEL:-gpt-4o-mini}"  # Env var override with default
+      provider: "${AKIOS_LLM_PROVIDER:-grok}"  # Env var override with default
+      model: "${AKIOS_LLM_MODEL:-grok-3}"  # Env var override with default
     action: complete
     parameters:
       prompt: |

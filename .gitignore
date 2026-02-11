@@ -1,0 +1,32 @@
+# Build
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Environment
+.env
+.env.*
+*.local
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Security — must never appear in public repo
+*.pem
+*.key
+*.crt
+internal/
+tests/
+MagicMock/

@@ -1,12 +1,12 @@
-# AKIOS v1.0 – The Open-Source Security Cage for AI Agents
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# AKIOS v1.0.5 – The Open-Source Security Cage for AI Agents
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 **Security sandboxing · Real-time PII redaction · Merkle audit · Cost kills**
 
 
 <div align="center">
-  <img src="assets/logo.png" alt="AKIOS Logo" width="250" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
+  <img src="https://raw.githubusercontent.com/akios-ai/akios/main/assets/logo.png" alt="AKIOS Logo" width="250" style="border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"/>
 </div>
 
 
@@ -35,7 +35,8 @@ AKIOS is the **strongest open-source cage** you can put around any AI agent. Run
 | Environment | Security Level | Status | Notes |
 |-------------|----------------|--------|-------|
 | Docker on any platform (macOS/Linux/Windows) | Strong policy-based container isolation | ✅ v1.0 | Simple, reliable, cross-platform |
-| Native Linux (AWS EC2) | Full security feature set | ✅ v1.0 | Maximum security and performance |
+| Native Linux (with sudo) | Full kernel-hard security (seccomp-bpf + cgroups) | ✅ v1.0 | Maximum security and performance |
+| Native Linux (without sudo) | Strong policy-based security | ✅ v1.0 | Graceful degradation with warnings |
 | gVisor on Linux | Kernel-hard isolation | 🔮 V1.1+ | Future advanced security option |
 
 **AKIOS v1.0 provides strong, reliable security across all platforms.**
@@ -57,7 +58,9 @@ AKIOS is the **strongest open-source cage** you can put around any AI agent. Run
 - ✅ **Performance optimizations** (automatic container-aware resource management)
 
 **For maximum security** (full kernel-hard seccomp-bpf + strict filesystem permissions):
-**Use native Linux installation** on Linux hosts.
+**Use native Linux installation with sudo** on Linux hosts.
+
+> **Note:** `pip install akios` on Linux automatically includes the seccomp module. For full kernel-hard security, run AKIOS with sudo (`sudo akios run workflow.yml`). Without sudo, AKIOS gracefully degrades to policy-based mode with clear warnings.
 
 ### macOS & Windows / Docker Users – Important Note on Audit Logging
 
@@ -86,6 +89,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 - Regulated/high-security environments
 - Strict filesystem permission enforcement
 - Maximum security guarantees
+- **Required:** Run with sudo for full kernel-hard protection
 
 ## Installation (works on Linux, macOS, Windows)
 
@@ -105,8 +109,8 @@ cd my-project
 akios run templates/hello-workflow.yml
 
 # Option 2: Docker (Cross-platform - works on Linux, macOS, Windows)
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file -b akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 ./akios init my-project
 cd my-project
@@ -124,15 +128,41 @@ cd my-project
 AKIOS_FORCE_PULL=1 ./akios status
 ```
 
-> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
-> For specific versions: `pip install akios==1.0.4`. 
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.5). 
+> For specific versions: `pip install akios==1.0.5`. 
 
+---
+
+## 🚨 **REQUIRED: Linux System Packages (Before Pip Install)**
+
+If you're installing on **Linux**, you MUST install the security library first:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install libseccomp-dev python3-seccomp
+
+# Fedora/RHEL  
+sudo dnf install libseccomp-devel python3-seccomp
+```
+
+**Why?** AKIOS uses kernel-hard security (seccomp-bpf) on Linux for maximum protection. These packages must be installed before `pip install akios`.
+
+**If you skip this:**
+- ✅ `pip install akios` will still work
+- ✅ AKIOS will still run  
+- ⚠️ Advanced security features will degrade with clear warnings
+- 📊 You get policy-based security (same as Docker) instead of kernel-hard
+
+**macOS & Windows:** No pre-installation needed.
+
+---
 
 ### Which Installation Should I Choose?
 
 | Option | Best For | Requirements | Security Level | Ease of Use |
 |--------|----------|--------------|----------------|-------------|
-| **Pip Package** ⭐ | Python developers, maximum security | Python 3.8+, Linux kernel 3.17+<br>**Ubuntu 24.04+:** `pipx install akios` | Full kernel-hard security | ⭐⭐⭐⭐⭐ |
+| **Pip Package** ⭐ | Python developers, maximum security | Python 3.8+, Linux kernel 3.17+<br>**LINUX REQUIRED:** libseccomp-dev + python3-seccomp (see section above)<br>**Ubuntu 24.04+:** `pipx install akios` | Full kernel-hard security (Linux) | ⭐⭐⭐⭐⭐ |
 | **Docker** | Cross-platform teams, development environments | Docker installed | Strong policy-based security | ⭐⭐⭐⭐ |
 | **Direct Docker** | Emergency fallback when wrapper fails | Docker installed | Strong policy-based security | ⭐⭐⭐ |
 
@@ -168,6 +198,11 @@ akios run templates/hello-workflow.yml
 # 4. Check results and status
 akios status
 cat data/output/run_*/hello-ai.txt
+
+# 5. Clean up old runs (optional)
+akios clean
+
+# 6. Export audit proof
 ```
 
 ## v1.0 UX and Value
@@ -190,8 +225,12 @@ akios init my-project   # Create new project
 cd my-project
 akios setup             # Configure API keys and settings
 akios status            # Check system status
+akios status --budget   # View budget dashboard and cost tracking
 akios files             # Show available input/output files
 akios run templates/hello-workflow.yml  # Run sample workflow
+akios protect scan "text"  # Scan text for PII
+akios protect show-prompt workflow.yml  # Preview LLM prompt
+akios http GET https://api.example.com  # Secure HTTP request
 ```
 
 AKIOS includes a guided setup wizard that makes configuration effortless:
@@ -250,13 +289,74 @@ cd my-project                    # ← REQUIRED STEP
 - **📊 Merkle Audit Trails**: Cryptographic proof of execution integrity — tamper-evident JSON exports
 - **💰 Cost Kill-Switches**: Hard budget limits ($1 default) with automatic termination on violations
 - **⚡ Zero-Dependency Deployment**: Standalone binaries for air-gapped environments, plus pip packages for Python integration
+- **🔐 HTTPS Whitelist Control**: Secure network access with explicit per-domain approval (LLM APIs always allowed)
+- **🗑️ Secure Data Destruction**: `cage down` completely destroys audit, output, and input data with zero recovery option
+
+---
+
+## Security Cage: Up & Down
+
+### Activate Full Protections
+
+```bash
+akios cage up
+# Result: All 6 protections ACTIVE
+# ├─ PII Redaction: ENABLED
+# ├─ Network Lock: HTTPS LOCKED  
+# ├─ LLM Access: ALLOWED (always)
+# ├─ Sandbox: ENFORCED
+# ├─ Audit Trail: RUNNING  
+# └─ Cost Controls: ACTIVE
+```
+
+### Complete Data Destruction
+
+```bash
+# Permanently destroy ALL session data (irreversible)
+akios cage down
+
+# Result: 0 bytes remain
+# ├─ audit/ destroyed
+# ├─ data/output/ destroyed
+# ├─ data/input/ destroyed
+# └─ ZERO DATA RESIDUE
+```
+
+**This is the cage's core promise: sessions disappear completely.**
+
+For development, use `cage down --keep-data` to preserve data while relaxing protections (not production-safe).
+
+---
+
+## HTTPS Whitelist Configuration
+
+By default, **only LLM APIs have network access**. Enable the HTTP agent and whitelist specific domains:
+
+**In `config.yaml`:**
+```yaml
+network_access_allowed: true
+allowed_domains:
+  - "api.salesforce.com"
+  - "api.mycompany.com"
+```
+
+**Or via `.env`:**
+```bash
+AKIOS_NETWORK_ACCESS_ALLOWED=true
+AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.mycompany.com"
+```
+
+**Important:** LLM APIs (OpenAI, Anthropic, Grok, etc.) always pass through network locks — they cannot be blocked.
+
+---
 - **🔧 Core Agents**: Filesystem, HTTP, LLM, and Tool Executor agents for complete AI workflows
 - **✅ Real AI Integration**: Templates use actual LLM APIs - not mock responses or demo placeholders
+- **🎨 Professional Terminal UI** (v1.0.5): Rich-powered colored tables, panels, and styled output for beautiful CLI experience
 - **🚀 10/10 Performance**: Validated performance metrics across all platforms (native Linux: 25ms startup, 44.44 wf/s throughput; Docker: <1000ms startup, >5 wf/s throughput)
 
 ## ⚡ Performance Highlights
 
-AKIOS v1.0.4 achieves **10/10 performance scores** across all platforms:
+AKIOS v1.0.5 achieves **10/10 performance scores** across all platforms:
 
 ### Native Linux (Maximum Performance)
 ```
@@ -282,13 +382,16 @@ AKIOS v1.0.4 achieves **10/10 performance scores** across all platforms:
 
 Both performance profiles are **validated and blocking for every release** — we measure both to ensure no regressions as AKIOS evolves.
 
-See [Native Linux Performance (EC2)](/.github/scripts/release/v4/scripts/ec2/README.md#step-9-performance-testing-30-minutes--blocking) and [Docker Performance](/.github/scripts/release/v4/scripts/docker/README.md#performance-validation-phase) for detailed validation reports.
+**v1.0.5 Validation Results:**
+- **Native Linux (EC2)**: 189 E2E tests (20 CLI, 18 security, 4 workflows, 132 demos, 15 performance) — 100% PASS
+- **Docker**: 187 E2E tests (20 CLI, 18 security, 4 workflows, 132 demos, 13 performance) — 100% PASS
+- Comprehensive test suites execute on every release with real LLM APIs, full security validation, and performance benchmarking
 
 ## ⚖️ Legal Disclaimers & User Responsibility
 
 ### AKIOS Performance Validation Scope
 
-**AKIOS v1.0.4 performance metrics are validated ONLY on AWS EC2 t3.medium instances in us-east-1 region.** Your actual performance may differ significantly based on:
+**AKIOS v1.0.5 performance metrics are validated ONLY on AWS EC2 t3.medium instances in us-east-1 region.** Your actual performance may differ significantly based on:
 - Instance type and size
 - AWS region and network latency
 - System load and other processes  
@@ -297,8 +400,8 @@ See [Native Linux Performance (EC2)](/.github/scripts/release/v4/scripts/ec2/REA
 - Configuration choices
 
 ### What AKIOS Guarantees
-✅ **Security of the sandbox** - Full kernel-hard isolation on native Linux (verified with 26/26 security tests)  
-✅ **PII redaction** - 50+ pattern detection (>95% accuracy)  
+✅ **Security of the sandbox** - Full kernel-hard isolation on native Linux (verified with 18 comprehensive security tests covering cage, audit, PII redaction, and syscall filtering)
+✅ **PII redaction** - 50+ pattern detection (>95% accuracy) including healthcare identifiers (NPI, DEA, MRN)
 ✅ **Audit integrity** - Cryptographic Merkle proofs of execution  
 ✅ **Performance baseline** - 25ms startup & 44.44 wf/s throughput on t3.medium  
 
@@ -376,9 +479,9 @@ We provide two resources to help validate AKIOS for your use case:
    - Troubleshooting for common issues
    - Security best practices for AWS
 
-2. **[Native vs Docker Performance Comparison](/.github/scripts/release/v4/NATIVE_VS_DOCKER_PERFORMANCE.md)** (Detailed analysis)
+2. **[Native vs Docker Performance Comparison](#-performance-highlights)** (Detailed metrics)
    - Side-by-side metrics comparison
-   - Performance analysis for each metric
+   - Performance validation with comprehensive E2E test suites
    - Decision matrix: when to use each platform
    - Validation results and methodologies
 
@@ -456,13 +559,13 @@ ls -la akios && file akios
 # akios: Bourne-Again shell script text executable, Unicode text, UTF-8 text
 
 # If download failed, use Direct Docker fallback:
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.4 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 "$@"' > akios
 chmod +x akios
-./akios --version  # Should show "AKIOS 1.0.4"
+./akios --version  # Should show "AKIOS 1.0.5"
 ```
 
 #### Docker Installation Issues
@@ -548,7 +651,7 @@ AKIOS v1.0 is **minimal by design** — focused on security fundamentals:
 - **Docker recommended** (provides Linux environment for macOS/Windows users)
 - **Sequential workflows only** (no parallel execution)
 - **Core agents** (filesystem, HTTP, LLM, tool executor)
-- **Basic CLI** (10 commands: init, setup, run, workflow, audit export, logs, status, templates, testing, clean)
+- **Basic CLI** (20+ commands: init, setup, run, status, templates, files, logs, audit, doctor, compliance, output, clean, cage, protect, http, timeline, testing, docs)
 - **No API server** (CLI-only in v1.0)
 - **No monitoring dashboard** (command-line only)
 
@@ -608,7 +711,7 @@ Development and build-time tools:
 
 - **PyPI installs** use `pyproject.toml` dependencies (modern Python packaging)
 - **Docker builds** use both `requirements.txt` + `requirements-build.txt` for complete environments
-- **Security libraries** (`seccomp`) are platform-specific and handled via optional dependencies
+- **Security libraries** (including `seccomp`) are now bundled for Linux hosts via `pyproject.toml`; the only extra step is installing the OS headers (`libseccomp-dev` or `libseccomp-devel`) so the wheel builds cleanly.
 
 ## 🐧 Advanced Installation Options
 
@@ -647,8 +750,8 @@ akios status | grep -E "(Sandbox|Audit|seccomp)"
 **Setup**:
 ```bash
 # Download the wrapper script
-curl -O https://raw.githubusercontent.com/akios-ai/akios/main/akios
-ls -la akios && file -b akios  # Verify download (shell script)
+curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
+mv wrapper.sh akios
 chmod +x akios
 
 # Run (provides strong cross-platform security)
@@ -795,11 +898,11 @@ The essential files you'll need to get started:
 
 - **[GETTING_STARTED.md](./GETTING_STARTED.md)** – 3-minute try-it-now guide
 - **[AGENTS.md](./AGENTS.md)** – Core agents (LLM, HTTP, Filesystem, Tool Executor)
-- **[RELEASES.md](./RELEASES.md)** – What v1.0 delivers and scope limitations
+- **[RELEASES.md](./CHANGELOG.md)** – What v1.0 delivers and scope limitations
 - **[akios](./akios)** – Smart wrapper (Cross-platform Docker launcher)
 - **[config.yaml](./config.yaml)** – Default configuration template
 - **[Dockerfile](./Dockerfile)** – Official Docker build
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** – Deployment philosophy and security-first approach
+- **[Deployment Guide](./docs/deployment.md)** – Deployment philosophy and security-first approach
 - **[TROUBLESHOOTING.md](./TROUBLESHOOTING.md)** – Common issues and solutions
 
 ## 📚 Documentation
@@ -812,6 +915,7 @@ The essential files you'll need to get started:
 ### 📖 Complete Guides
 - **[Configuration](docs/configuration.md)** - Settings and environment variables
 - **[CLI Reference](docs/cli-reference.md)** - All command-line options
+- **[Rich Terminal UI](docs/rich-ui.md)** - Professional styled output with tables and panels
 - **[Security Overview](docs/security.md)** - Security features and compliance
 - **[Deployment](docs/deployment.md)** - Production deployment options
 - **[Troubleshooting](docs/troubleshooting.md)** - Common issues and solutions
@@ -898,7 +1002,7 @@ cat data/output/run_*/batch-summary.json
 
 ## 📈 Roadmap
 
-**Current: v1.0** - Security cage fundamentals (Linux-only, minimal features)
+**Current: v1.0.5** - Security cage fundamentals (Linux-only, minimal features)
 
 **Future Releases:**
 - **Enhanced Security**: Additional compliance features, advanced monitoring

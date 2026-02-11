@@ -51,6 +51,23 @@ def _get_agent_class():
     """Lazy load get_agent_class function."""
     return _import_module('akios.core.runtime.agents', 'get_agent_class')
 
+
+def _get_progress_functions():
+    """Lazy load progress bar functions."""
+    try:
+        create_workflow_progress = _import_module('akios.core.ui.rich_output', 'create_workflow_progress')
+        create_step_progress = _import_module('akios.core.ui.rich_output', 'create_step_progress')
+        create_workflow_dashboard = _import_module('akios.core.ui.rich_output', 'create_workflow_dashboard')
+        return {
+            'workflow': create_workflow_progress,
+            'step': create_step_progress,
+            'dashboard': create_workflow_dashboard
+        }
+    except ImportError:
+        # Fallback if rich_output not available
+        return None
+
+
 # Core imports that are always needed
 from akios.config import get_settings
 
@@ -367,6 +384,10 @@ class RuntimeEngine:
         self.template_source = None
         self.workflow = None
 
+        # Reset output directory to prevent cross-workflow contamination
+        if hasattr(self, '_output_dir'):
+            del self._output_dir
+
         # Reset kill switches to pristine state
         self.cost_kill.reset()
         self.loop_kill.reset()
@@ -398,8 +419,13 @@ class RuntimeEngine:
         # Clear any agent-specific cached state
         self._clear_agent_state()
 
-        # Ensure output directories are clean for this workflow run
-        self._validate_output_directory_state()
+        # Skip output directory validation when sandbox is enabled
+        # Sandbox enforcement may restrict file operations during initialization,
+        # and validation failures won't prevent workflow execution anyway
+        # (the actual workflow will fail more gracefully if there are real issues)
+        if not self.settings.sandbox_enabled:
+            # Ensure output directories are clean for this workflow run
+            self._validate_output_directory_state()
 
         # Clear any audit-related temporary state
         self._clear_audit_state()
@@ -505,49 +531,95 @@ class RuntimeEngine:
         # (Defensive measure for complex workflows)
 
     def _execute_workflow_steps(self, workflow, end_time: float) -> list:
-        """Execute all workflow steps with safety checks and progress indicators"""
+        """
+        Execute all workflow steps with safety checks and progress indicators.
+        
+        Enhanced with Rich Live Dashboard showing:
+        - Real-time step status (Pending/Running/Success/Error)
+        - Execution time per step
+        - Live logs in a separate panel (optional)
+        - Automatic fallback to simple print for non-TTY/JSON mode
+        """
         results = []
         total_steps = len(workflow.steps)
-
-        for i, step in enumerate(workflow.steps, 1):
-            # ENFORCEMENT: Check kill switches BEFORE executing each step
-            self._check_execution_limits(end_time)
-
-            # Show enhanced progress indicator
-            step_start = time.time()
-            agent_action = f"{step.agent}.{step.action}"
-            # Make step descriptions more user-friendly
-            friendly_descriptions = {
-                "llm.complete": "AI generation",
-                "filesystem.write": "Saving results",
-                "filesystem.read": "Reading data",
-                "http.get": "Fetching data",
-                "http.post": "Submitting data",
-                "tool_executor.run": "Running command"
-            }
-            friendly_desc = friendly_descriptions.get(agent_action, agent_action)
-            print(f"⚡ Executing step {i}/{total_steps}: {friendly_desc}", file=sys.stderr)
-            sys.stderr.flush()
-
-            step_result = self._execute_step(step, workflow)
-            results.append(step_result)
-
-            # Show step completion with timing - determine success based on agent type
-            step_duration = time.time() - step_start
-            status_icon = self._determine_step_status_icon(step_result, step)
-            print(f"{status_icon} Step {i}/{total_steps} completed in {step_duration:.2f}s", file=sys.stderr)
-            sys.stderr.flush()
-
-            # Check for security violations
-            self._check_step_security_violation(step_result, step.step_id)
-
-            if step_result.get('status') == 'error':
-                error_msg = step_result.get('error', 'Unknown error')
-                raise RuntimeError(f"Step {i} failed: {error_msg}")
-
-            # ENFORCEMENT: Check kill switches AFTER each step execution
-            self._check_execution_limits(end_time)
-
+        
+        # Get progress functions
+        progress_funcs = _get_progress_functions()
+        use_rich_progress = progress_funcs is not None and sys.stderr.isatty()
+        
+        # Determine friendly descriptions for steps (kept for fallback)
+        friendly_descriptions = {
+            "llm.complete": "AI generation",
+            "filesystem.write": "Saving results",
+            "filesystem.read": "Reading data",
+            "http.get": "Fetching data",
+            "http.post": "Submitting data",
+            "tool_executor.run": "Running command"
+        }
+        
+        # Execute with Live Dashboard if available
+        if use_rich_progress:
+            create_workflow_dashboard = progress_funcs['dashboard']
+            
+            # Use the dashboard context manager
+            with create_workflow_dashboard(workflow) as dashboard:
+                for i, step in enumerate(workflow.steps):
+                    # ENFORCEMENT: Check kill switches BEFORE executing each step
+                    self._check_execution_limits(end_time)
+                    
+                    # Mark step as running (0-based index)
+                    dashboard.set_running(i)
+                    
+                    # Execute step
+                    step_start = time.time()
+                    step_result = self._execute_step(step, workflow)
+                    results.append(step_result)
+                    step_duration = time.time() - step_start
+                    
+                    # Check for security violations
+                    self._check_step_security_violation(step_result, step.step_id)
+                    
+                    if step_result.get('status') == 'error':
+                        error_msg = step_result.get('error', 'Unknown error')
+                        dashboard.set_error(i, duration=step_duration)
+                        raise RuntimeError(f"Step {i+1} failed: {error_msg}")
+                    else:
+                        dashboard.set_success(i, duration=step_duration)
+                    
+                    # ENFORCEMENT: Check kill switches AFTER each step execution
+                    self._check_execution_limits(end_time)
+        else:
+            # Fallback to original print-based progress (non-TTY, JSON mode, or Rich unavailable)
+            for i, step in enumerate(workflow.steps, 1):
+                # ENFORCEMENT: Check kill switches BEFORE executing each step
+                self._check_execution_limits(end_time)
+                
+                # Show enhanced progress indicator
+                step_start = time.time()
+                agent_action = f"{step.agent}.{step.action}"
+                friendly_desc = friendly_descriptions.get(agent_action, agent_action)
+                print(f"⚡ Executing step {i}/{total_steps}: {friendly_desc}", file=sys.stderr)
+                sys.stderr.flush()
+                
+                step_result = self._execute_step(step, workflow)
+                results.append(step_result)
+                
+                # Show step completion with timing
+                step_duration = time.time() - step_start
+                status_icon = self._determine_step_status_icon(step_result, step)
+                print(f"{status_icon} Step {i}/{total_steps} completed in {step_duration:.2f}s", file=sys.stderr)
+                sys.stderr.flush()
+                
+                # Check for security violations
+                self._check_step_security_violation(step_result, step.step_id)
+                
+                if step_result.get('status') == 'error':
+                    error_msg = step_result.get('error', 'Unknown error')
+                    raise RuntimeError(f"Step {i} failed: {error_msg}")
+                
+                # ENFORCEMENT: Check kill switches AFTER each step execution
+                self._check_execution_limits(end_time)
+        
         return results
 
     def _determine_step_status_icon(self, step_result: Dict[str, Any], step) -> str:
@@ -747,13 +819,53 @@ class RuntimeEngine:
             # But this indicates a serious audit system issue that needs investigation
             pass
 
-        return {
+        result = {
             'status': 'completed',
             'workflow_id': self.current_workflow_id,
             'steps_executed': len(results),
             'execution_time': execution_time,
             'results': results
         }
+
+        # Write output.json — deployable artifact with LLM results + metadata.
+        # Enables `akios output latest` and CI/CD pipeline integration.
+        if hasattr(self, '_output_dir') and self._output_dir:
+            try:
+                import json as _json
+                output_json_path = self._output_dir / "output.json"
+                deployable = {
+                    'akios_version': '1.0.5',
+                    'workflow_name': workflow.name,
+                    'workflow_id': self.current_workflow_id,
+                    'status': 'completed',
+                    'steps_executed': len(results),
+                    'execution_time_seconds': round(execution_time, 3),
+                    'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
+                    'security': {
+                        'pii_redaction': getattr(self.settings, 'pii_redaction_enabled', True),
+                        'audit_enabled': getattr(self.settings, 'audit_enabled', True),
+                        'sandbox_enabled': getattr(self.settings, 'sandbox_enabled', True),
+                    },
+                    'cost': self.cost_kill.get_status(),
+                    'results': [
+                        {
+                            'step': i + 1,
+                            'agent': r.get('agent', '') if isinstance(r, dict) else '',
+                            'action': r.get('action', '') if isinstance(r, dict) else '',
+                            'status': r.get('status', '') if isinstance(r, dict) else '',
+                            'execution_time': round(r.get('execution_time', 0), 3) if isinstance(r, dict) else 0,
+                            'output': self._extract_step_output(r),
+                        }
+                        for i, r in enumerate(results)
+                    ],
+                    'output_directory': str(self._output_dir),
+                }
+                with open(output_json_path, 'w') as f:
+                    _json.dump(deployable, f, indent=2, default=str)
+            except Exception:
+                pass  # Don't fail workflow on output write failure
+
+        return result
 
     def _handle_workflow_failure(self, workflow, exception: Exception, start_time: float) -> None:
         """Handle workflow execution failure"""
@@ -841,7 +953,22 @@ class RuntimeEngine:
                 mock_indicator = ""
                 if os.getenv('AKIOS_MOCK_LLM') == '1':
                     mock_indicator = " [🎭 MOCK MODE]"
-                print(f"🤖 Step {step.step_id} Output{mock_indicator}: {result['text']}", file=sys.stdout)
+                
+                # Format output with colors if Rich available
+                try:
+                    from rich.console import Console
+                    from akios.core.ui.rich_output import get_theme_color
+                    console = Console()
+                    # Add newline before output for better readability
+                    console.print(f"[bold {get_theme_color('header')}]🤖 Step {step.step_id} Output{mock_indicator}:[/bold {get_theme_color('header')}]")
+                    # Display actual output in white/dim for readability
+                    output_text = result['text']
+                    if len(output_text) > 300:
+                        console.print(f"{output_text[:300]}[dim]...[/dim]")
+                    else:
+                        console.print(f"{output_text}")
+                except ImportError:
+                    print(f"🤖 Step {step.step_id} Output{mock_indicator}: {result['text']}", file=sys.stdout)
                 sys.stdout.flush()
 
             # Update execution context
@@ -1202,6 +1329,34 @@ class RuntimeEngine:
 
         self.current_workflow_id = None
         self.execution_context = {}
+
+    @staticmethod
+    def _extract_step_output(step_result) -> str:
+        """Extract human-readable output from a step result dict.
+        
+        Different agents return results with different keys:
+          - LLM → text
+          - Filesystem read → content
+          - Filesystem write → written + path
+          - HTTP → content / json
+          - Tool executor → stdout
+        """
+        if not isinstance(step_result, dict):
+            return str(step_result)[:2000]
+        result = step_result.get('result')
+        if not isinstance(result, dict):
+            return str(result)[:2000] if result else ''
+        # Try known agent output keys in priority order
+        for key in ('text', 'content', 'stdout'):
+            val = result.get(key)
+            if val:
+                return str(val)[:2000]
+        # Filesystem write summary
+        if result.get('written'):
+            return f"Written to {result.get('path', '?')} ({result.get('size', '?')} bytes)"
+        # Fallback: serialize the result dict (skip internal keys)
+        summary = {k: v for k, v in result.items() if k not in ('cost_incurred',)}
+        return str(summary)[:2000] if summary else ''
 
     def _resolve_env_vars(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """

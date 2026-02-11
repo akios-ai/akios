@@ -23,10 +23,14 @@ import argparse
 import os
 import signal
 import sys
+from typing import Optional
 
 from ...core.runtime import RuntimeEngine
 from ...core.ui.commands import suggest_command
 from ..helpers import CLIError, output_result, handle_cli_error, check_project_context
+from ..rich_helpers import (
+    output_with_mode, print_step_counter, is_json_mode, is_quiet_mode
+)
 
 
 def register_run_command(subparsers: argparse._SubParsersAction) -> None:
@@ -78,6 +82,13 @@ def register_run_command(subparsers: argparse._SubParsersAction) -> None:
         help="Enable real API mode with interactive setup (sets AKIOS_MOCK_LLM=0, network_access_allowed=true, prompts for API keys)"
     )
 
+    parser.add_argument(
+        "--exec",
+        dest="exec_cmd",
+        default=None,
+        help=argparse.SUPPRESS  # Hidden: exists only to reject with clear error
+    )
+
     parser.set_defaults(func=run_run_command)
 
 
@@ -118,42 +129,68 @@ def handle_template_run(template_path: str, force: bool = False) -> str:
 
     if workflow_exists:
         # Safety confirmation when switching templates (overwrites customizations)
-        if debug_messages:
-            print(f"🔄 Switching to {template_name}")
-            print(f"   Previous customizations in workflow.yml will be overwritten.")
-            print(f"   Previous workflow outputs will be cleared for clean slate.")
-            print(f"   Audit logs remain intact (filter by workflow_id for history).")
-        else:
-            print(f"🔄 Switching to {template_name}")
-            print("   workflow.yml will be overwritten.")
+        if not force:
+            output_with_mode(
+                message=f"Switching to {template_name}",
+                details=[
+                    "This will overwrite your current workflow.yml",
+                    "Previous workflow outputs will be cleared for clean slate",
+                    "Audit logs remain intact (filter by workflow_id for history)"
+                ],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="warning"
+            )
 
         if not force:
             try:
-                response = input("   Continue? (y/N): ").strip().lower()
-                if response not in ['y', 'yes']:
-                    print("❌ Template switch cancelled - keeping current workflow.")
-                    print("   Tip: Edit workflow.yml to customize your current setup.")
-                    # Return the existing workflow path to continue with current template
-                    return "workflow.yml"
+                # Auto-approve if stdin is not interactive (e.g., piped, Docker without TTY)
+                if not sys.stdin.isatty():
+                    if debug_messages:
+                        print("   Non-interactive mode detected - auto-approving template switch...")
+                else:
+                    response = input("Continue? (y/N): ").strip().lower()
+                    if response not in ['y', 'yes']:
+                        output_with_mode(
+                            message="Template switch cancelled - keeping current workflow",
+                            json_mode=False,
+                            quiet_mode=False,
+                            output_type="info"
+                        )
+                        # Return the existing workflow path to continue with current template
+                        return "workflow.yml"
             except (EOFError, KeyboardInterrupt):
-                print("\n❌ Template switch cancelled.")
+                output_with_mode(
+                    message="Template switch cancelled",
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
                 return "workflow.yml"
         else:
             if debug_messages:
                 print("   --force flag used - proceeding automatically...")
 
         # Clear previous outputs for clean slate (but never touch audit)
-        clear_project_outputs()
+        clear_project_outputs(quiet=force)
 
-        if debug_messages:
-            print(f"✅ Switched to {template_name} - workflow.yml updated!")
-            print(f"   Edit workflow.yml to customize the {template_name} template.")
-            print(f"   Previous outputs cleared - fresh start with new template.")
+        output_with_mode(
+            message=f"Switched to {template_name}",
+            details=[
+                f"Edit workflow.yml to customize the {template_name} template",
+                "Previous outputs cleared - fresh start with new template"
+            ],
+            json_mode=False,
+            quiet_mode=force,
+            output_type="success"
+        )
     else:
-        if debug_messages:
-            print(f"📝 Creating workflow.yml from {template_name} template...")
-            print(f"   Template copied to workflow.yml")
-            print(f"   Edit workflow.yml to customize your workflow.")
+        output_with_mode(
+            message=f"Creating workflow.yml from {template_name} template...",
+            json_mode=False,
+            quiet_mode=False,
+            output_type="info"
+        )
 
     # Copy template to workflow.yml (in project root)
     template_full_path = Path(template_path)
@@ -169,7 +206,7 @@ def handle_template_run(template_path: str, force: bool = False) -> str:
     return "workflow.yml"
 
 
-def clear_project_outputs() -> None:
+def clear_project_outputs(quiet: bool = False) -> None:
     """
     Clear project outputs when switching templates to provide clean slate.
 
@@ -191,12 +228,28 @@ def clear_project_outputs() -> None:
                 elif item.is_dir():
                     shutil.rmtree(item)
 
-            print("Previous workflow outputs cleared for clean slate.")
+            output_with_mode(
+                message="Previous workflow outputs cleared for clean slate",
+                json_mode=False,
+                quiet_mode=quiet,
+                output_type="info"
+            )
         except Exception as e:
-            print(f"Warning: Could not clear some output files: {e}")
+            output_with_mode(
+                message=f"Warning: Could not clear some output files",
+                details=[str(e)],
+                json_mode=False,
+                quiet_mode=False,
+                output_type="warning"
+            )
             # Don't fail the workflow if output clearing fails
     else:
-        print("No previous outputs to clear.")
+        output_with_mode(
+            message="No previous outputs to clear",
+            json_mode=False,
+            quiet_mode=False,
+            output_type="info"
+        )
 
 
 def run_run_command(args: argparse.Namespace) -> int:
@@ -212,15 +265,27 @@ def run_run_command(args: argparse.Namespace) -> int:
     try:
         debug_messages = os.getenv("AKIOS_DEBUG_ENABLED") == "1"
 
+        # SECURITY: Reject --exec flag immediately
+        if getattr(args, 'exec_cmd', None) is not None:
+            from ...core.ui.rich_output import print_error
+            print_error(
+                "Direct shell execution is not permitted inside the security cage.\n"
+                "Only approved agents (filesystem, llm, http) are authorized.\n"
+                "Define your operations as workflow steps in a YAML file instead."
+            )
+            return 1
+
         # Handle --real-api flag for automatic mode switching
         if getattr(args, 'real_api', False):
             try:
                 from ...config.modes import switch_to_real_api_mode
+                from ...core.ui.rich_output import print_info, print_error
                 switch_to_real_api_mode()
                 if not args.quiet:
-                    print("🔄 Switched to real API mode", file=__import__('sys').stderr)
+                    print_info("Switched to real API mode")
             except Exception as e:
-                print(f"❌ Failed to switch to real API mode: {e}", file=__import__('sys').stderr)
+                from ...core.ui.rich_output import print_error
+                print_error(f"Failed to switch to real API mode: {e}")
                 return 1
 
         # Check project context for relative paths (assumes project structure)
@@ -265,39 +330,54 @@ def run_run_command(args: argparse.Namespace) -> int:
             output_result(result, json_mode=args.json)
         elif not args.quiet:
             if result["status"] == "completed":
-                if debug_messages:
-                    print(f"Workflow {result['status']}")
-                    print(f"Executed {result['steps_executed']} steps in {result['execution_time']:.2f}s")
-                    print("")
-                    print("💡 Next steps:")
-                    print(f"  • View results: {suggest_command('status')}")
-                    print("  • Check outputs: cat data/output/run_*/*")
-                    print(f"  • Run again: {suggest_command('run templates/hello-workflow.yml')}")
-                else:
-                    from pathlib import Path
-                    output_base = Path("./data/output")
-                    output_line = None
-                    try:
-                        if output_base.exists():
-                            run_dirs = [d for d in output_base.iterdir() if d.is_dir() and d.name.startswith('run_')]
-                            if run_dirs:
-                                latest_run = max(run_dirs, key=lambda x: x.stat().st_mtime)
-                                output_files = [p for p in sorted(latest_run.iterdir()) if p.is_file()]
-                                if output_files:
-                                    output_line = f"{latest_run}/{output_files[0].name}"
-                    except Exception:
-                        output_line = None
+                from pathlib import Path
+                output_base = Path("./data/output")
+                output_path = "data/output/run_*/"
+                
+                try:
+                    if output_base.exists():
+                        run_dirs = [d for d in output_base.iterdir() if d.is_dir() and d.name.startswith('run_')]
+                        if run_dirs:
+                            latest_run = max(run_dirs, key=lambda x: x.stat().st_mtime)
+                            output_files = [p for p in sorted(latest_run.iterdir()) if p.is_file()]
+                            if output_files:
+                                output_path = f"{latest_run}/{output_files[0].name}"
+                except Exception:
+                    output_path = "data/output/run_*/"
 
-                    if output_line:
-                        print(f"📁 Output: {output_line}")
-                    else:
-                        print("📁 Output: data/output/run_*/")
-                    print("🔍 Audit: audit/audit_events.jsonl (Merkle verified)")
-                    print(f"📊 Status: {suggest_command('status')}")
+                output_with_mode(
+                    message="Workflow completed successfully",
+                    details=[
+                        f"Steps executed: {result.get('steps_executed', '?')}",
+                        f"Execution time: {result.get('execution_time', 0):.2f}s",
+                        f"Output: {output_path}",
+                        "Audit: audit/audit_events.jsonl (Merkle verified)"
+                    ],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="success"
+                )
+                
+                output_with_mode(
+                    message="Next steps:",
+                    details=[
+                        f"View results: {suggest_command('status')}",
+                        f"List outputs: {suggest_command('files output')}",
+                        f"Run again: {suggest_command(f'run {args.workflow}')}"
+                    ],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="info"
+                )
             else:
-                if debug_messages:
-                    print(f"Workflow {result['status']}")
-                print(f"Error: {result.get('error', 'Unknown error')}")
+                error_msg = result.get('error', 'Unknown error')
+                output_with_mode(
+                    message=f"Workflow execution failed",
+                    details=[str(error_msg)],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="error"
+                )
 
         return exit_code
 
@@ -425,19 +505,10 @@ def _isolate_template_execution() -> None:
 
     This ensures that switching between templates doesn't leave residual state
     that could affect subsequent workflow executions.
+    
+    Note: We do NOT delete workflow.yml here — handle_template_run() manages
+    the overwrite lifecycle with user confirmation prompts.
     """
-    from pathlib import Path
-
-    # Ensure workflow.yml is completely clean before template execution
-    workflow_file = Path("workflow.yml")
-    if workflow_file.exists():
-        try:
-            # Remove any existing workflow.yml to ensure clean template copy
-            workflow_file.unlink()
-        except OSError:
-            # If we can't remove it, at least ensure it's not corrupted
-            pass
-
     # Clear any cached template state
     # (Defensive cleanup for future template caching features)
 
@@ -528,50 +599,7 @@ def _auto_detect_testing_limitations(tracker, args):
         if memory_gb < 4:  # Less than 4GB RAM
             tracker.detect_performance_limitation(
                 test_type="Memory-intensive operations",
-                limitation=".1f",
-                impact="Cannot test large document processing or memory-intensive workflows"
-            )
-    except ImportError:
-        tracker.detect_dependency_limitation(
-            feature="System resource monitoring",
-            dependency="psutil",
-            reason="not available for resource tracking"
-        )
-
-    # Check for GPU availability
-    try:
-        import subprocess
-        result = subprocess.run(['nvidia-smi'], capture_output=True, text=True, timeout=5)
-        if result.returncode != 0:
-            tracker.detect_performance_limitation(
-                test_type="GPU acceleration",
-                limitation="NVIDIA GPU not available or not properly configured",
-                impact="Cannot test GPU-accelerated AI models or performance optimizations"
-            )
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        tracker.detect_performance_limitation(
-            test_type="GPU acceleration",
-            limitation="GPU detection tools not available",
-            impact="Cannot validate GPU-accelerated functionality"
-        )
-
-    # Check for platform-specific limitations
-    system = platform.system()
-    if system != 'Linux':
-        tracker.detect_platform_limitation(
-            feature="Full kernel-hard security (seccomp-bpf, cgroups)",
-            required_platform="Linux with seccomp support",
-            current_platform=system
-        )
-
-    # Check for memory/CPU intensive testing limitations
-    try:
-        import psutil
-        memory_gb = psutil.virtual_memory().total / (1024**3)
-        if memory_gb < 4:  # Less than 4GB RAM
-            tracker.detect_performance_limitation(
-                test_type="Memory-intensive operations",
-                limitation=".1f",
+                limitation=f"{memory_gb:.1f}GB available (minimum 4GB recommended)",
                 impact="Cannot test large document processing or memory-intensive workflows"
             )
     except ImportError:
@@ -678,33 +706,21 @@ def execute_workflow(workflow_path: str, quiet: bool = False, verbose: bool = Fa
         # Check for mock mode and inform user appropriately (session-based to prevent spam)
         if os.getenv('AKIOS_MOCK_LLM') == '1' and not quiet:
             # Import warning session management
+            should_show = True
             try:
                 from ...security.validation import _should_show_warning
-                if _should_show_warning('mock_mode'):
-                    print("", file=__import__('sys').stderr)
-                    print("🎭 ════════════════════════════════════════════════════════════════════════════════════", file=__import__('sys').stderr)
-                    print("🎭                           MOCK MODE ACTIVE - SAFE TESTING", file=__import__('sys').stderr)
-                    print("🎭 ════════════════════════════════════════════════════════════════════════════════════", file=__import__('sys').stderr)
-                    print("🎭 Using simulated AI responses for testing", file=__import__('sys').stderr)
-                    print("🎭 • NO API COSTS incurred", file=__import__('sys').stderr)
-                    print("🎭 • NO external network calls", file=__import__('sys').stderr)
-                    print("🎭 • Results flagged as mock mode in audit logs", file=__import__('sys').stderr)
-                    print("🎭 • For production: Set AKIOS_MOCK_LLM=0 + add real API keys to .env", file=__import__('sys').stderr)
-                    print("🎭 ════════════════════════════════════════════════════════════════════════════════════", file=__import__('sys').stderr)
-                    print("", file=__import__('sys').stderr)
+                should_show = _should_show_warning('mock_mode')
             except ImportError:
-                # Fallback if warning management not available
-                print("", file=__import__('sys').stderr)
-                print("🎭 ════════════════════════════════════════════════════════════════════════════════════", file=__import__('sys').stderr)
-                print("🎭                           MOCK MODE ACTIVE - SAFE TESTING", file=__import__('sys').stderr)
-                print("🎭 ════════════════════════════════════════════════════════════════════════════════════", file=__import__('sys').stderr)
-                print("🎭 Using simulated AI responses for testing", file=__import__('sys').stderr)
-                print("🎭 • NO API COSTS incurred", file=__import__('sys').stderr)
-                print("🎭 • NO external network calls", file=__import__('sys').stderr)
-                print("🎭 • Results flagged as mock mode in audit logs", file=__import__('sys').stderr)
-                print("🎭 • For production: Set AKIOS_MOCK_LLM=0 + add real API keys to .env", file=__import__('sys').stderr)
-                print("🎭 ════════════════════════════════════════════════════════════════════════════════════", file=__import__('sys').stderr)
-                print("", file=__import__('sys').stderr)
+                pass
+            
+            if should_show:
+                output_with_mode(
+                    message="Using simulated AI responses for testing\n• NO API COSTS incurred\n• NO external network calls\n• Results flagged as mock mode in audit logs\n• For production: Set AKIOS_MOCK_LLM=0 + add real API keys to .env",
+                    title="MOCK MODE ACTIVE - SAFE TESTING",
+                    output_type="banner",
+                    quiet_mode=quiet,
+                    json_mode=args.json if hasattr(args, 'json') else False
+                )
 
         if not quiet and debug_messages:
             print(f"📋 Loading workflow: {workflow_path}")
@@ -721,13 +737,18 @@ def execute_workflow(workflow_path: str, quiet: bool = False, verbose: bool = Fa
 
         # Track resource usage in verbose mode
         import time
-        import psutil
 
         start_time = time.time()
+        _psutil_available = False
         if verbose:
-            process = psutil.Process(os.getpid())
-            initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-            print(f"📊 Starting execution - Memory: {initial_memory:.1f} MB", file=__import__('sys').stderr)
+            try:
+                import psutil
+                _psutil_available = True
+                process = psutil.Process(os.getpid())
+                initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+                print(f"📊 Starting execution - Memory: {initial_memory:.1f} MB", file=__import__('sys').stderr)
+            except ImportError:
+                print("📊 Starting execution (install psutil for memory metrics)", file=__import__('sys').stderr)
 
         # Ensure clean environment state for repeated runs
         _prepare_execution_environment()
@@ -755,9 +776,12 @@ def execute_workflow(workflow_path: str, quiet: bool = False, verbose: bool = Fa
         if verbose:
             end_time = time.time()
             execution_time = end_time - start_time
-            final_memory = process.memory_info().rss / 1024 / 1024  # MB
-            memory_delta = final_memory - initial_memory
-            print(f"📊 Execution complete - Time: {execution_time:.2f}s, Memory: {final_memory:.1f} MB ({memory_delta:+.1f} MB)", file=__import__('sys').stderr)
+            if _psutil_available:
+                final_memory = process.memory_info().rss / 1024 / 1024  # MB
+                memory_delta = final_memory - initial_memory
+                print(f"📊 Execution complete - Time: {execution_time:.2f}s, Memory: {final_memory:.1f} MB ({memory_delta:+.1f} MB)", file=__import__('sys').stderr)
+            else:
+                print(f"📊 Execution complete - Time: {execution_time:.2f}s", file=__import__('sys').stderr)
 
         return result
 

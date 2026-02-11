@@ -1,6 +1,6 @@
-# AKIOS v1.0 – Core Agents Reference
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# AKIOS v1.0.5 – Core Agents Reference
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 **The 4 core agents that power AKIOS workflows with military-grade security.**
 
@@ -11,7 +11,7 @@ AKIOS provides 4 specialized agents, each running inside the security cage with 
 Every agent execution includes:
 - **Process isolation** via cgroups v2 + seccomp-bpf
 - **Syscall filtering** blocking dangerous operations
-- **PII redaction** on all inputs/outputs (>95% accuracy)
+- **PII redaction** on all inputs/outputs (>95% accuracy, including healthcare: NPI, DEA, medical records)
 - **Cryptographic audit logging** of every action
 - **Cost/resource limits** with automatic kill-switches
 - **Sandbox enforcement** preventing system access
@@ -132,10 +132,12 @@ Get file/directory metadata.
 
 ## 🌐 HTTP Agent
 
-**Secure web service calls with rate limiting and automatic PII protection.**
+**Secure web service calls with domain whitelisting, rate limiting, and automatic PII redaction.**
+
+Also available as a standalone CLI command: `akios http <METHOD> <URL>`.
 
 ### Purpose
-Makes HTTP requests while enforcing security boundaries, rate limits, and data protection. Perfect for API integrations and web service calls.
+Makes HTTP requests while enforcing domain whitelisting, security boundaries, rate limits, and data protection. Outbound requests are restricted to configured `allowed_domains`; LLM provider APIs always bypass the whitelist.
 
 ### Actions
 
@@ -188,7 +190,7 @@ Make HTTP DELETE request.
 
 ### Common Parameters
 
-- `url` (string): Target URL (must be HTTP/HTTPS)
+- `url` (string): Target URL (must be HTTP/HTTPS and in allowed_domains whitelist)
 - `headers` (object, optional): HTTP headers
 - `data` (string/object, optional): Request body data
 - `json` (object, optional): JSON request body
@@ -206,9 +208,10 @@ Make HTTP DELETE request.
 
 ### Security Controls
 
+- **Domain whitelisting**: Only configured `allowed_domains` permitted
 - **Rate limiting**: 10 requests per minute maximum
 - **PII redaction**: All request/response data automatically redacted
-- **URL validation**: Only HTTP/HTTPS protocols allowed
+- **HTTPS enforcement**: Only HTTPS URLs permitted when cage is active
 - **Timeout enforcement**: 30-second default timeout
 - **Audit logging**: Every HTTP request logged with redacted data
 
@@ -284,6 +287,7 @@ Have a conversation with context.
 - **Budget limits**: $1.00 default per workflow
 - **Kill switches**: Automatic termination on budget violations
 - **Cost logging**: Every API call logged with cost data
+- **Dashboard**: Run `akios status --budget` to view real-time cost breakdown per workflow
 
 ## 🛠️ Tool Executor Agent
 
@@ -329,6 +333,7 @@ Execute external command.
 - **Resource limits**: CPU, memory, and time restrictions
 - **PII redaction**: All command output automatically redacted
 - **Path restrictions**: Limited filesystem access
+- **`--exec` rejection**: The hidden `--exec` flag on `akios run` is a security trap that blocks shell-injection attempts
 
 ### Allowed Commands (Default)
 
@@ -356,12 +361,14 @@ max_tokens_per_call: 500       # LLM token limits
 
 # Security controls (All Agents)
 sandbox_enabled: true          # Syscall restrictions
-pii_redaction_enabled: true    # Auto PII masking
+pii_redaction_enabled: true    # Auto PII masking (SSN, NPI, DEA, MRN, etc.)
 network_access_allowed: false  # HTTP agent control
+allowed_domains:               # Domain whitelist for HTTP agent
+  - api.example.com
 
 # Audit (All Agents)
 audit_enabled: true           # Full logging
-audit_export_format: "pdf"    # Compliance exports
+audit_export_format: "json"    # Compliance exports
 
 # Resource limits (Tool Executor)
 max_command_timeout: 30       # seconds
@@ -373,19 +380,21 @@ max_output_size: 1048576      # 1MB
 | Use Case | Recommended Agent | Why |
 |----------|-------------------|-----|
 | File processing | **Filesystem** | Secure file I/O with path controls |
-| API integration | **HTTP** | Rate-limited web service calls |
+| API integration | **HTTP** | Rate-limited, domain-whitelisted web service calls |
 | Text generation | **LLM** | Token-tracked AI completions |
 | Data processing | **Tool Executor** | Safe command-line tools |
 | Document analysis | **Filesystem** + **LLM** | Read files, then analyze |
 | Web scraping | **HTTP** + **Filesystem** | Fetch data, save results |
 | System monitoring | **Tool Executor** | Safe system commands |
+| Prompt inspection | **CLI** (`protect show-prompt`) | Preview interpolated + redacted LLM prompts |
 
 ## 🚨 Security Notes
 
 - **All agents run sandboxed** with kernel-level isolation
-- **PII redaction applied** to all inputs and outputs
+- **PII redaction applied** to all inputs and outputs (including healthcare: NPI, DEA, MRN)
 - **Cost limits enforced** with automatic kill-switches
 - **Full audit trail** maintained for compliance
-- **Network access controlled** per agent capabilities
+- **Network access controlled** via domain whitelisting per agent capabilities
+- **Shell injection blocked** via `--exec` rejection trap
 
 **Agents cannot escape the security cage — guaranteed by kernel primitives.**

@@ -78,7 +78,7 @@ class OpenAIProvider(LLMProvider):
                 messages=[{"role": "user", "content": prompt}],
                 max_tokens=max_tokens,
                 temperature=temperature,
-                timeout=30,  # 30 second timeout for consistency
+                timeout=120,  # 120s for large prompts with high max_tokens
                 **kwargs
             )
 
@@ -131,7 +131,7 @@ class OpenAIProvider(LLMProvider):
                 messages=messages,
                 max_tokens=max_tokens,
                 temperature=temperature,
-                timeout=30,  # 30 second timeout for consistency
+                timeout=120,  # 120s for large prompts with high max_tokens
                 **kwargs
             )
 

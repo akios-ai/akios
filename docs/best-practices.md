@@ -87,6 +87,8 @@ agents:
   http:
     network_access_allowed: ${AKIOS_NETWORK_ACCESS:-false}
     timeout: 30
+    allowed_domains:             # Restrict HTTP agent to specific domains
+      - api.example.com
 
   llm:
     provider: ${AKIOS_LLM_PROVIDER:-grok}
@@ -213,6 +215,45 @@ GROK_API_KEY=sk-prod-123456789
 OPENAI_API_KEY=sk-prod-987654321
 ```
 
+### Prompt Safety
+
+Always preview prompts before sending to LLM providers, especially when templates include file content or user data:
+
+```bash
+# Preview the interpolated + PII-redacted prompt the LLM will receive
+akios protect show-prompt workflow.yml
+
+# Verify no sensitive data leaks (SSN, NPI, DEA, medical records, etc.)
+akios protect scan data/input/document.txt
+```
+
+**Why:** Prompts may inadvertently include PII from interpolated file contents. `show-prompt` reveals the exact redacted text sent to the LLM, catching leaks before they happen.
+
+### HTTP Domain Whitelisting
+
+When workflows use the HTTP agent, restrict outbound requests to known domains:
+
+```yaml
+# config.yaml or akios.yml
+allowed_domains:
+  - api.example.com
+  - data.provider.com
+```
+
+```bash
+# Or via environment variable
+export AKIOS_ALLOWED_DOMAINS="api.example.com,data.provider.com"
+
+# Use the standalone HTTP command for quick API checks
+akios http GET https://api.example.com/health
+```
+
+**Why:** Prevents workflows from exfiltrating data to unauthorized endpoints. LLM provider APIs always bypass the whitelist.
+
+### Shell Injection Prevention
+
+AKIOS blocks the hidden `--exec` flag to prevent shell-injection attacks. Never pass unsanitized user input as command arguments in tool_executor workflows.
+
 ### Input Validation
 
 ```yaml
@@ -338,6 +379,20 @@ steps:
 ```
 
 ## Monitoring and Observability
+
+### Budget Monitoring
+
+Monitor your workflow costs and budget consumption to avoid unexpected charges:
+
+```bash
+# View budget dashboard with cost breakdown and kill-switch status
+akios status --budget
+
+# Export budget data as JSON for automation/alerting
+akios status --budget --json
+```
+
+Set appropriate `budget_limit_per_run` values in `config.yaml` (default: $1.00). AKIOS automatically terminates workflows that exceed the budget via kill-switches.
 
 ### Health Checks
 

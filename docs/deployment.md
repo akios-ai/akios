@@ -89,12 +89,41 @@ See [EC2 Performance Testing Guide](./ec2-performance-testing.md) for complete v
 
 ### 2. In Scope – What MUST exist in v1.0 Deployment
 
+**⚠️ LINUX REQUIREMENT: Install System Packages Before Pip Install**
+
+Linux users MUST install these system packages before running `pip install akios`:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install libseccomp-dev python3-seccomp
+
+# Fedora/RHEL
+sudo dnf install libseccomp-devel python3-seccomp
+```
+
+**Why?** AKIOS uses kernel-hard security (seccomp-bpf) on Linux for process isolation and syscall filtering. These packages provide the necessary security library that `pip install akios` will use automatically.
+
+**If you skip this:**
+- ✅ AKIOS will still install and run
+- ⚠️ Advanced security features will gracefully degrade to policy-based mode (same security as Docker)
+- You'll see warnings: "⚠️ seccomp filter not installed or lacks privileges"
+
+**To verify seccomp is available:**
+```bash
+python3 -c "import seccomp; print('✅ seccomp available')"
+```
+
+---
+
 **Deployment Options (two supported methods)**:
 
 | Method                        | Description & How It Works                                      | Security Level | Best For |
 |-------------------------------|-----------------------------------------------------------------|----------------|----------|
 | **Pip Package** ⭐            | Python package installation with ecosystem integration         | Full kernel-hard (Linux) | Python developers, CI/CD |
 | **Docker Container**          | Official minimal Docker image + containerized deployment       | Strong policy-based | Cross-platform teams, development |
+
+> **Linux deployment note:** `pip install akios` on Linux automatically includes the `seccomp>=1.0.0` module for kernel-hard security. Install OS development headers (`libseccomp-dev` on Ubuntu/Debian, `libseccomp-devel` on Fedora) before `pip install` for optimal compilation. For full kernel-hard protection, run with `sudo akios run workflow.yml`. Without sudo, AKIOS gracefully degrades to policy-based mode (same security as Docker) with clear warnings.
 
 **Required Artifacts**:
 - `Dockerfile` (Alpine/scratch base + Python application)
@@ -469,4 +498,3 @@ echo "=== Environment Check Complete ==="
 ---
 
 **Deployment issues are usually environment or configuration related. The troubleshooting guide above resolves 95% of deployment problems.**
-

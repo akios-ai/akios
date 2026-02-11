@@ -1,6 +1,6 @@
 # AKIOS Roadmap – v1.0, Future Open & PRO  
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+**Document Version:** 1.0.5  
+**Date:** 2026-02-10  
 
 This roadmap clearly separates the three tracks:  
 - **AKIOS Open Runtime v1.0** (free, minimal security cage – locked)  
@@ -24,7 +24,7 @@ No feature bleed. Open stays clean & viral. PRO captures regulated industry.
 - Hard cost & infinite loop kill-switches
 - Sequential execution only
 - 4 core agents: LLM, HTTP/web, Filesystem, Tool Executor
-- Minimal CLI (5–7 commands: init, run, audit export, logs, status)
+- Minimal CLI (20 commands: init, run, status, cage, doctor, templates, files, logs, audit, clean, setup, compliance, testing, output, timeline, docs, protect, http)
 - 3–4 high-quality static example workflows
 - Docker wrapper + native Linux binary (cross-platform capable)
 

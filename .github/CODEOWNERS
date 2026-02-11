@@ -1,0 +1,47 @@
+# CODEOWNERS for AKIOS
+# This file defines who is automatically requested for review on pull requests.
+# It also helps enforce branch protection rules when "Require review from Code Owners" is enabled.
+
+# ────────────────────────────────────────────────────────────────────────────────
+# GLOBAL DEFAULT: Everything in the repo requires review from the maintainer
+# (prevents accidental merges without oversight)
+# ────────────────────────────────────────────────────────────────────────────────
+*                               @akios-ai
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Protect this very file itself (critical for security)
+# ────────────────────────────────────────────────────────────────────────────────
+.github/CODEOWNERS              @akios-ai
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Security-critical & core files — always require review (even if you add more people later)
+# ────────────────────────────────────────────────────────────────────────────────
+src/security/                   @akios-ai
+src/runtime/                    @akios-ai
+src/audit/                      @akios-ai
+**/sandbox*                     @akios-ai
+**/containment*                 @akios-ai
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Configuration & setup files (high impact if broken)
+# ────────────────────────────────────────────────────────────────────────────────
+*.toml                          @akios-ai
+*.yml                           @akios-ai
+*.yaml                          @akios-ai
+Dockerfile                      @akios-ai
+**/requirements*.txt            @akios-ai
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Tests & CI — still important, but same owner for now
+# ────────────────────────────────────────────────────────────────────────────────
+tests/                          @akios-ai
+.github/workflows/              @akios-ai
+
+# ────────────────────────────────────────────────────────────────────────────────
+# Documentation & README — lower risk, but still owned
+# ────────────────────────────────────────────────────────────────────────────────
+*.md                            @akios-ai
+docs/                           @akios-ai
+
+# End of CODEOWNERS
+# Last updated: December 2025

@@ -21,7 +21,7 @@ Strict schema validation for sequential workflows.
 
 import os
 import json
-from typing import Dict, List, Any, Set
+from typing import Any, Dict, List, Optional, Set
 
 # Conditional import for schema validation
 try:
@@ -250,7 +250,9 @@ def _validate_single_step(step_data: Any, step_num: int) -> List[str]:
 
     # Validate parameters
     if 'parameters' in step_data:
-        param_errors = _validate_parameters(step_data['parameters'], step_num)
+        # Pass agent type to allow context-aware validation (e.g. allow URLs for http/llm agents)
+        agent_type = step_data.get('agent')
+        param_errors = _validate_parameters(step_data['parameters'], step_num, agent_type)
         errors.extend(param_errors)
 
     # Check for step ID (optional but validated if present)
@@ -297,8 +299,15 @@ def _validate_action(agent: str, action: str, step_num: int) -> List[str]:
     return errors
 
 
-def _validate_parameters(parameters: Any, step_num: int) -> List[str]:
-    """Validate parameters structure"""
+def _validate_parameters(parameters: Any, step_num: int, agent_type: Optional[str] = None) -> List[str]:
+    """
+    Validate parameters structure
+    
+    Args:
+        parameters: The parameters dictionary
+        step_num: Step number for error reporting
+        agent_type: The agent type (e.g. 'http', 'llm') for context-aware validation
+    """
     errors = []
 
     if not isinstance(parameters, dict):
@@ -312,20 +321,34 @@ def _validate_parameters(parameters: Any, step_num: int) -> List[str]:
         'os.spawn', 'os.exec', 'os.fork', 'multiprocessing', 'threading',
         # File system patterns
         '/etc/passwd', '/etc/shadow', '/etc/hosts', '../', '..\\',
-        # Network patterns (basic detection)
-        'socket', 'urllib', 'requests', 'http://', 'https://', 'ftp://',
         # Dangerous imports
         'import os', 'import sys', 'import subprocess', 'from os import',
         'from sys import', 'from subprocess import'
     ]
-
+    
+    # Network patterns - Context aware validation
+    # Only flag network patterns if agent is NOT authorized for network use
+    network_patterns = ['socket', 'urllib', 'requests', 'http://', 'https://', 'ftp://']
+    
+    # Agents allowed to use URLs
+    url_allowed_agents = {'http', 'llm'}
+    
     for key, value in parameters.items():
         if isinstance(value, str):
             value_lower = value.lower()
+            
+            # Check general dangerous patterns
             for pattern in dangerous_patterns:
                 if pattern in value_lower:
                     errors.append(f"Step {step_num}: parameter '{key}' contains dangerous pattern '{pattern}' - "
                                 f"potentially unsafe operation detected")
+            
+            # Check network patterns with context awareness
+            if agent_type not in url_allowed_agents:
+                for pattern in network_patterns:
+                    if pattern in value_lower:
+                        errors.append(f"Step {step_num}: parameter '{key}' contains dangerous network pattern '{pattern}' - "
+                                    f"blocked for agent '{agent_type}'")
 
             # Additional validation: check for suspicious template patterns
             if '{' in value and '}' in value:

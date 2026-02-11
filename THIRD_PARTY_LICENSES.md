@@ -24,6 +24,7 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 | **google-generativeai**| >=0.8.0       | Apache-2.0           | Google Gemini API client                     | https://github.com/google/generative-ai-python    |
 | **tiktoken**        | >=0.5.0         | MIT                  | Token counting for LLM providers             | https://github.com/openai/tiktoken                 |
 | **protobuf**        | >=5.29.5        | BSD-3-Clause         | Protocol buffer serialization                | https://github.com/protocolbuffers/protobuf       |
+| **rich**            | >=13.7.0        | MIT                  | Rich text and terminal formatting            | https://github.com/Textualize/rich                 |
 | **PyPDF2**          | >=3.0.0         | BSD                  | PDF document processing                      | https://github.com/py-pdf/pypdf                    |
 | **pdfminer.six**    | >=20231228      | MIT                  | PDF text extraction                          | https://github.com/pdfminer/pdfminer.six          |
 | **python-docx**     | >=1.1.0         | MIT                  | Microsoft Word document processing           | https://github.com/python-openxml/python-docx     |
@@ -38,6 +39,9 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 | **seccomp**         | >=1.0.0         | LGPL-2.1-or-later    | Linux syscall filtering                      | https://github.com/seccomp/libseccomp              | seccomp |
 | **backoff**         | >=2.2.0         | MIT                  | Retry logic with exponential backoff         | https://github.com/litl/backoff                    | extended |
 | **aiohttp**         | >=3.9.0         | Apache-2.0           | Asynchronous HTTP client                     | https://github.com/aio-libs/aiohttp                | extended |
+| **questionary**     | >=2.0.0         | MIT                  | Interactive CLI prompts and wizards          | https://github.com/tmbo/questionary                | cli |
+| **fuzzywuzzy**      | >=0.18.0        | GPL-2.0              | Fuzzy string matching for template search    | https://github.com/seatgeek/fuzzywuzzy             | cli |
+| **python-Levenshtein**| >=0.12.0      | GPL-2.0-or-later     | Fast string distance computation             | https://github.com/rapidfuzz/python-Levenshtein    | cli |
 
 ## Development & Testing Dependencies
 
@@ -69,12 +73,13 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 ## License Compatibility
 
 All dependencies are **compatible with GPL-3.0-only**:
-- **MIT**: Fully compatible (pydantic, pyyaml, anthropic, tiktoken, fastapi, pdfminer.six, python-docx, pytest, black, isort, mypy, ruff, pre-commit, flake8, sphinx-rtd-theme, tox, setuptools, wheel, build)
+- **MIT**: Fully compatible (pydantic, pyyaml, anthropic, tiktoken, rich, fastapi, pdfminer.six, python-docx, questionary, pytest, black, isort, mypy, ruff, pre-commit, flake8, sphinx-rtd-theme, tox, setuptools, wheel, build)
 - **Apache-2.0**: Compatible (openai, cryptography, requests, google-generativeai, prometheus-client, aiohttp, types-PyYAML, types-requests)
 - **BSD-3-Clause**: Compatible (click, protobuf)
 - **BSD**: Compatible (httpx, psutil, uvicorn, PyPDF2)
 - **BSD-2-Clause**: Compatible (sphinx)
 - **GPL-2.0 + Exception**: Compatible (PyInstaller - build tool with exception allowing proprietary programs)
+- **GPL-2.0 / GPL-2.0-or-later**: Compatible (fuzzywuzzy, python-Levenshtein - GPL-2.0 is compatible with GPL-3.0-only)
 - **LGPL-2.1-or-later**: Compatible (seccomp - optional security enhancement)
 
 No GPL-incompatible licenses are used.

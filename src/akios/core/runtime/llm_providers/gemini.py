@@ -25,7 +25,10 @@ from .base import LLMProvider, ProviderError
 
 # Lazy import to avoid issues when library not installed
 try:
-    import google.generativeai as genai
+    import warnings as _w
+    with _w.catch_warnings():
+        _w.simplefilter("ignore", FutureWarning)
+        import google.generativeai as genai
     GEMINI_AVAILABLE = True
 except ImportError:
     genai = None
@@ -93,7 +96,8 @@ class GeminiProvider(LLMProvider):
 
             response = self.client.generate_content(
                 prompt,
-                generation_config=generation_config
+                generation_config=generation_config,
+                request_options={"timeout": 120}  # 120s for large prompts with high max_tokens
             )
 
             # Extract response text
@@ -173,7 +177,8 @@ class GeminiProvider(LLMProvider):
 
             response = chat.send_message(
                 last_message,
-                generation_config=generation_config
+                generation_config=generation_config,
+                request_options={"timeout": 120}  # 120s for large prompts with high max_tokens
             )
 
             # Extract response

@@ -28,6 +28,19 @@ logger = logging.getLogger(__name__)
 
 from ...config import get_settings
 from ...core.audit.ledger import get_ledger
+from ...core.analytics.cost_tracker import (
+    get_budget_status,
+    format_cost_breakdown,
+    calculate_7day_trend,
+    export_cost_history_csv,
+)
+from ...core.ui.rich_output import (
+    print_panel, print_table, print_success, print_warning, 
+    print_error, print_info, get_status_badge,
+    print_budget_progress,
+    print_cost_breakdown_table,
+    print_spending_trend,
+)
 from ..helpers import CLIError, output_result, format_status_info, check_project_context
 
 
@@ -90,16 +103,14 @@ def run_status_command(args: argparse.Namespace) -> int:
     try:
         # Suppress interactive prompts for status command
         os.environ['AKIOS_NON_INTERACTIVE'] = '1'
-        # Environment setup debug - removed for production
 
         # Verify we're in a valid project context
         check_project_context()
 
-        # Show Docker security mode information
+        # Show Docker security mode information (debug mode only)
         if os.path.exists('/.dockerenv') and os.getenv("AKIOS_DEBUG_ENABLED") == "1":
-            print("ℹ️  Docker mode: policy-based security active", file=__import__("sys").stderr)
-            print("   For maximum kernel-hard protections, use native Linux installation.", file=__import__("sys").stderr)
-            print("", file=__import__("sys").stderr)
+            from ...core.ui.rich_output import print_info
+            print_info("Docker mode: policy-based security active")
 
         # Handle security dashboard mode
         if args.security:
@@ -116,12 +127,13 @@ def run_status_command(args: argparse.Namespace) -> int:
             output_result(status_data, json_mode=True)
         else:
             formatted = format_status_info(status_data, workflow_filter=args.workflow, verbose=args.verbose)
-            print(formatted)
+            print_panel("AKIOS Status", formatted)
 
         return 0
 
     except CLIError as e:
-        print(f"Error: {e}", file=__import__("sys").stderr)
+        import sys
+        sys.stderr.write(f"❌ Error: {e}\n")
         return e.exit_code
     except Exception as e:
         if os.environ.get('AKIOS_DEBUG_ENABLED') == '1':
@@ -199,8 +211,9 @@ def get_status_data(workflow_filter: str = None) -> dict:
                     break
 
         # Build status data
+        from ..._version import __version__
         status_data = {
-            "akios_version": "1.0.4",
+            "akios_version": __version__,
             "configuration_loaded": True,
             "sandbox_enabled": settings.sandbox_enabled,
             "audit_enabled": settings.audit_enabled,
@@ -460,14 +473,24 @@ def get_workflow_status_info(all_events, workflow_filter: str = None) -> dict:
         elif result == 'error':
             workflow_runs[workflow_id]["error_count"] += 1
 
-    # Find the most recent workflow (active workflow)
+    # Find the most recent workflow (active workflow) and extract remaining budget
     active_workflow = None
     last_run_time = None
+    remaining_budget = None
 
     for workflow_id, info in workflow_runs.items():
         if info["last_run"] and (last_run_time is None or info["last_run"] > last_run_time):
             last_run_time = info["last_run"]
             active_workflow = workflow_id
+
+    # Get remaining budget from the last workflow_complete event
+    for event in reversed(all_events):
+        metadata = getattr(event, 'metadata', {}) or {}
+        if getattr(event, 'action', None) == 'workflow_complete':
+            cost_status = metadata.get('cost_status', {})
+            if 'remaining_budget' in cost_status:
+                remaining_budget = cost_status['remaining_budget']
+                break
 
     result = {
         "active_workflow": active_workflow,
@@ -476,7 +499,8 @@ def get_workflow_status_info(all_events, workflow_filter: str = None) -> dict:
         "workflow_runs": workflow_runs,
         "cost_summary": {
             "total_cost": round(total_cost, 4),
-            "total_tokens": total_tokens
+            "total_tokens": total_tokens,
+            "remaining_budget": remaining_budget
         }
     }
 
@@ -539,65 +563,56 @@ def run_security_dashboard(json_mode: bool = False) -> int:
             import json
             print(json.dumps(security_data, indent=2))
         else:
-            # Human-readable dashboard
-            print("🔒 AKIOS Security Dashboard")
-            print("=" * 50)
-
-            # Security Level
+            # Human-readable dashboard with Rich UI
+            from ...core.ui.rich_output import get_theme_color
+            
+            success_color = get_theme_color("success")
+            warning_color = get_theme_color("warning")
+            error_color = get_theme_color("error")
+            
             level_icon = "🛡️" if security_status["security_level"] == "Full" else "🔒"
-            print(f"\n{level_icon} Security Level: {security_status['security_level']}")
-            print(f"   {security_status['description']}")
-            print(f"   Environment: {security_status['environment']}")
+            level_style = f"bold {success_color}" if security_status["security_level"] == "Full" else f"bold {warning_color}"
+            
+            title = f"{level_icon} AKIOS Security Dashboard"
+            content = f"[{level_style}]{security_status['security_level']}[/{level_style}] {security_status['description']}\n" \
+                     f"[dim]{security_status['environment']}[/dim]"
+            # Use default theme color (Cyan) for the panel border, but keep status text colored
+            print_panel(title, content)
 
-            # Active Protections
-            print("\n🛡️ Active Protections:")
-            print(f"   ✅ PII Redaction: {'Enabled' if settings.pii_redaction_enabled else 'Disabled'}")
-            if settings.pii_redaction_enabled:
-                print("      - Input protection: Always active")
-                print(f"      - Output protection: {'Enabled' if settings.pii_redaction_outputs else 'Disabled'}")
-                print(f"      - Aggressive mode: {'Enabled' if settings.pii_redaction_aggressive else 'Disabled'}")
+            # Build protections table with colored status values
+            protections = [
+                {
+                    "protection": "🔐 PII Redaction",
+                    "status": f"[bold {success_color}]Enabled[/]" if settings.pii_redaction_enabled else f"[bold {error_color}]Disabled[/]",
+                    "details": "[dim]Input protection always active[/dim]" if settings.pii_redaction_enabled else "[dim]—[/dim]"
+                },
+                {
+                    "protection": "📋 Audit Logging", 
+                    "status": f"[bold {success_color}]Enabled[/]" if settings.audit_enabled else f"[bold {error_color}]Disabled[/]",
+                    "details": "[dim]Merkle integrity active[/dim]" if settings.audit_enabled else "[dim]—[/dim]"
+                },
+                {
+                    "protection": "💰 Budget Limits",
+                    "status": f"[bold {success_color}]Active[/]",
+                    "details": f"[bold {warning_color}]${settings.budget_limit_per_run:.2f}[/] [dim]per workflow[/dim]"
+                },
+                {
+                    "protection": "🌐 Network Access",
+                    "status": f"[bold {success_color}]Allowed[/]" if settings.network_access_allowed else f"[bold {error_color}]Blocked[/]",
+                    "details": "[dim]LLM API calls permitted[/dim]" if settings.network_access_allowed else "[dim]Local processing only[/dim]"
+                },
+            ]
+            print_table(protections, title="Active Protections", columns=["protection", "status", "details"])
 
-            print(f"   ✅ Audit Logging: {'Enabled' if settings.audit_enabled else 'Disabled'}")
-            if settings.audit_enabled:
-                print(f"      - Storage path: {settings.audit_storage_path}")
-                print("      - Merkle integrity: Active")
-            print("\n💰 Cost & Resource Controls:")
-            print(f"   ✅ Budget Limit: ${settings.budget_limit_per_run:.2f} per workflow")
-            print(f"   ✅ Token Limit: {settings.max_tokens_per_call} per LLM call")
-            print("   ✅ Kill Switches: Always active (cannot be disabled)")
-            print("\n🌐 Network Access:")
-            if settings.network_access_allowed:
-                print("   ⚠️  Network access: ALLOWED (required for LLM APIs)")
-                print("      - External API calls permitted")
-                print("      - Rate limiting active")
-            else:
-                print("   ✅ Network access: BLOCKED (maximum security)")
-                print("      - No external API calls")
-                print("      - Local processing only")
-
-            print("\n📋 Compliance Indicators:")
-            print("   ✅ Merkle Tree Integrity: Tamper-evident audit trails")
-            print("   ✅ Cryptographic Audit: Every action logged with proof")
-            print("   ✅ Process Isolation: Sandboxed execution environment")
-            print("   ✅ Data Protection: PII automatic masking")
-            print("   ✅ Resource Limits: Automatic termination on violations")
-
-            print("\n💡 Security Notes:")
-            if security_status["security_level"] == "Full":
-                print("   • Full kernel-hard security active (Linux native)")
-                print("   • seccomp-bpf syscall filtering enabled")
-                print("   • cgroups v2 resource isolation active")
-            else:
-                print("   • Policy-based security active (Docker environment)")
-                print("   • Application-level protections enabled")
-                print("   • For maximum security, use native Linux installation")
-
-            if settings.network_access_allowed:
-                print("   • Network access required for AI functionality")
-                print("   • All external calls are logged and protected")
-            else:
-                print("   • Maximum security: No external network access")
-                print("   • Suitable for air-gapped or local-only workflows")
+            # Compliance indicators with colored status
+            compliance = [
+                {"indicator": "Merkle Tree Integrity", "status": f"[{success_color}]✓ Active[/]", "desc": "[dim]Tamper-evident audit trails[/dim]"},
+                {"indicator": "Cryptographic Audit", "status": f"[{success_color}]✓ Active[/]", "desc": "[dim]Every action logged with proof[/dim]"},
+                {"indicator": "Process Isolation", "status": f"[{success_color}]✓ Active[/]", "desc": "[dim]Sandboxed execution[/dim]"},
+                {"indicator": "Data Protection", "status": f"[{success_color}]✓ Active[/]", "desc": "[dim]PII automatic masking[/dim]"},
+                {"indicator": "Resource Limits", "status": f"[{success_color}]✓ Active[/]", "desc": "[dim]Termination on violation[/dim]"},
+            ]
+            print_table(compliance, title="Compliance Indicators", columns=["indicator", "status", "desc"])
 
         return 0
 
@@ -614,6 +629,12 @@ def run_security_dashboard(json_mode: bool = False) -> int:
 def run_budget_dashboard(status_data: dict, json_mode: bool = False) -> int:
     """
     Display detailed budget and spending information.
+    
+    Shows:
+    - Budget progress bar with color coding
+    - Per-workflow cost breakdown table
+    - 7-day spending trend
+    - Status warnings at 80% threshold
 
     Args:
         status_data: Status data dictionary
@@ -636,15 +657,26 @@ def run_budget_dashboard(status_data: dict, json_mode: bool = False) -> int:
         settings = get_settings()
         budget_limit = settings.budget_limit_per_run
         total_cost = cost_summary.get('total_cost', 0.0)
-        remaining_budget = max(0, budget_limit - total_cost)
+
+        # If per-event cost tracking shows $0 but we have remaining_budget from
+        # workflow_complete events, derive actual spending from budget arithmetic.
+        # This handles the case where cost is tracked at workflow level, not per-event.
+        remaining_budget = cost_summary.get('remaining_budget')
+        if total_cost == 0.0 and remaining_budget is not None and remaining_budget < budget_limit:
+            total_cost = round(budget_limit - remaining_budget, 4)
 
         if json_mode:
-            # JSON output for automation
+            # JSON output for automation (Feature 4: raw data export)
+            budget_status = get_budget_status(total_cost, budget_limit)
+            
             budget_data = {
                 "budget_limit": budget_limit,
                 "total_spent": round(total_cost, 4),
-                "remaining_budget": round(remaining_budget, 4),
-                "utilization_percentage": round((total_cost / budget_limit) * 100, 2) if budget_limit > 0 else 0,
+                "remaining_budget": round(budget_status['remaining'], 4),
+                "utilization_percentage": budget_status['percentage'],
+                "status": budget_status['status_text'],
+                "is_over_budget": budget_status['is_over_budget'],
+                "warning_threshold_reached": budget_status['warning_threshold_reached'],
                 "workflows_run": len(workflow_runs),
                 "cost_by_workflow": {}
             }
@@ -653,39 +685,67 @@ def run_budget_dashboard(status_data: dict, json_mode: bool = False) -> int:
                 budget_data["cost_by_workflow"][workflow_id] = {
                     "cost": round(info.get("cost", 0.0), 4),
                     "tokens": info.get("tokens", 0),
-                    "runs": info.get("runs", 0)
+                    "runs": info.get("runs", 0),
+                    "avg_cost_per_run": round(info.get("cost", 0.0) / max(info.get("runs", 1), 1), 4)
                 }
 
             import json
             print(json.dumps(budget_data, indent=2))
         else:
-            # Human-readable dashboard
-            print("💰 AKIOS Budget Dashboard")
-            print("=" * 40)
-
-            # Budget overview
-            print(f"\n💵 Budget Limit: ${budget_limit:.2f} per workflow")
-            print(f"💸 Total Spent: ${total_cost:.4f}")
-            print(f"💰 Remaining: ${remaining_budget:.4f}")
-            print(f"📊 Utilization: {((total_cost / budget_limit) * 100):.1f}%" if budget_limit > 0 else "N/A")
-
-            # Cost breakdown by workflow
+            # Human-readable dashboard with Rich UI (Feature 4: visual progress bars)
+            from ...core.ui.rich_output import get_theme_color
+            
+            header_color = get_theme_color("header")
+            success_color = get_theme_color("success")
+            warning_color = get_theme_color("warning")
+            error_color = get_theme_color("error")
+            info_color = get_theme_color("info")
+            
+            print_panel("💰 AKIOS Budget Dashboard", "Comprehensive cost tracking and budget monitoring", style=f"bold {header_color}")
+            
+            # Feature 4: Budget progress bar with color coding
+            print_budget_progress(
+                current_spending=total_cost,
+                budget_limit=budget_limit,
+                title="Overall Budget",
+                show_warning=True
+            )
+            
+            print()  # Spacing
+            
+            # Feature 4: Per-workflow cost breakdown table
             if workflow_runs:
-                print(f"\n📈 Cost Breakdown ({len(workflow_runs)} workflows):")
-                for workflow_id, info in workflow_runs.items():
-                    cost = info.get("cost", 0.0)
-                    tokens = info.get("tokens", 0)
-                    runs = info.get("runs", 0)
-                    print(f"  • {workflow_id[:30]}...: ${cost:.4f} ({tokens} tokens, {runs} runs)")
-
-            # Usage warnings
-            if total_cost > budget_limit * 0.8:
-                print(f"\n⚠️  WARNING: Budget usage is high ({((total_cost / budget_limit) * 100):.1f}%)")
-                print("   Consider increasing budget limit or monitoring usage")
-
-            if total_cost >= budget_limit:
-                print(f"\n🚫 ALERT: Budget limit reached (${budget_limit:.2f})")
-                print("   Workflows will be killed if they exceed budget")
+                breakdown = format_cost_breakdown(workflow_runs)
+                print_cost_breakdown_table(breakdown, title=f"[{header_color}]Cost Breakdown[/{header_color}] ([dim]{len(workflow_runs)} workflows[/dim])")
+            else:
+                print_info("No workflow cost data available yet - run a workflow to see costs")
+            
+            print()  # Spacing
+            
+            # Feature 4: 7-day spending trend
+            ledger = get_ledger()
+            all_events = ledger.get_all_events()
+            if all_events:
+                trend = calculate_7day_trend(all_events)
+                print_spending_trend(trend, title="7-Day Spending Trend")
+            else:
+                print_info("No historical data for trend analysis")
+            
+            print()  # Spacing
+            
+            # Summary statistics with colors
+            total_tokens = cost_summary.get('total_tokens', 0)
+            summary_data = [
+                {"metric": "💵 Budget Limit", "value": f"[bold {warning_color}]${budget_limit:.2f}[/]"},
+                {"metric": "💸 Total Spent", "value": f"[bold {error_color if total_cost > budget_limit else success_color}]${total_cost:.4f}[/]"},
+                {"metric": "📊 Total Tokens", "value": f"[{info_color}]{total_tokens:,}[/]"},
+                {"metric": "🔢 Workflows Run", "value": f"[{success_color}]{len(workflow_runs)}[/]"},
+            ]
+            print_table(summary_data, title="Summary", columns=["metric", "value"])
+            
+            # Feature 4: CSV export option hint
+            print()
+            print_info(f"[dim]💡 Tip: Export cost history with:[/dim] [{info_color}]akios status --budget --json[/{info_color}]")
 
         return 0
 

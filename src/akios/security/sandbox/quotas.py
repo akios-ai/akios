@@ -318,12 +318,13 @@ class ResourceQuotas:
     def _apply_posix_limits(self, pid: int, cpu_percent: float, memory_mb: float, max_files: int) -> None:
         """Fallback to POSIX resource limits if cgroups not available"""
         # Skip POSIX limits in Docker containers - Docker provides equivalent isolation
-        if os.path.exists('/.dockerenv'):
-            import sys
+        # Also check DOCKER_CONTAINER env var for simulation/testing
+        if os.path.exists('/.dockerenv') or os.getenv("DOCKER_CONTAINER") == "1":
+            from ...core.ui.semantic_colors import print_info
             global _docker_notice_emitted
             if not _docker_notice_emitted:
                 if os.getenv("AKIOS_DEBUG_ENABLED") == "1":
-                    print("ℹ️ Docker container detected - using Docker's built-in resource limits", file=sys.stderr)
+                    print_info("Docker container detected - using Docker's built-in resource limits")
                 _docker_notice_emitted = True
             return
 
@@ -438,9 +439,9 @@ def enforce_hard_limits(pid: int = None, cpu_percent: float = 100, memory_mb: fl
 
     global _limits_notice_emitted
     if not _limits_notice_emitted:
-        import sys
+        from ...core.ui.semantic_colors import print_success
         if os.getenv("AKIOS_DEBUG_ENABLED") == "1":
-            print(f"✅ Applied resource limits to PID {pid} using cgroup '{cgroup_name}'", file=sys.stderr)
+            print_success(f"Applied resource limits to PID {pid} using cgroup '{cgroup_name}'")
         _limits_notice_emitted = True
 
     # Immediately enforce limits

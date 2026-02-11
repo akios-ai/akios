@@ -2,7 +2,7 @@
 
 **Document Version:** 1.0  
 **Date:** 2026-01-30  
-**Scope:** AKIOS v1.0.4 native Linux performance & security validation on AWS EC2
+**Scope:** AKIOS v1.0.5 native Linux performance & security validation on AWS EC2
 
 ---
 
@@ -155,7 +155,7 @@ Performance may vary by region due to:
 
 ### Performance Scaling Model
 
-**Based on AKIOS v1.0.4 validation:**
+**Based on AKIOS v1.0.5 validation:**
 
 ```
 Startup Latency:  ~25ms (base on t3.medium)
@@ -249,7 +249,7 @@ sudo apt install -y python3-pip python3-venv
 pip install akios
 
 # Verify installation
-akios --version  # Should show "AKIOS 1.0.4"
+akios --version  # Should show "AKIOS 1.0.5"
 ```
 
 ### Step 4: Configure AKIOS
@@ -630,7 +630,7 @@ CLEANUP
 ### References
 
 - **[AKIOS Main Documentation](../README.md)** - Overview and features
-- **[Native vs Docker Performance](./performance-comparison.md)** - Detailed comparison
+- **[Native vs Docker Performance](../README.md#-performance-highlights)** - Performance comparison and validation results
 - **[Deployment Guide](./deployment.md)** - Deployment best practices
 - **[AWS EC2 Documentation](https://docs.aws.amazon.com/ec2/)** - AWS reference
 

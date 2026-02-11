@@ -27,20 +27,24 @@ from typing import Optional
 from .settings import Settings
 from .defaults import DEFAULT_SETTINGS
 from .validation import validate_config, validate_env_file
+from .themes import load_theme, resolve_theme_from_env
 
 # Cache for .env file parsing to avoid reading twice
 _env_cache = {}
 
 # ANSI color codes for better error messages
-class Colors:
-    RED = '\033[91m'
-    RESET = '\033[0m'
+try:
+    from ..core.ui.rich_output import get_theme_ansi, ANSI_RESET
+except ImportError:
+    # Fallback if rich_output cannot be imported (circular dependency or minimal env)
+    def get_theme_ansi(name): return ""
+    ANSI_RESET = ""
 
 def colored_error(message: str) -> str:
     """Add red color to error messages if terminal supports it."""
     try:
         if sys.stdout.isatty():
-            return f"{Colors.RED}{message}{Colors.RESET}"
+            return f"{get_theme_ansi('error')}{message}{ANSI_RESET}"
         else:
             return message
     except:
@@ -195,6 +199,47 @@ def _convert_pydantic_errors(error_str: str) -> str:
     return f"{colored_error('Configuration error:')} Invalid settings detected. Please check your configuration values."
 
 
+def _auto_detect_llm_provider(settings: Settings) -> None:
+    """
+    Auto-detect LLM provider and model from API key environment variables.
+
+    If an API key is found but AKIOS_LLM_PROVIDER is not explicitly set,
+    automatically configure the provider and a sensible default model.
+
+    Priority order (first key found wins):
+        1. GROK_API_KEY → grok / grok-3
+        2. OPENAI_API_KEY → openai / gpt-4o-mini
+        3. ANTHROPIC_API_KEY → anthropic / claude-sonnet-4-20250514
+        4. MISTRAL_API_KEY → mistral / mistral-small-latest
+        5. GEMINI_API_KEY → gemini / gemini-2.0-flash
+
+    Args:
+        settings: Settings instance to update in-place
+    """
+    # Skip if provider already explicitly set via env var
+    if os.environ.get("AKIOS_LLM_PROVIDER"):
+        return
+
+    # Map API key env vars → (provider, default_model)
+    _provider_map = [
+        ("GROK_API_KEY", "grok", "grok-3"),
+        ("OPENAI_API_KEY", "openai", "gpt-4o-mini"),
+        ("ANTHROPIC_API_KEY", "anthropic", "claude-sonnet-4-20250514"),
+        ("MISTRAL_API_KEY", "mistral", "mistral-small-latest"),
+        ("GEMINI_API_KEY", "gemini", "gemini-2.0-flash"),
+    ]
+
+    for env_var, provider, default_model in _provider_map:
+        if os.environ.get(env_var):
+            object.__setattr__(settings, "llm_provider", provider)
+            os.environ["AKIOS_LLM_PROVIDER"] = provider
+            # Only set model if not already explicitly set
+            if not os.environ.get("AKIOS_LLM_MODEL"):
+                object.__setattr__(settings, "llm_model", default_model)
+                os.environ["AKIOS_LLM_MODEL"] = default_model
+            break
+
+
 def get_settings(config_file: Optional[str] = None) -> Settings:
     """
     Load and validate AKIOS settings
@@ -305,11 +350,21 @@ def get_settings(config_file: Optional[str] = None) -> Settings:
                     value = int(value)
                 elif value.replace('.', '', 1).isdigit() or (value.startswith('-') and value[1:].replace('.', '', 1).isdigit()):
                     value = float(value)
+                elif (value.startswith('[') and value.endswith(']')) or (value.startswith('{') and value.endswith('}')):
+                    try:
+                        import json
+                        value = json.loads(value)
+                    except json.JSONDecodeError:
+                        pass  # Keep as string if not valid JSON
 
                 # Use object.__setattr__ to bypass Pydantic field validation for dynamic attributes
                 object.__setattr__(settings, config_key, value)
             except Exception as e:
                 raise ValueError(f"Invalid environment variable {key}={value}: {e}")
+
+    # Auto-detect LLM provider and model from API key environment variables
+    # If an API key is set but AKIOS_LLM_PROVIDER is not, infer the provider automatically
+    _auto_detect_llm_provider(settings)
 
     # Validate the loaded settings
     try:
@@ -326,8 +381,14 @@ def get_settings(config_file: Optional[str] = None) -> Settings:
                 "type": "configuration_error"
             }
             print(json.dumps(error_output, indent=2))
-            sys.exit(1)
+            raise SystemExit(1)
         else:
             raise  # Re-raise for normal error handling
+
+    # Initialize theme
+    # Priority: 1. Environment variable, 2. Settings, 3. Default
+    theme_name = resolve_theme_from_env() or settings.ui_theme or "default"
+    custom_colors = settings.ui_custom_theme if theme_name == "custom" else None
+    load_theme(theme_name, custom_colors)
 
     return settings

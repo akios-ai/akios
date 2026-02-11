@@ -94,7 +94,7 @@ class AnthropicProvider(LLMProvider):
                 max_tokens=max_tokens,
                 temperature=temperature,
                 messages=[{"role": "user", "content": prompt}],
-                timeout=30.0,  # 30 second timeout for consistency
+                timeout=120.0,  # 120s for large prompts with high max_tokens
                 **filtered_kwargs
             )
 
@@ -175,7 +175,7 @@ class AnthropicProvider(LLMProvider):
                 max_tokens=max_tokens,
                 temperature=temperature,
                 messages=anthropic_messages,
-                timeout=30.0,  # 30 second timeout for consistency
+                timeout=120.0,  # 120s for large prompts with high max_tokens
                 **filtered_kwargs
             )
 

@@ -20,9 +20,12 @@ Show recent logs for a task.
 """
 
 import argparse
+from typing import Optional
 
 from ...core.audit.ledger import get_ledger
+from ...core.ui.rich_output import _get_console
 from ..helpers import CLIError, output_result, format_logs_info, check_project_context
+from ..rich_helpers import output_with_mode
 
 
 def register_logs_command(subparsers: argparse._SubParsersAction) -> None:
@@ -78,8 +81,30 @@ def run_logs_command(args: argparse.Namespace) -> int:
         if args.json:
             output_result(logs_data, json_mode=True)
         else:
-            formatted = format_logs_info(logs_data)
-            print(formatted)
+            # Display logs via output_with_mode
+            if logs_data.get('events'):
+                details = [f"Total events: {len(logs_data['events'])}"]
+                if args.task:
+                    details.insert(0, f"Filtering for task: {args.task}")
+                output_with_mode(
+                    message="Recent logs retrieved",
+                    details=details,
+                    output_type="info",
+                    json_mode=False
+                )
+                # Print the actual formatted logs
+                formatted = format_logs_info(logs_data)
+                console = _get_console()
+                if console:
+                    console.print(formatted)
+                else:
+                    print(formatted)
+            else:
+                output_with_mode(
+                    message="No logs found",
+                    output_type="info",
+                    json_mode=False
+                )
 
         return 0
 

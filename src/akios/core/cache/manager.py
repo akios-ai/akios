@@ -45,7 +45,7 @@ class CacheManager:
             cache_dir: Directory to store cache files
         """
         self.cache_dir = Path(cache_dir)
-        self.cache_dir.mkdir(exist_ok=True)
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
         self._memory_cache = {}
         self._lock = threading.Lock()  # Thread safety for concurrent access
 
@@ -62,11 +62,12 @@ class CacheManager:
         Returns:
             Cached or computed result
         """
-        # Check memory cache first
-        if key in self._memory_cache:
-            cached_item = self._memory_cache[key]
-            if time.time() - cached_item['timestamp'] < ttl_seconds:
-                return cached_item['data']
+        # Check memory cache first (thread-safe)
+        with self._lock:
+            if key in self._memory_cache:
+                cached_item = self._memory_cache[key]
+                if time.time() - cached_item['timestamp'] < ttl_seconds:
+                    return cached_item['data']
 
         # Check file cache
         cache_file = self.cache_dir / f"{self._hash_key(key)}.json"
@@ -117,8 +118,9 @@ class CacheManager:
             # Silently fail if we can't write cache
             pass
 
-        # Store in memory cache
-        self._memory_cache[key] = cache_data
+        # Store in memory cache (thread-safe)
+        with self._lock:
+            self._memory_cache[key] = cache_data
 
         return result
 

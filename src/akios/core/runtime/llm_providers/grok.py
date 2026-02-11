@@ -122,7 +122,7 @@ class GrokProvider(LLMProvider):
                 f"{self.base_url}/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=120  # 120s for large prompts with high max_tokens
             )
             response.raise_for_status()
 
@@ -150,7 +150,7 @@ class GrokProvider(LLMProvider):
                 try:
                     error_data = e.response.json()
                     error_message = error_data.get('error', e.response.text)
-                except:
+                except Exception:
                     error_message = e.response.text
 
                 if e.response.status_code == 400:
@@ -204,7 +204,7 @@ class GrokProvider(LLMProvider):
                 f"{self.base_url}/chat/completions",
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=120  # 120s for large prompts with high max_tokens
             )
             response.raise_for_status()
 
@@ -239,7 +239,7 @@ class GrokProvider(LLMProvider):
                 try:
                     error_data = e.response.json()
                     error_message = error_data.get('error', e.response.text)
-                except:
+                except Exception:
                     error_message = e.response.text
 
                 if e.response.status_code == 400:

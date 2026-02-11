@@ -95,29 +95,31 @@ def validate_llm_provider_model(provider: str, model: str) -> None:
         )
 
 # ANSI color codes for better error messages
-class Colors:
-    RED = '\033[91m'
-    YELLOW = '\033[93m'
-    RESET = '\033[0m'
+try:
+    from ..core.ui.rich_output import get_theme_ansi, ANSI_RESET
+except ImportError:
+    # Fallback if rich_output cannot be imported
+    def get_theme_ansi(name): return ""
+    ANSI_RESET = ""
 
 def colored_error(message: str) -> str:
     """Add red color to error messages if terminal supports it."""
     try:
         if sys.stdout.isatty():
-            return f"{Colors.RED}{message}{Colors.RESET}"
+            return f"{get_theme_ansi('error')}{message}{ANSI_RESET}"
         else:
             return message
-    except:
+    except Exception:
         return message
 
 def colored_warning(message: str) -> str:
     """Add yellow color to warning messages if terminal supports it."""
     try:
         if sys.stdout.isatty():
-            return f"{Colors.YELLOW}{message}{Colors.RESET}"
+            return f"{get_theme_ansi('warning')}{message}{ANSI_RESET}"
         else:
             return message
-    except:
+    except Exception:
         return message
 
 
@@ -187,7 +189,13 @@ def validate_env_file(env_path: str) -> None:
         value = value.strip()
 
         # Check for quoted values
-        if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+        # Allow quotes for JSON-like values (lists/dicts)
+        is_json_like = (value.startswith('"') and value.endswith('"') and 
+                       (value.strip('"').startswith('[') or value.strip('"').startswith('{'))) or \
+                       (value.startswith("'") and value.endswith("'") and 
+                       (value.strip("'").startswith('[') or value.strip("'").startswith('{')))
+
+        if ((value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'"))) and not is_json_like:
             value = value[1:-1]  # Strip quotes
             corruption_issues.append({
                 'line': line_num,
@@ -211,7 +219,8 @@ def validate_env_file(env_path: str) -> None:
             parsed_vars[key] = {'line': line_num, 'value': value}
 
         # Check for shell injection characters (expanded list)
-        injection_chars = [';', '&', '|', '`', '$', '(', ')', '<', '>', '{', '}', '[', ']', '*', '?', '~', '!', '@', '#', '%', '^', '+', '=']
+        # Removed [, ], {, } to allow JSON structures
+        injection_chars = [';', '&', '|', '`', '$', '(', ')', '<', '>', '*', '?', '~', '!', '@', '#', '%', '^', '+']
         for char in injection_chars:
             if char in value:
                 corruption_issues.append({
@@ -494,7 +503,7 @@ def validate_environment():
         # Quick environment check - avoid full settings validation
         env_setting = os.environ.get('AKIOS_ENVIRONMENT', 'development')
         is_production = env_setting == 'production'
-    except:
+    except Exception:
         is_production = False  # Default to development if anything fails
 
     errors = []
@@ -517,7 +526,7 @@ def validate_environment():
                 errors.append(error_msg + " (production requirement)")
             else:
                 warnings.append(error_msg)
-    except:
+    except Exception:
         error_msg = "Could not determine kernel version"
         if is_production:
             errors.append(error_msg + " (cannot verify kernel requirements)")
@@ -533,7 +542,7 @@ def validate_environment():
                     errors.append(error_msg + " (production security requirement)")
                 else:
                     warnings.append(error_msg)
-    except:
+    except Exception:
         error_msg = "Could not check cgroups v2"
         if is_production:
             errors.append(error_msg + " (cannot verify security features)")
@@ -552,7 +561,7 @@ def validate_environment():
                 warnings.append(warning_msg)
         else:
             logger.info("seccomp-bpf enabled in kernel")
-    except:
+    except Exception:
         warning_msg = "Could not check seccomp-bpf kernel config - syscall filtering may be limited"
         if is_production:
             errors.append(warning_msg + " (cannot verify security features)")
@@ -589,7 +598,7 @@ def validate_linux_distro():
     try:
         env_setting = os.environ.get('AKIOS_ENVIRONMENT', 'development')
         is_production = env_setting == 'production'
-    except:
+    except Exception:
         is_production = False
 
     try:
@@ -635,7 +644,7 @@ def validate_linux_distro():
         return True
     except ValueError:
         raise  # Re-raise production validation errors
-    except:
+    except Exception:
         error_msg = "Could not determine Linux distribution"
         if is_production:
             raise ValueError(f"Distribution validation failed:\n❌ {error_msg} (cannot verify compatibility)")
