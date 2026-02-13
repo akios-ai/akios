@@ -32,10 +32,15 @@ from akios.core.audit import append_audit_event
 
 # Pre-import PII redaction to avoid import hangs during agent execution
 try:
-    from akios.security.pii import apply_pii_redaction as _pii_redaction_func
+    from akios.security.pii import apply_pii_redaction
 except Exception:
-    # Fallback if PII import fails
-    _pii_redaction_func = lambda x: x
+    # SECURITY: Never silently disable PII redaction. If the module fails to import,
+    # replace all content with a warning marker to prevent data leakage.
+    import logging as _logging
+    _logging.getLogger(__name__).critical(
+        "PII redaction module failed to import — all content will be masked"
+    )
+    apply_pii_redaction = lambda x: "[PII_REDACTION_UNAVAILABLE]"
 
 
 class HTTPAgent(BaseAgent):
@@ -102,6 +107,14 @@ class HTTPAgent(BaseAgent):
         params = parameters.get('params', {})
         auth_params = parameters.get('auth')  # Basic auth tuple (username, password) or auth object
 
+        # HTTPS enforcement: block plain HTTP when sandbox/cage is active
+        parsed_url = urlparse(url)
+        if parsed_url.scheme == 'http' and self.settings.sandbox_enabled:
+            raise AgentError(
+                f"HTTPS required: plain HTTP requests are blocked when the security cage is active. "
+                f"Use https:// instead of http:// for '{url}'"
+            )
+
         # Redact PII from request data
         if isinstance(data, str):
             original_data = data
@@ -122,10 +135,11 @@ class HTTPAgent(BaseAgent):
                 })
         elif isinstance(data, dict):
             original_data = data.copy()
-            data = {k: apply_pii_redaction(str(v)) if isinstance(v, str) else v
+            # Redact PII from all stringifiable values (str, int, float) — e.g. SSN as int 123456789
+            data = {k: apply_pii_redaction(str(v)) if isinstance(v, (str, int, float)) else v
                    for k, v in data.items()}
             # Check if any values were redacted
-            if any(str(original_data.get(k, '')) != str(data.get(k, '')) for k in data.keys() if isinstance(data[k], str)):
+            if any(str(original_data.get(k, '')) != str(data.get(k, '')) for k in data.keys()):
                 # Log PII redaction event
                 append_audit_event({
                     'workflow_id': parameters.get('workflow_id', 'unknown'),
@@ -135,7 +149,7 @@ class HTTPAgent(BaseAgent):
                     'result': 'success',
                     'metadata': {
                         'field': 'data_dict',
-                        'keys_affected': len([k for k in data.keys() if isinstance(data[k], str) and str(original_data.get(k, '')) != str(data[k])])
+                        'keys_affected': len([k for k in data.keys() if str(original_data.get(k, '')) != str(data.get(k, ''))])
                     }
                 })
 
@@ -227,7 +241,6 @@ class HTTPAgent(BaseAgent):
                 response_headers = dict(response.headers)
 
                 # Apply PII redaction to response content and headers
-                apply_pii_redaction = _pii_redaction_func
 
                 original_content = response_content
                 response_content = apply_pii_redaction(response_content)

@@ -1,6 +1,6 @@
-# 🚀 AKIOS v1.0.5 - Get Started in 3 Minutes
-**Document Version:** 1.0.5  
-**Date:** 2026-02-10  
+# 🚀 AKIOS v1.0.6 - Get Started in 3 Minutes
+**Document Version:** 1.0.6  
+**Date:** 2026-02-13  
 
 **Secure AI workflows made simple.**
 
@@ -30,7 +30,7 @@ pipx install akios
 pip install akios
 
 # Or install a specific version:
-pip install akios==1.0.5
+pip install akios==1.0.6
 
 # Verify installation
 akios --version
@@ -43,14 +43,14 @@ akios init my-project
 **Containerized deployment works everywhere - no Python/dependencies needed**
 ```bash
 # Pull the Docker image
-docker pull akiosai/akios:v1.0.5
+docker pull akiosai/akios:v1.0.6
 
 # Initialize a new project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 init my-project
 
 # Run workflows
 cd my-project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 run templates/hello-workflow.yml
 ```
 
 **OR use the wrapper script for easier commands:**
@@ -241,4 +241,4 @@ akios clean
 
 ---
 
-*AKIOS v1.0.5 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0.6 - Where AI meets unbreakable security* 🛡️🤖

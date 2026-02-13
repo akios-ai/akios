@@ -329,7 +329,7 @@ def run_audit_verify_command(args: argparse.Namespace) -> int:
         if not audit_file.exists():
             raise CLIError("Audit ledger not found: ./audit/audit_events.jsonl")
             
-        # Reconstruct Merkle Tree
+        # Reconstruct Merkle Tree from raw events
         tree = MerkleTree()
         event_count = 0
         first_timestamp = None
@@ -360,23 +360,38 @@ def run_audit_verify_command(args: argparse.Namespace) -> int:
             else:
                 print_panel("Audit Verification", "Audit ledger is empty.", style="yellow")
             return 0
+
+        # Compare against stored Merkle root hash
+        stored_root = None
+        root_file = Path("./audit/merkle_root.hash")
+        if root_file.exists():
+            stored_root = root_file.read_text(encoding="utf-8").strip()
+
+        if stored_root:
+            integrity_verified = (root_hash == stored_root)
+        else:
+            # No stored root — first verification or root file missing
+            integrity_verified = True  # Tree is self-consistent
         
         # JSON output
         if getattr(args, 'json', False):
             proof = {
-                "integrity": "VERIFIED",
+                "integrity": "VERIFIED" if integrity_verified else "TAMPERED",
                 "events": event_count,
                 "merkle_root": root_hash,
+                "stored_root": stored_root,
+                "roots_match": integrity_verified,
                 "first_event": first_timestamp,
                 "last_event": last_timestamp,
                 "ledger_file": str(audit_file),
                 "verified_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             }
             print(json.dumps(proof, indent=2))
-            return 0
+            return 0 if integrity_verified else 1
             
         # Rich display
         success_color = get_theme_color('success')
+        error_color = get_theme_color('error')
         info_color = get_theme_color('info')
         
         # Format time range
@@ -393,17 +408,34 @@ def run_audit_verify_command(args: argparse.Namespace) -> int:
                 )
             except (ValueError, AttributeError):
                 pass
-        
-        status_text = (
-            f"[bold {success_color}]Integrity: VERIFIED[/]\n\n"
-            f"• Events Processed: [bold]{event_count}[/]\n"
-            f"• Merkle Root:\n  [dim]{root_hash}[/]"
-            f"{time_range}\n"
-            f"[{success_color}]The cryptographic chain of custody is intact.[/]"
-        )
-        
-        print_panel("🔐 Audit Proof", status_text, style=success_color)
-        return 0
+
+        if integrity_verified:
+            root_comparison = ""
+            if stored_root:
+                root_comparison = f"\n• Stored Root:\n  [dim]{stored_root}[/]\n[{success_color}]✓ Recomputed root matches stored root[/]"
+            else:
+                root_comparison = f"\n[dim]No stored root hash found (first verification)[/]"
+
+            status_text = (
+                f"[bold {success_color}]Integrity: VERIFIED[/]\n\n"
+                f"• Events Processed: [bold]{event_count}[/]\n"
+                f"• Merkle Root:\n  [dim]{root_hash}[/]"
+                f"{root_comparison}"
+                f"{time_range}\n"
+                f"[{success_color}]The cryptographic chain of custody is intact.[/]"
+            )
+            print_panel("🔐 Audit Proof", status_text, style=success_color)
+        else:
+            status_text = (
+                f"[bold {error_color}]Integrity: TAMPERED[/]\n\n"
+                f"• Events Processed: [bold]{event_count}[/]\n"
+                f"• Recomputed Root:\n  [dim]{root_hash}[/]\n"
+                f"• Stored Root:\n  [dim]{stored_root}[/]\n"
+                f"\n[bold {error_color}]⚠ ROOT HASH MISMATCH — audit log may have been tampered with![/]"
+            )
+            print_panel("🚨 Audit Integrity Failure", status_text, style=error_color)
+
+        return 0 if integrity_verified else 1
         
     except Exception as e:
         raise CLIError(f"Audit verification failed: {str(e)}")

@@ -545,7 +545,8 @@ class RuntimeEngine:
         
         # Get progress functions
         progress_funcs = _get_progress_functions()
-        use_rich_progress = progress_funcs is not None and sys.stderr.isatty()
+        force_color = os.environ.get("FORCE_COLOR") == "1" or os.environ.get("CLICOLOR_FORCE") == "1"
+        use_rich_progress = progress_funcs is not None and (sys.stderr.isatty() or force_color)
         
         # Determine friendly descriptions for steps (kept for fallback)
         friendly_descriptions = {
@@ -834,7 +835,7 @@ class RuntimeEngine:
                 import json as _json
                 output_json_path = self._output_dir / "output.json"
                 deployable = {
-                    'akios_version': '1.0.5',
+                    'akios_version': '1.0.6',
                     'workflow_name': workflow.name,
                     'workflow_id': self.current_workflow_id,
                     'status': 'completed',

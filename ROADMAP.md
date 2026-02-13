@@ -1,6 +1,6 @@
 # AKIOS Roadmap – v1.0, Future Open & PRO  
-**Document Version:** 1.0.5  
-**Date:** 2026-02-10  
+**Document Version:** 1.0.6  
+**Date:** 2026-02-13  
 
 This roadmap clearly separates the three tracks:  
 - **AKIOS Open Runtime v1.0** (free, minimal security cage – locked)  

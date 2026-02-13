@@ -176,6 +176,9 @@ class ComplianceRules:
         # Communication Data
         patterns.update(self._load_communication_patterns())
 
+        # Digital Identity & Credentials
+        patterns.update(self._load_digital_identity_patterns())
+
         return patterns
 
     def _load_personal_info_patterns(self) -> Dict[str, PIIPattern]:
@@ -293,12 +296,12 @@ class ComplianceRules:
 
             'full_name': PIIPattern(
                 name='full_name',
-                pattern=r'(?:Mr|Mrs|Ms|Dr|Prof|Mme|Mlle)\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b|\bM\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b',
-                compiled_pattern=re.compile(r'(?:Mr|Mrs|Ms|Dr|Prof|Mme|Mlle)\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b|\bM\.\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\s+[A-Z][a-z\u00C0-\u00FF]+(?:-[A-Z][a-z\u00C0-\u00FF]+)?\b'),
+                pattern=r'(?:Mr|Mrs|Ms|Dr|Prof|Mme|Mlle)\.\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?\b|\bM\.\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?\b',
+                compiled_pattern=re.compile(r'(?:Mr|Mrs|Ms|Dr|Prof|Mme|Mlle)\.\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?\b|\bM\.\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?(?:\s+[A-Z]\.?)?\s+[A-Z][a-zA-Z\u00C0-\u00FF]+(?:-[A-Z][a-zA-Z\u00C0-\u00FF]+)?\b'),
                 category='personal',
                 sensitivity='low',
-                description='Full names with titles (English: Mr./Mrs./Dr. | French: M./Mme./Mlle., incl. compound names)',
-                examples=['Mr. John Doe', 'Dr. Jane Smith', 'M. Jean-Luc Picard', 'Mme. Marie-Claire Dupont']
+                description='Full names with titles (English: Mr./Mrs./Dr. | French: M./Mme./Mlle., incl. compound names like McCoy, McDonald)',
+                examples=['Mr. John Doe', 'Dr. Jane Smith', 'Dr. Leonard H. McCoy', 'M. James T. Kirk', 'M. Jean-Luc Picard', 'Mme. Marie-Claire Dupont']
             ),
 
             'french_ssn': PIIPattern(
@@ -362,6 +365,15 @@ class ComplianceRules:
                     r'(?<!TCK-)'
                     r'(?<!TICKET-)'
                     r'(?<!TKT-)'
+                    r'(?<!MRN-)'
+                    r'(?<!ADM-)'
+                    r'(?<!ICD-)'
+                    r'(?<!NDC-)'
+                    r'(?<!CPT-)'
+                    r'(?<!BCBS-)'
+                    r'(?<!GRP-)'
+                    r'(?<!NPI-)'
+                    r'(?<!DEA-)'
                     r'\b'
                     r'(?!INV-)'
                     r'(?!INVOICE-)'
@@ -391,7 +403,7 @@ class ComplianceRules:
                     r'(?!GRP-)'
                     r'(?!NPI-)'
                     r'(?!DEA-)'
-                    r'[A-Z]{1,3}-?\d{2,4}-?[A-Z]{0,2}\b(?!-\d)'
+                    r'[A-Z]{2,3}-?\d{2,4}-?[A-Z]{0,2}\b(?!-\d)'
                 ),
                 compiled_pattern=re.compile(
                     r'(?<!INV-)'
@@ -419,6 +431,8 @@ class ComplianceRules:
                     r'(?<!CPT-)'
                     r'(?<!BCBS-)'
                     r'(?<!GRP-)'
+                    r'(?<!NPI-)'
+                    r'(?<!DEA-)'
                     r'\b'
                     r'(?!INV-)'
                     r'(?!INVOICE-)'
@@ -448,12 +462,24 @@ class ComplianceRules:
                     r'(?!GRP-)'
                     r'(?!NPI-)'
                     r'(?!DEA-)'
-                    r'[A-Z]{1,3}-?\d{2,4}-?[A-Z]{0,2}\b(?!-\d)'
+                    r'[A-Z]{2,3}-?\d{2,4}-?[A-Z]{0,2}\b(?!-\d)'
                 ),
                 category='personal',
                 sensitivity='medium',
-                description='Vehicle license plates',
+                description='Vehicle license plates (requires 2+ letter prefix to avoid false positives on medical/product codes)',
                 examples=['ABC-123', 'XYZ 4567', 'AA12BB']
+            ),
+
+            'company_name': PIIPattern(
+                name='company_name',
+                pattern=r'\b[A-Z][a-zA-ZÀ-ÿ]+(?:\s[A-Za-zÀ-ÿ]+)*\s(?:Inc\.?|LLC|Ltd\.?|Corp\.?|Co\.?|GmbH|SAS|SARL|SA|SE|AG|PLC|LP|LLP|NV|BV|SpA|Srl|EURL|SNC|SCI|Pty)\b',
+                compiled_pattern=re.compile(
+                    r'\b[A-Z][a-zA-ZÀ-ÿ]+(?:\s[A-Za-zÀ-ÿ]+)*\s(?:Inc\.?|LLC|Ltd\.?|Corp\.?|Co\.?|GmbH|SAS|SARL|SA|SE|AG|PLC|LP|LLP|NV|BV|SpA|Srl|EURL|SNC|SCI|Pty)\b'
+                ),
+                category='personal',
+                sensitivity='high',
+                description='Company and organization names (detected by legal suffix)',
+                examples=['Meridian Technologies Inc.', 'Horizon Technologies SAS', 'Acme Corp']
             )
         }
 
@@ -556,12 +582,12 @@ class ComplianceRules:
 
             'health_insurance_us': PIIPattern(
                 name='health_insurance_us',
-                pattern=r'\b[A-Z]{2}\d{9}\b',
-                compiled_pattern=re.compile(r'\b[A-Z]{2}\d{9}\b'),
+                pattern=r'\b[A-Z]{2,3}\d{6,12}\b',
+                compiled_pattern=re.compile(r'\b[A-Z]{2,3}\d{6,12}\b'),
                 category='health',
                 sensitivity='high',
-                description='US health insurance member IDs',
-                examples=['AB123456789', 'XY987654321']
+                description='US health insurance member IDs (BCBS, Aetna, UHC, Cigna etc.)',
+                examples=['AB123456789', 'XY987654321', 'UHC12345678', 'AET123456']
             ),
 
             'medical_record': PIIPattern(
@@ -721,6 +747,110 @@ class ComplianceRules:
                 description='MAC addresses',
                 examples=['00:1B:44:11:3A:B7', '00-1B-44-11-3A-B7']
             )
+        }
+
+    def _load_digital_identity_patterns(self) -> Dict[str, PIIPattern]:
+        """Load digital identity and credential patterns"""
+        return {
+            'itin_us': PIIPattern(
+                name='itin_us',
+                pattern=r'\b9\d{2}-[7-9]\d-\d{4}\b',
+                compiled_pattern=re.compile(r'\b9\d{2}-[7-9]\d-\d{4}\b'),
+                category='personal',
+                sensitivity='high',
+                description='US Individual Taxpayer Identification Number (ITIN)',
+                examples=['912-78-1234', '999-88-5678']
+            ),
+
+            'medicare_mbi': PIIPattern(
+                name='medicare_mbi',
+                pattern=r'\b[1-9][A-Z](?:[A-Z0-9])[0-9]-[A-Z](?:[A-Z0-9])[0-9]-[A-Z]{2}[0-9]{2}\b',
+                compiled_pattern=re.compile(r'\b[1-9][A-Z](?:[A-Z0-9])[0-9]-[A-Z](?:[A-Z0-9])[0-9]-[A-Z]{2}[0-9]{2}\b'),
+                category='health',
+                sensitivity='high',
+                description='US Medicare Beneficiary Identifier (MBI, 11-char new format)',
+                examples=['1EG4-TE5-MK72']
+            ),
+
+            'vin': PIIPattern(
+                name='vin',
+                pattern=r'\b[A-HJ-NPR-Z0-9]{17}\b',
+                compiled_pattern=re.compile(r'\b[A-HJ-NPR-Z0-9]{17}\b'),
+                category='personal',
+                sensitivity='medium',
+                description='Vehicle Identification Number (VIN)',
+                examples=['1HGBH41JXMN109186', 'WBA3A5G59DNP26082']
+            ),
+
+            'ipv6_address': PIIPattern(
+                name='ipv6_address',
+                pattern=r'\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b',
+                compiled_pattern=re.compile(r'\b(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}\b'),
+                category='communication',
+                sensitivity='medium',
+                description='IPv6 addresses (full form)',
+                examples=['2001:0db8:85a3:0000:0000:8a2e:0370:7334']
+            ),
+
+            'aws_access_key': PIIPattern(
+                name='aws_access_key',
+                pattern=r'\b(?:AKIA|ABIA|ACCA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}\b',
+                compiled_pattern=re.compile(r'\b(?:AKIA|ABIA|ACCA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}\b'),
+                category='digital',
+                sensitivity='high',
+                description='AWS access key IDs',
+                examples=['AKIAIOSFODNN7EXAMPLE']
+            ),
+
+            'api_key_generic': PIIPattern(
+                name='api_key_generic',
+                pattern=r'(?:api[_-]?key|apikey|api[_-]?token|access[_-]?token|secret[_-]?key|auth[_-]?token)\s*[=:]\s*["\']?([a-zA-Z0-9_\-]{20,})["\']?',
+                compiled_pattern=re.compile(r'(?:api[_-]?key|apikey|api[_-]?token|access[_-]?token|secret[_-]?key|auth[_-]?token)\s*[=:]\s*["\']?([a-zA-Z0-9_\-]{20,})["\']?', re.IGNORECASE),
+                category='digital',
+                sensitivity='high',
+                description='Generic API keys and access tokens',
+                examples=['api_key=sk_test_1234567890abcdef', 'auth_token: ghp_xxxxxxxxxxxxxxxxxxxx']
+            ),
+
+            'jwt_token': PIIPattern(
+                name='jwt_token',
+                pattern=r'\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b',
+                compiled_pattern=re.compile(r'\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b'),
+                category='digital',
+                sensitivity='high',
+                description='JSON Web Tokens (JWT)',
+                examples=['eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.XbPfbIHMI6ariqw7hs']
+            ),
+
+            'private_key_header': PIIPattern(
+                name='private_key_header',
+                pattern=r'-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----',
+                compiled_pattern=re.compile(r'-----BEGIN (?:RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'),
+                category='digital',
+                sensitivity='high',
+                description='Private key file headers (PEM format)',
+                examples=['-----BEGIN RSA PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----']
+            ),
+
+            'github_token': PIIPattern(
+                name='github_token',
+                pattern=r'\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b',
+                compiled_pattern=re.compile(r'\b(?:ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}\b'),
+                category='digital',
+                sensitivity='high',
+                description='GitHub personal access tokens and OAuth tokens',
+                examples=['ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghij']
+            ),
+
+            'password_in_url': PIIPattern(
+                name='password_in_url',
+                pattern=r'(?:https?|ftp)://[^:@\s]+:[^:@\s]+@[^\s]+',
+                compiled_pattern=re.compile(r'(?:https?|ftp)://[^:@\s]+:[^:@\s]+@[^\s]+'),
+                category='digital',
+                sensitivity='high',
+                description='URLs containing embedded user:password credentials',
+                examples=['https://user:password@host.com/path', 'ftp://admin:secret@ftp.example.com']
+            ),
         }
 
     def get_patterns_for_category(self, category: str) -> List[PIIPattern]:

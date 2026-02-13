@@ -43,7 +43,7 @@ detect_version() {
     
     # Final fallback: hardcoded stable version
     if [[ -z "$version" ]]; then
-        version="1.0.5"
+        version="1.0.6"
     fi
     
     echo "$version"
@@ -154,8 +154,15 @@ add_env_if_set AKIOS_PII_REDACTION_ENABLED
 add_env_if_set AKIOS_SANDBOX_ENABLED
 add_env_if_set FORCE_COLOR
 add_env_if_set CLICOLOR_FORCE
+
+# Only allocate TTY when stdout is a terminal (preserves stderr separation for piping)
+DOCKER_IT_FLAGS=""
+if [[ -t 1 ]]; then
+    DOCKER_IT_FLAGS="-it"
+fi
+
 exec docker run --rm \
-    -it \
+    $DOCKER_IT_FLAGS \
     $DOCKER_TTY_FLAGS \
     -v "$PROJECT_DIR:/app" \
     -w /app \
