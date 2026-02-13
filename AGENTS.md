@@ -1,6 +1,6 @@
-# AKIOS v1.0.5 – Core Agents Reference
-**Document Version:** 1.0.5  
-**Date:** 2026-02-10  
+# AKIOS v1.0.6 – Core Agents Reference
+**Document Version:** 1.0.6  
+**Date:** 2026-02-12  
 
 **The 4 core agents that power AKIOS workflows with military-grade security.**
 
@@ -211,7 +211,7 @@ Make HTTP DELETE request.
 - **Domain whitelisting**: Only configured `allowed_domains` permitted
 - **Rate limiting**: 10 requests per minute maximum
 - **PII redaction**: All request/response data automatically redacted
-- **HTTPS enforcement**: Only HTTPS URLs permitted when cage is active
+- **HTTPS enforcement**: Only HTTPS URLs permitted when sandbox is active — plain `http://` blocked
 - **Timeout enforcement**: 30-second default timeout
 - **Audit logging**: Every HTTP request logged with redacted data
 
@@ -391,7 +391,7 @@ max_output_size: 1048576      # 1MB
 ## 🚨 Security Notes
 
 - **All agents run sandboxed** with kernel-level isolation
-- **PII redaction applied** to all inputs and outputs (including healthcare: NPI, DEA, MRN)
+- **PII redaction applied** to all inputs and outputs (including healthcare: NPI, DEA, MRN). If PII module is unavailable, data is blocked (never passed through raw).
 - **Cost limits enforced** with automatic kill-switches
 - **Full audit trail** maintained for compliance
 - **Network access controlled** via domain whitelisting per agent capabilities

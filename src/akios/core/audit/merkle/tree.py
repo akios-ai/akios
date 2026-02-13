@@ -32,6 +32,7 @@ class MerkleTree:
     def __init__(self):
         self.leaves: List[MerkleNode] = []
         self.root: Optional[MerkleNode] = None
+        self._levels: List[List[MerkleNode]] = []
 
     def append(self, data: str) -> None:
         """Append data to the Merkle tree"""
@@ -40,13 +41,15 @@ class MerkleTree:
         self._build_tree()
 
     def _build_tree(self) -> None:
-        """Build the Merkle tree from current leaves"""
+        """Build the Merkle tree from current leaves, storing all levels for proof generation"""
         if not self.leaves:
             self.root = None
+            self._levels = []
             return
 
-        # Start with leaves and build up to root
+        # Start with leaves and build up to root, storing each level
         current_level = self.leaves.copy()
+        self._levels = [current_level]
 
         while len(current_level) > 1:
             next_level = []
@@ -57,6 +60,7 @@ class MerkleTree:
                 parent = MerkleNode(left=left, right=right)
                 next_level.append(parent)
             current_level = next_level
+            self._levels.append(current_level)
 
         self.root = current_level[0] if current_level else None
 
@@ -64,29 +68,45 @@ class MerkleTree:
         """Get the root hash of the Merkle tree"""
         return self.root.hash if self.root else None
 
-    def get_proof(self, index: int) -> Optional[List[str]]:
+    def get_proof(self, index: int) -> Optional[List[dict]]:
         """
         Generate a Merkle proof for the leaf at the given index.
 
-        This is a simplified implementation. In production, this should generate
-        proper cryptographic proofs with left/right indicators.
+        Returns O(log n) sibling hashes needed to recompute the root hash,
+        enabling cryptographic verification that a leaf belongs to the tree.
+
+        Each proof element is {"position": "left"|"right", "hash": "<hex>"}
+        indicating the sibling's position relative to the current node.
+
+        Returns:
+            List of proof steps, or None if index is invalid.
+            Empty list for single-leaf trees (leaf IS the root).
         """
         if index < 0 or index >= len(self.leaves) or not self.root:
             return None
 
-        # Simplified proof: return sibling hashes at each level
-        # This is NOT cryptographically secure but demonstrates the concept
         proof = []
+        idx = index
 
-        # Get sibling at the leaf level
-        if index % 2 == 0 and index + 1 < len(self.leaves):
-            proof.append(self.leaves[index + 1].hash)  # Right sibling
-        elif index % 2 == 1:
-            proof.append(self.leaves[index - 1].hash)  # Left sibling
+        # Walk from leaf level up to (but not including) the root level
+        for level in self._levels[:-1]:
+            if idx % 2 == 0:
+                # Current node is a left child; sibling is on the right
+                sibling_idx = idx + 1
+                if sibling_idx < len(level):
+                    proof.append({"position": "right", "hash": level[sibling_idx].hash})
+                else:
+                    # Odd node count: node was duplicated during tree build
+                    proof.append({"position": "right", "hash": level[idx].hash})
+            else:
+                # Current node is a right child; sibling is on the left
+                sibling_idx = idx - 1
+                proof.append({"position": "left", "hash": level[sibling_idx].hash})
 
-        # For deeper levels, this would need proper tree traversal
-        # For now, return what we have
-        return proof if proof else None
+            # Move to parent index
+            idx = idx // 2
+
+        return proof
 
     def _get_all_nodes(self) -> List['MerkleNode']:
         """Get all nodes in the tree (for proof generation)"""
@@ -113,22 +133,49 @@ class MerkleTree:
         # Height is the number of levels, minimum 1 for a single leaf
         return max(1, math.ceil(math.log2(len(self.leaves))))
 
-    def verify_proof(self, leaf_index: int, proof: List[str]) -> bool:
+    def verify_proof(self, leaf_index: int, proof: List[dict]) -> bool:
         """
-        Verify a Merkle proof for the leaf at the given index.
+        Cryptographically verify a Merkle proof for the leaf at the given index.
 
-        This is a simplified verification for demonstration purposes.
-        Production implementations should use proper cryptographic proof verification.
+        Recomputes the root hash from the leaf hash and proof siblings,
+        then compares against the tree's actual root hash.
+
+        Args:
+            leaf_index: Index of the leaf to verify
+            proof: List of {"position": "left"|"right", "hash": "<hex>"} steps
+
+        Returns:
+            True if the proof cryptographically verifies against the root hash
         """
-        if leaf_index < 0 or leaf_index >= len(self.leaves) or not proof:
+        if leaf_index < 0 or leaf_index >= len(self.leaves) or not self.root:
             return False
 
-        # Simplified verification: just check if leaf exists and proof is provided
-        # In a real implementation, this would cryptographically verify the proof
-        leaf_exists = 0 <= leaf_index < len(self.leaves)
-        has_proof = len(proof) > 0
+        # Empty proof is valid only for single-leaf trees
+        if not proof:
+            return len(self.leaves) == 1 and self.leaves[leaf_index].hash == self.root.hash
 
-        return leaf_exists and has_proof
+        try:
+            current_hash = self.leaves[leaf_index].hash
+
+            for step in proof:
+                sibling_hash = step["hash"]
+                position = step["position"]
+
+                if position == "left":
+                    # Sibling is on the left: H(sibling || current)
+                    combined = sibling_hash + current_hash
+                elif position == "right":
+                    # Sibling is on the right: H(current || sibling)
+                    combined = current_hash + sibling_hash
+                else:
+                    return False  # Invalid position
+
+                current_hash = hashlib.sha256(combined.encode('utf-8')).hexdigest()
+
+            return current_hash == self.root.hash
+
+        except (KeyError, TypeError, AttributeError):
+            return False
 
     def size(self) -> int:
         """Get the number of leaves in the tree"""

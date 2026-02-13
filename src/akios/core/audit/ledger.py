@@ -91,11 +91,21 @@ class AuditLedger:
             return
 
         # Just store file info, don't load all events into memory
-        with open(self.ledger_file, 'r', encoding='utf-8') as f:
-            self._event_count = sum(1 for _ in f)
+        try:
+            with open(self.ledger_file, 'r', encoding='utf-8') as f:
+                self._event_count = sum(1 for _ in f)
+        except (PermissionError, OSError) as e:
+            logger.warning(f"Cannot read audit file for lazy count: {e}")
+            self._event_count = 0
 
     def _load_all_events(self) -> None:
-        """Load all events into memory when needed"""
+        """Load all events from disk into memory.
+
+        Flushes any pending buffered events to disk first, then resets
+        in-memory state and reloads everything from disk.  This prevents
+        both duplication (events appended before this call) and data loss
+        (events still sitting in the write buffer).
+        """
         with self._state_lock:
             if self._loaded_all_events:
                 return
@@ -104,35 +114,54 @@ class AuditLedger:
                 self._loaded_all_events = True
                 return
 
-            with open(self.ledger_file, 'r', encoding='utf-8') as f:
-                for line in f:
-                    line = line.strip()
-                    if not line:
-                        continue
+            # Flush any pending buffered events to disk before reloading,
+            # so they survive the in-memory reset below.
+            try:
+                with self._buffer_lock:
+                    if self._event_buffer:
+                        with open(self.ledger_file, 'a', encoding='utf-8') as f:
+                            for event_json in self._event_buffer:
+                                f.write(event_json + '\n')
+                        self._event_buffer.clear()
+            except Exception as e:
+                logger.warning(f"Could not flush buffer before full reload: {e}")
 
-                    try:
-                        data = json.loads(line)
-                        event = AuditEvent(
-                            workflow_id=data['workflow_id'],
-                            step=data['step'],
-                            agent=data['agent'],
-                            action=data['action'],
-                            result=data['result'],
-                            metadata=data.get('metadata', {}),
-                            timestamp=data.get('timestamp')
-                        )
+            # Reset in-memory state to prevent duplication with already-appended events
+            self.events = []
+            self.merkle_tree = MerkleTree()
 
-                        # Validate hash integrity if stored hash is available
-                        stored_hash = data.get('hash')
-                        if stored_hash and event.hash != stored_hash:
-                            logger.warning(f"Hash mismatch for audit event: expected {stored_hash}, got {event.hash}")
-                            # Continue processing but log the integrity issue
+            try:
+                with open(self.ledger_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if not line:
+                            continue
 
-                        self.events.append(event)
-                        self.merkle_tree.append(event.to_json())
-                    except (json.JSONDecodeError, KeyError) as e:
-                        # Log error but continue processing
-                        logger.warning(f"Skipping corrupted audit event: {e}")
+                        try:
+                            data = json.loads(line)
+                            event = AuditEvent(
+                                workflow_id=data['workflow_id'],
+                                step=data['step'],
+                                agent=data['agent'],
+                                action=data['action'],
+                                result=data['result'],
+                                metadata=data.get('metadata', {}),
+                                timestamp=data.get('timestamp')
+                            )
+
+                            # Validate hash integrity if stored hash is available
+                            stored_hash = data.get('hash')
+                            if stored_hash and event.hash != stored_hash:
+                                logger.warning(f"Hash mismatch for audit event: expected {stored_hash}, got {event.hash}")
+                                # Continue processing but log the integrity issue
+
+                            self.events.append(event)
+                            self.merkle_tree.append(event.to_json())
+                        except (json.JSONDecodeError, KeyError) as e:
+                            # Log error but continue processing
+                            logger.warning(f"Skipping corrupted audit event: {e}")
+            except (PermissionError, OSError) as e:
+                logger.error(f"Cannot read audit file: {e}")
 
             self._loaded_all_events = True
 
@@ -164,12 +193,16 @@ class AuditLedger:
 
         # Buffer events for performance optimization (thread-safe)
         event_json = event.to_json()
+        needs_flush = False
         with self._buffer_lock:
             self._event_buffer.append(event_json)
 
-            # Flush buffer when it reaches threshold
+            # Check if buffer threshold reached (flush outside the lock to avoid deadlock)
             if len(self._event_buffer) >= self._buffer_size:
-                self._flush_buffer()
+                needs_flush = True
+
+        if needs_flush:
+            self._flush_buffer()
 
         return event
 
@@ -190,6 +223,9 @@ class AuditLedger:
             self._event_buffer.clear()
             # Note: Removed chmod to prevent potential hanging on some filesystems
 
+        # Persist Merkle root hash for later verification
+        self._save_root_hash()
+
     def _shutdown_flush(self) -> None:
         """Flush any remaining buffers during program shutdown"""
         try:
@@ -197,9 +233,22 @@ class AuditLedger:
                 pending = len(self._event_buffer)
                 self._flush_buffer()
                 logger.info(f"Shutdown flush completed: {pending} events written")
+            # Always persist final root hash on shutdown
+            self._save_root_hash()
         except Exception as e:
             # Log error but don't crash during shutdown
             logger.error(f"Error during shutdown flush: {e}")
+
+    def _save_root_hash(self) -> None:
+        """Persist current Merkle root hash to sidecar file for verification"""
+        try:
+            root = self.merkle_tree.get_root_hash()
+            if root:
+                root_file = self.ledger_file.parent / "merkle_root.hash"
+                with open(root_file, 'w', encoding='utf-8') as f:
+                    f.write(root)
+        except Exception as e:
+            logger.warning(f"Failed to save Merkle root hash: {e}")
 
     def get_merkle_root(self) -> Optional[str]:
         """Get the current Merkle root hash"""
@@ -232,12 +281,9 @@ class AuditLedger:
         Verify that stored audit file matches the in-memory ledger.
         This detects file-based tampering (the real threat).
         """
-        from ...config import get_settings
-        from pathlib import Path
         import json
 
-        settings = get_settings()
-        audit_path = Path(settings.audit_storage_path) / "audit_events.jsonl"
+        audit_path = self.ledger_file
 
         if not audit_path.exists():
             return False

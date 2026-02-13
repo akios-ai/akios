@@ -688,24 +688,29 @@ def create_env_example() -> str:
 # GEMINI_API_KEY=your-gemini-key-here
 
 # === AKIOS SETTINGS ===
-# Default LLM provider and model
-AKIOS_LLM_PROVIDER=grok  # Options: openai, anthropic, grok, mistral, gemini
-AKIOS_LLM_MODEL=grok-3   # Provider-specific models
+# Default LLM provider and model (Options: openai, anthropic, grok, mistral, gemini)
+# Provider is auto-detected from your API key — these are optional overrides.
+# AKIOS_LLM_PROVIDER=grok
+# AKIOS_LLM_MODEL=grok-3
 
 # Development/Testing
-# AKIOS_MOCK_LLM=1        # Set to 1 for testing without API calls
-# AKIOS_MOCK_LLM=0        # Set to 0 for production API calls
+# AKIOS_MOCK_LLM=1
+# AKIOS_MOCK_LLM=0
 
 # Security & Performance
-# AKIOS_BUDGET_LIMIT_PER_RUN=1.0    # Cost limit per workflow ($)
-# AKIOS_MAX_TOKENS_PER_CALL=500     # Token limit per API call
+# AKIOS_BUDGET_LIMIT_PER_RUN=1.0
+# AKIOS_MAX_TOKENS_PER_CALL=500
 
 # === SECURITY CAGE ===
-# These settings are managed by 'akios cage up/down' but can be set manually
-AKIOS_PII_REDACTION_ENABLED=true     # Auto PII masking on inputs/outputs
-AKIOS_NETWORK_ACCESS_ALLOWED=false   # Block external HTTPS (LLM APIs pass through)
-AKIOS_SANDBOX_ENABLED=true           # Process isolation (always recommended)
-AKIOS_AUDIT_ENABLED=true             # Cryptographic audit logging
+# These settings are managed by 'akios cage up/down' but can be set manually.
+# Auto PII masking on inputs/outputs
+AKIOS_PII_REDACTION_ENABLED=true
+# Block external HTTPS (LLM API calls always pass through)
+AKIOS_NETWORK_ACCESS_ALLOWED=false
+# Process isolation (always recommended)
+AKIOS_SANDBOX_ENABLED=true
+# Cryptographic audit logging
+AKIOS_AUDIT_ENABLED=true
 
 # Whitelisted domains (comma-separated, allowed even when network is locked)
 # AKIOS_ALLOWED_DOMAINS=api.example.com,data.example.org
@@ -764,7 +769,7 @@ Welcome to your AKIOS (AI Knowledge & Intelligence Operating System) project! Th
 
    **Direct Docker (if you do not have `{get_command_prefix()}`):**
    ```bash
-   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 run templates/hello-workflow.yml
+   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 run templates/hello-workflow.yml
    ```
 
 2. **Configure for API workflows** (if using batch_processing.yml):
@@ -833,7 +838,7 @@ AKIOS comes with 4 pre-built workflow templates. Here's what each one does:
 {FILE_ANALYSIS_COMMAND}
 
 # Direct Docker (if you do not have {get_command_prefix()})
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 run templates/hello-workflow.yml
 ```
 
 ### Creating Custom Workflows

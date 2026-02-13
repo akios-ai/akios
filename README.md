@@ -1,6 +1,6 @@
-# AKIOS v1.0.5 – The Open-Source Security Cage for AI Agents
-**Document Version:** 1.0.5  
-**Date:** 2026-02-10  
+# AKIOS v1.0.6 – The Open-Source Security Cage for AI Agents
+**Document Version:** 1.0.6  
+**Date:** 2026-02-12  
 
 **Security sandboxing · Real-time PII redaction · Merkle audit · Cost kills**
 
@@ -128,8 +128,8 @@ cd my-project
 AKIOS_FORCE_PULL=1 ./akios status
 ```
 
-> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.5). 
-> For specific versions: `pip install akios==1.0.5`. 
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.6). 
+> For specific versions: `pip install akios==1.0.6`. 
 
 ---
 
@@ -285,7 +285,7 @@ cd my-project                    # ← REQUIRED STEP
 ## ✨ Key Features
 
 - **🔒 Security Sandboxing**: Kernel-hard isolation on native Linux (seccomp-bpf + cgroups) or strong policy-based security in Docker — agents cannot escape
-- **🛡️ Comprehensive PII Redaction**: 50+ pattern detection covering personal, financial, health, and location data before LLM processing
+- **🛡️ Comprehensive PII Redaction**: 53 pattern detection across 6 categories (personal, financial, health, digital identity, communication, location) before LLM processing
 - **📊 Merkle Audit Trails**: Cryptographic proof of execution integrity — tamper-evident JSON exports
 - **💰 Cost Kill-Switches**: Hard budget limits ($1 default) with automatic termination on violations
 - **⚡ Zero-Dependency Deployment**: Standalone binaries for air-gapped environments, plus pip packages for Python integration
@@ -356,7 +356,7 @@ AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.mycompany.com"
 
 ## ⚡ Performance Highlights
 
-AKIOS v1.0.5 achieves **10/10 performance scores** across all platforms:
+AKIOS v1.0.6 achieves **10/10 performance scores** across all platforms:
 
 ### Native Linux (Maximum Performance)
 ```
@@ -382,16 +382,16 @@ AKIOS v1.0.5 achieves **10/10 performance scores** across all platforms:
 
 Both performance profiles are **validated and blocking for every release** — we measure both to ensure no regressions as AKIOS evolves.
 
-**v1.0.5 Validation Results:**
-- **Native Linux (EC2)**: 189 E2E tests (20 CLI, 18 security, 4 workflows, 132 demos, 15 performance) — 100% PASS
-- **Docker**: 187 E2E tests (20 CLI, 18 security, 4 workflows, 132 demos, 13 performance) — 100% PASS
+**v1.0.6 Validation Results:**
+- **Native Linux (EC2)**: 192 E2E tests (20 CLI, 24 security, 4 workflows, 132 demos, 12 performance) — 100% PASS
+- **Docker**: 192 E2E tests (20 CLI, 24 security, 4 workflows, 132 demos, 12 performance) — 100% PASS
 - Comprehensive test suites execute on every release with real LLM APIs, full security validation, and performance benchmarking
 
 ## ⚖️ Legal Disclaimers & User Responsibility
 
 ### AKIOS Performance Validation Scope
 
-**AKIOS v1.0.5 performance metrics are validated ONLY on AWS EC2 t3.medium instances in us-east-1 region.** Your actual performance may differ significantly based on:
+**AKIOS v1.0.6 performance metrics are validated ONLY on AWS EC2 t3.medium instances in us-east-1 region.** Your actual performance may differ significantly based on:
 - Instance type and size
 - AWS region and network latency
 - System load and other processes  
@@ -401,7 +401,7 @@ Both performance profiles are **validated and blocking for every release** — w
 
 ### What AKIOS Guarantees
 ✅ **Security of the sandbox** - Full kernel-hard isolation on native Linux (verified with 18 comprehensive security tests covering cage, audit, PII redaction, and syscall filtering)
-✅ **PII redaction** - 50+ pattern detection (>95% accuracy) including healthcare identifiers (NPI, DEA, MRN)
+✅ **PII redaction** - 53 pattern detection across 6 categories (>95% accuracy) including healthcare identifiers (NPI, DEA, MRN)
 ✅ **Audit integrity** - Cryptographic Merkle proofs of execution  
 ✅ **Performance baseline** - 25ms startup & 44.44 wf/s throughput on t3.medium  
 
@@ -559,13 +559,13 @@ ls -la akios && file akios
 # akios: Bourne-Again shell script text executable, Unicode text, UTF-8 text
 
 # If download failed, use Direct Docker fallback:
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 "$@"' > akios
 chmod +x akios
-./akios --version  # Should show "AKIOS 1.0.5"
+./akios --version  # Should show "AKIOS 1.0.6"
 ```
 
 #### Docker Installation Issues
@@ -1002,7 +1002,7 @@ cat data/output/run_*/batch-summary.json
 
 ## 📈 Roadmap
 
-**Current: v1.0.5** - Security cage fundamentals (Linux-only, minimal features)
+**Current: v1.0.6** - Security cage fundamentals (Linux-only, minimal features)
 
 **Future Releases:**
 - **Enhanced Security**: Additional compliance features, advanced monitoring

@@ -1,11 +1,49 @@
 # Changelog
-**Document Version:** 1.0.5  
-**Date:** 2026-02-10  
+**Document Version:** 1.0.6  
+**Date:** 2026-02-12  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.6] - 2026-02-12
+
+### Security
+- **🔐 Merkle Proof System — Complete Rewrite**
+  - `get_proof()` now generates proper O(log n) sibling-hash proof paths
+  - `verify_proof()` performs real SHA-256 cryptographic root recomputation
+  - `akios audit verify` compares recomputed root against stored Merkle root hash
+  - Ledger persists Merkle root to `merkle_root.hash` sidecar file on every flush
+  - Proof format: `{"position": "left"|"right", "hash": "<hex>"}` dictionaries
+- **🛡️ PII Fail-Safe Hardening**
+  - All 4 agents (filesystem, HTTP, LLM, tool executor): PII import failure now blocks data with `[PII_REDACTION_UNAVAILABLE]` instead of silently passing raw content through
+  - Filesystem agent PII timeout: returns `[CONTENT_REDACTED_TIMEOUT]` instead of raw content
+  - CRITICAL log warning emitted when PII module fails to load
+- **🌐 HTTPS Enforcement**
+  - HTTP agent now blocks plain `http://` URLs when `sandbox_enabled=True`
+  - Only HTTPS permitted in sandboxed mode (LLM APIs always allowed)
+
+### Fixed
+- **🏥 ICD-10 False Positives Eliminated**
+  - License plate pattern changed from `[A-Z]{1,3}` to `[A-Z]{2,3}` — medical codes like `E11.9` no longer misclassified as license plates
+  - Synced `pattern` and `compiled_pattern` fields in license plate rule (previously mismatched — compiled was missing negative lookaheads)
+- **📋 Audit Verifier Tests**
+  - Fixed mock paths for `get_settings` (was using wrong module path due to lazy import pattern)
+  - Fixed ledger duplicate event loading (events no longer doubled from disk reload)
+  - All 14 audit verifier tests now pass (previously 11 failures)
+
+### Added
+- **🔍 53 PII Patterns (was 43)**
+  - 10 new digital identity patterns: ITIN, Medicare MBI, VIN, IPv6 address, AWS access key, generic API key, JWT token, private key header, GitHub token, password-in-URL
+  - Total: 53 patterns across 6 categories (personal: 20, health: 13, financial: 8, digital: 6, communication: 3, location: 3)
+- **🏥 US Health Insurance Coverage Broadened**
+  - Pattern widened from `[A-Z]{2}\d{9}` to `[A-Z]{2,3}\d{6,12}` for broader carrier format support
+
+### Tests
+- Merkle tree: 36/36 tests pass (new proof format, multi-leaf, tamper detection)
+- Audit verifier: 14/14 tests pass (was 3/14 — fixed mock paths and duplicate loading)
+- Full unit suite: 775+ tests pass, 0 regressions from v1.0.6 changes
 
 ## [1.0.5] - 2026-02-07
 

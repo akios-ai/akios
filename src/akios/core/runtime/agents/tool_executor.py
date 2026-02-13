@@ -33,10 +33,15 @@ from akios.core.audit import append_audit_event
 
 # Pre-import PII redaction to avoid import hangs during agent execution
 try:
-    from akios.security.pii import apply_pii_redaction as _pii_redaction_func
+    from akios.security.pii import apply_pii_redaction
 except Exception:
-    # Fallback if PII import fails
-    _pii_redaction_func = lambda x: x
+    # SECURITY: Never silently disable PII redaction. If the module fails to import,
+    # replace all content with a warning marker to prevent data leakage.
+    import logging as _logging
+    _logging.getLogger(__name__).critical(
+        "PII redaction module failed to import — all content will be masked"
+    )
+    apply_pii_redaction = lambda x: "[PII_REDACTION_UNAVAILABLE]"
 
 
 class ToolExecutorAgent(BaseAgent):
@@ -117,7 +122,6 @@ class ToolExecutorAgent(BaseAgent):
         # Apply security before executing commands (delayed import)
         from akios.security import enforce_sandbox
         from akios.security.syscall.policy import AgentType
-        apply_pii_redaction = _pii_redaction_func
         enforce_sandbox(agent_type=AgentType.TOOL_EXECUTOR)
 
         # Extract args from parameters
@@ -328,7 +332,6 @@ class ToolExecutorAgent(BaseAgent):
             })()
 
             # Apply PII redaction to command output
-            apply_pii_redaction = _pii_redaction_func
 
             original_stdout = result.stdout
             original_stderr = result.stderr

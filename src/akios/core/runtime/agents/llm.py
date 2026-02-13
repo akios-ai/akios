@@ -39,10 +39,15 @@ except Exception:  # pragma: no cover - fallback for environments without openai
 
 # Pre-import PII redaction to avoid import hangs during agent execution
 try:
-    from akios.security.pii import apply_pii_redaction as _pii_redaction_func
+    from akios.security.pii import apply_pii_redaction
 except Exception:
-    # Fallback if PII import fails
-    _pii_redaction_func = lambda x: x
+    # SECURITY: Never silently disable PII redaction. If the module fails to import,
+    # replace all content with a warning marker to prevent data leakage.
+    import logging as _logging
+    _logging.getLogger(__name__).critical(
+        "PII redaction module failed to import — all content will be masked"
+    )
+    apply_pii_redaction = lambda x: "[PII_REDACTION_UNAVAILABLE]"
 
 
 class LLMAgent(BaseAgent):
@@ -262,7 +267,7 @@ class LLMAgent(BaseAgent):
         enforce_sandbox(agent_type=AgentType.LLM)
 
         # Use pre-imported PII redaction function
-        enterprise_pii_redaction = _pii_redaction_func
+        enterprise_pii_redaction = apply_pii_redaction
 
         # Apply PII redaction to input prompts
         if 'prompt' in parameters:

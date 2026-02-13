@@ -51,10 +51,15 @@ from akios.core.audit import append_audit_event
 
 # Pre-import PII redaction to avoid import hangs during agent execution
 try:
-    from akios.security.pii import apply_pii_redaction as _pii_redaction_func
+    from akios.security.pii import apply_pii_redaction
 except Exception:
-    # Fallback if PII import fails
-    _pii_redaction_func = lambda x: x
+    # SECURITY: Never silently disable PII redaction. If the module fails to import,
+    # replace all content with a warning marker to prevent data leakage.
+    import logging as _logging
+    _logging.getLogger(__name__).critical(
+        "PII redaction module failed to import — all content will be masked"
+    )
+    apply_pii_redaction = lambda x: "[PII_REDACTION_UNAVAILABLE]"
 
 
 class FilesystemAgent(BaseAgent):
@@ -97,7 +102,6 @@ class FilesystemAgent(BaseAgent):
 
         # Apply security before file operations (delayed import)
         from akios.security import enforce_sandbox
-        apply_pii_redaction = _pii_redaction_func
         enforce_sandbox()
 
         # Validate path security first to get the path variable
@@ -124,10 +128,11 @@ class FilesystemAgent(BaseAgent):
                     signal.alarm(0)  # Cancel the alarm
                     
             except TimeoutError:
-                # If PII redaction times out, keep original content
+                # SECURITY: If PII redaction times out, NEVER keep original content.
+                # Replace with marker to prevent data leakage.
                 import sys
-                print(f"Warning: PII redaction timed out for input, keeping original content", file=sys.stderr)
-                parameters['content'] = original_content
+                print(f"Warning: PII redaction timed out for input — content masked for safety", file=sys.stderr)
+                parameters['content'] = '[CONTENT_REDACTED_TIMEOUT]'
             
             if parameters['content'] != original_content:
                 # Log PII redaction event
@@ -181,10 +186,11 @@ class FilesystemAgent(BaseAgent):
                     signal.alarm(0)  # Cancel the alarm
                     
             except TimeoutError:
-                # If PII redaction times out, keep original content
+                # SECURITY: If PII redaction times out, NEVER keep original content.
+                # Replace with marker to prevent data leakage.
                 import sys
-                print(f"Warning: PII redaction timed out for output, keeping original content", file=sys.stderr)
-                result['content'] = original_content
+                print(f"Warning: PII redaction timed out for output — content masked for safety", file=sys.stderr)
+                result['content'] = '[CONTENT_REDACTED_TIMEOUT]'
             
             if result['content'] != original_content:
                 # Log PII redaction event

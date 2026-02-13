@@ -1,10 +1,10 @@
-# AKIOS v1.0.5 CLI Reference
-**Document Version:** 1.0.5  
-**Date:** 2026-02-10  
+# AKIOS v1.0.6 CLI Reference
+**Document Version:** 1.0.6  
+**Date:** 2026-02-12  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.0.5 supports three deployment methods:
+AKIOS v1.0.6 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.5 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -495,7 +495,7 @@ The output includes:
 Example output:
 ```json
 {
-  "akios_version": "1.0.5",
+  "akios_version": "1.0.6",
   "workflow_name": "Hello World Workflow",
   "status": "completed",
   "steps_executed": 3,
@@ -687,7 +687,7 @@ akios http GET https://api.example.com/report --timeout 60 --json-output
 **Security:**
 - All requests pass through domain whitelist enforcement
 - Request/response bodies scanned for PII and redacted in audit logs
-- Only HTTPS URLs permitted when cage is active
+- Only HTTPS URLs permitted when sandbox is active — plain `http://` URLs blocked automatically
 - Full audit trail of all HTTP activity
 
 ### `akios audit verify` - Verify Audit Integrity
@@ -705,7 +705,7 @@ akios audit verify --json
 **Options:**
 - `--json`: Output in machine-readable JSON format
 
-**Returns:** Chain integrity status, hash verification results, and tamper detection.
+**Returns:** Chain integrity status with stored vs recomputed Merkle root comparison. Shows **VERIFIED** (roots match, no tampering) or **TAMPERED** (mismatch detected). Returns exit code 1 on tampering.
 
 ### `akios audit log` - View Audit Log
 

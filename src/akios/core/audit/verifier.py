@@ -19,9 +19,12 @@ Audit integrity verification and proof generation.
 Checks Merkle tree integrity and generates verifiable proofs.
 """
 
+import json
+from pathlib import Path
 from typing import Dict, Any
 
 from .ledger import get_ledger, get_merkle_root
+from ...config import get_settings
 
 
 def verify_audit_integrity() -> Dict[str, Any]:
@@ -32,13 +35,13 @@ def verify_audit_integrity() -> Dict[str, Any]:
     Returns:
         Dict with verification results
     """
-    from ...config import get_settings
-    from pathlib import Path
-    import json
 
     ledger = get_ledger()
     settings = get_settings()
     audit_path = Path(settings.audit_storage_path) / "audit_events.jsonl"
+
+    # Flush any buffered events to disk before verifying
+    ledger.flush_buffer()
 
     # Ensure all events are loaded for integrity check
     ledger._load_all_events()

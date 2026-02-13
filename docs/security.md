@@ -1,10 +1,10 @@
 # Security Features
-**Document Version:** 1.0.5  
-**Date:** 2026-02-10  
+**Document Version:** 1.0.6  
+**Date:** 2026-02-12  
 
 ## Security Overview
 
-AKIOS v1.0.5 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
+AKIOS v1.0.6 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
 
 ## Supported Versions
 
@@ -120,7 +120,7 @@ The cage blocks four attack vectors:
 
 ## PII Protection
 
-AKIOS detects and redacts 50+ PII patterns covering personal, financial, health, and location data.
+AKIOS detects and redacts 53 PII patterns across 6 categories (personal, financial, health, digital identity, communication, location).
 
 ### Scanning Files
 
@@ -202,13 +202,13 @@ This guarantees no sensitive artifacts survive a cage session. Every session sta
 
 ### Merkle-Chained Audit Trail
 
-Every operation is logged with a SHA-256 hash chained to the previous entry, creating a tamper-evident ledger:
+Every operation is logged with a SHA-256 hash chained to the previous entry, creating a tamper-evident ledger. The Merkle root hash is persisted on every flush and compared at verification time to detect tampering:
 
 ```bash
-# Verify audit chain integrity
+# Verify audit chain integrity (compares stored vs recomputed Merkle root)
 akios audit verify
 
-# Machine-readable verification
+# Machine-readable verification (includes stored root and match status)
 akios audit verify --json
 
 # Export full audit trail for compliance systems
@@ -217,6 +217,8 @@ akios audit export --json
 # Save as compliance artifact
 akios audit export --json > audit-report.json
 ```
+
+**Verification Process:** `akios audit verify` rebuilds the Merkle tree from audit events and compares the recomputed root against the stored root hash. If they match, the trail is **VERIFIED** (tamper-free). If they differ, it reports **TAMPERED** and returns exit code 1.
 
 ### Compliance Frameworks
 
