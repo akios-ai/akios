@@ -1,186 +1,279 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/akios-ai/akios/main/assets/logo.png" alt="AKIOS" width="200"/>
+  <img src="https://raw.githubusercontent.com/akios-ai/akios/main/assets/logo.png" alt="AKIOS" width="180"/>
   <h1>AKIOS</h1>
-  <p><strong>The open-source security cage for AI agents.</strong></p>
-  <p>Sandbox · PII Redaction · Merkle Audit · Cost Kill-Switches</p>
+  <h3>The open-source security cage for AI agents</h3>
+  <p>
+    <strong>Kernel-hard sandbox</strong> · <strong>50+ PII patterns</strong> · <strong>Merkle audit trail</strong> · <strong>Cost kill-switches</strong>
+  </p>
 
-  <a href="https://pypi.org/project/akios/"><img src="https://img.shields.io/pypi/v/akios?color=blue&label=PyPI" alt="PyPI"></a>
-  <a href="https://pypi.org/project/akios/"><img src="https://img.shields.io/pypi/pyversions/akios" alt="Python"></a>
-  <a href="https://github.com/akios-ai/akios/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-green" alt="License"></a>
-  <a href="https://github.com/akios-ai/akios/stargazers"><img src="https://img.shields.io/github/stars/akios-ai/akios?style=social" alt="Stars"></a>
+  <a href="https://pypi.org/project/akios/"><img src="https://img.shields.io/pypi/v/akios?color=%2334D058&label=PyPI" alt="PyPI"></a>
+  <a href="https://pypi.org/project/akios/"><img src="https://img.shields.io/pypi/pyversions/akios?color=%2334D058" alt="Python"></a>
+  <a href="https://github.com/akios-ai/akios/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-blue" alt="License"></a>
   <a href="https://github.com/akios-ai/akios"><img src="https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey" alt="Platform"></a>
+  <a href="https://github.com/akios-ai/akios/stargazers"><img src="https://img.shields.io/github/stars/akios-ai/akios?style=social" alt="Stars"></a>
+</div>
+
+<br>
+
+<div align="center">
+
+**AKIOS wraps any AI agent in a hardened security cage** — kernel-level process isolation,<br>
+real-time PII redaction, cryptographic Merkle audit trails, and automatic cost kill-switches —<br>
+so you can deploy AI workflows in regulated environments without building security from scratch.
 
 </div>
 
----
+<br>
 
-AKIOS wraps any AI agent in a **hardened security cage** — kernel-level process isolation (seccomp-bpf + cgroups v2), real-time PII redaction across 50+ patterns, cryptographic Merkle audit trails, and automatic cost kill-switches — so you can deploy AI workflows in regulated environments without building security from scratch.
+<div align="center">
+
+[Quick Start](#-quick-start) · [Architecture](#-architecture) · [Features](#-key-features) · [Documentation](#-documentation) · [Contributing](#-contributing)
+
+</div>
+
+<br>
+
+## 🏗️ Architecture
+
+> Every workflow step passes through five security layers before anything touches the outside world.
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    AKIOS Security Cage                   │
-│                                                         │
-│   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌──────────┐  │
-│   │   LLM   │  │  HTTP   │  │  File   │  │   Tool   │  │
-│   │  Agent  │  │  Agent  │  │  Agent  │  │ Executor │  │
-│   └────┬────┘  └────┬────┘  └────┬────┘  └────┬─────┘  │
-│        │            │            │             │        │
-│   ┌────▼────────────▼────────────▼─────────────▼────┐   │
-│   │           Security Primitives Layer             │   │
-│   │  PII Scan → Sandbox → Budget → Audit → Merkle  │   │
-│   └─────────────────────────────────────────────────┘   │
-│                                                         │
-│   🔒 seccomp-bpf  🛡️ cgroups v2  📋 Merkle tree       │
-│   💰 cost kills   🚫 50+ PII     🌐 HTTPS whitelist   │
-└─────────────────────────────────────────────────────────┘
+              ┌────────────────────────────────────┐
+              │        Untrusted AI Agents         │
+              │        LLMs, Code, Plugins         │
+              └──────────────────┬─────────────────┘
+                                 │
+                                 ▼
+╔════════════════════════════════════════════════════════════════╗
+║                     AKIOS SECURITY RUNTIME                     ║
+║                                                                ║
+║  ┌──────────────────────────────────────────────────────────┐  ║
+║  │ 1. Policy Engine    allowlist verification               │  ║
+║  │ 2. Kernel Sandbox   seccomp-bpf + cgroups v2             │  ║
+║  │ 3. PII Redaction    50+ patterns, 6 categories           │  ║
+║  │ 4. Budget Control   cost kill-switches, token limits     │  ║
+║  │ 5. Audit Ledger     Merkle tree, SHA-256, JSONL          │  ║
+║  └──────────────────────────────────────────────────────────┘  ║
+║                                                                ║
+╚════════════════════════════════╤═══════════════════════════════╝
+                                 │
+                                 ▼
+              ┌────────────────────────────────────┐
+              │      Protected Infrastructure      │
+              │       APIs, Databases, Cloud       │
+              └────────────────────────────────────┘
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
 ```bash
-# Install
 pip install akios
-
-# Create a project
 akios init my-project && cd my-project
-
-# Configure your LLM provider
-akios setup
-
-# Run your first secure workflow
-akios run templates/hello-workflow.yml
-
-# Check security status
-akios status
+akios setup                              # Configure LLM provider (interactive)
+akios run templates/hello-workflow.yml    # Run inside the security cage
 ```
 
-**Docker** (all platforms):
+<details>
+<summary><b>📦 Docker (all platforms — macOS, Linux, Windows)</b></summary>
+
 ```bash
 curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data/wrapper.sh
 mv wrapper.sh akios && chmod +x akios
 ./akios init my-project && cd my-project
 ./akios run templates/hello-workflow.yml
 ```
+</details>
 
-## Why AKIOS?
+### What happens when you run a workflow
 
-**The problem:** AI agents can leak sensitive data, run up massive bills, execute dangerous code, and leave no audit trail. Every team building with LLMs faces the same security engineering burden.
+```
+$ akios run workflow.yml
 
-**The solution:** AKIOS provides **compliance-by-construction** — security guarantees that are architectural, not bolted on. Your workflows run inside a cage where violations are physically impossible, not just discouraged.
+╔══════════════════════════════════════════════════════════╗
+║                   AKIOS Security Cage                    ║
+╠══════════════════════════════════════════════════════════╣
+║  🔒 Sandbox:   ACTIVE (seccomp-bpf + cgroups v2)        ║
+║  🚫 PII Scan:  50+ patterns loaded                      ║
+║  💰 Budget:    $1.00 limit ($0.00 used)                  ║
+║  📋 Audit:     Merkle chain initialized                  ║
+╚══════════════════════════════════════════════════════════╝
 
-| Without AKIOS | With AKIOS |
-|---------------|------------|
-| PII leaks to LLM providers | Automatic redaction before any API call |
-| Runaway API costs | Hard budget limits with kill-switches |
-| No audit trail for compliance | Cryptographic Merkle-chained logs |
-| Manual security reviews | Kernel-enforced process isolation |
-| Hope-based security | Proof-based security |
+  ▶ Step 1/3: read-document ─────────────────────────────
+    Agent: filesystem │ Action: read
+    ✓ PII redacted: 3 patterns found (SSN, email, phone)
+    ✓ Audit event #1 logged
 
-## Key Features
+  ▶ Step 2/3: analyze-with-ai ───────────────────────────
+    Agent: llm │ Model: gpt-4o │ Tokens: 847
+    ✓ Prompt scrubbed before API call
+    ✓ Cost: $0.003 of $1.00 budget
+    ✓ Audit event #2 logged
 
-🔒 **Kernel-Hard Sandbox** — seccomp-bpf syscall filtering + cgroups v2 resource isolation on native Linux. Policy-based isolation on Docker (all platforms).
+  ▶ Step 3/3: save-results ─────────────────────────────
+    Agent: filesystem │ Action: write
+    ✓ Output saved to data/output/run_20250211_143052/
+    ✓ Audit event #3 logged
 
-🛡️ **PII Redaction** — 50+ detection patterns across 6 categories (personal, financial, health, digital, communication, location) including NPI, DEA, and medical records. Redaction happens before data reaches any LLM.
+══════════════════════════════════════════════════════════
+  ✅ Workflow complete │ 3 steps │ $0.003 │ 0 PII leaked
+══════════════════════════════════════════════════════════
+```
 
-📊 **Merkle Audit Trail** — Every action is cryptographically chained. Tamper-evident JSONL logs with SHA-256 proofs. Export to JSON for compliance reporting.
+## 🎯 Why AKIOS?
 
-💰 **Cost Kill-Switches** — Hard budget limits ($1 default) with automatic workflow termination. Token tracking across all providers.
+AI agents can **leak PII** to LLM providers, **run up massive bills**, execute **dangerous code**, and leave **no audit trail**. Every team building with LLMs faces this security engineering burden.
 
-🌐 **HTTPS Whitelist** — Network access locked to explicit domain allowlist. LLM APIs always pass through. Plain HTTP blocked in sandbox mode.
+AKIOS provides **compliance-by-construction** — security guarantees that are architectural, not bolted on:
 
-🤖 **5 LLM Providers** — OpenAI, Anthropic, Grok (xAI), Mistral, Gemini. Swap providers in one line of config.
+| | Without AKIOS | With AKIOS |
+|:---:|:---|:---|
+| 🚫 | PII leaks to LLM providers | **Automatic redaction** before any API call |
+| 💸 | Runaway API costs | **Hard budget limits** with kill-switches |
+| 📋 | No audit trail for compliance | **Cryptographic Merkle-chained** logs |
+| 🔓 | Manual security reviews | **Kernel-enforced** process isolation |
+| 🤞 | Hope-based security | **Proof-based** security |
 
-🗑️ **Data Destruction** — `cage down` destroys all session data (audit logs, inputs, outputs). Nothing remains.
+## 🛡️ Key Features
 
-🏥 **Industry Templates** — Healthcare (HIPAA), Banking (PCI-DSS), Insurance, Accounting (SOX), Government (FedRAMP), Legal — ready-to-run sector workflows.
+<table>
+<tr>
+<td width="50%">
 
-## How It Works
+### 🔒 Kernel-Hard Sandbox
+seccomp-bpf syscall filtering + cgroups v2 resource isolation on native Linux. Policy-based isolation on Docker (all platforms).
 
-AKIOS orchestrates YAML-defined workflows through 4 secure agents:
+### 🚫 PII Redaction Engine
+50+ detection patterns across 6 categories: personal, financial, health, digital, communication, location. Includes NPI, DEA, and medical records. Redaction happens **before** data reaches any LLM.
+
+### 📋 Merkle Audit Trail
+Every action is cryptographically chained. Tamper-evident JSONL logs with SHA-256 proofs. Export to JSON for compliance reporting.
+
+</td>
+<td width="50%">
+
+### 💰 Cost Kill-Switches
+Hard budget limits ($1 default) with automatic workflow termination. Token tracking across all providers. Real-time `akios status --budget` dashboard.
+
+### 🤖 Multi-Provider LLM Support
+OpenAI, Anthropic, Grok (xAI), Mistral, Gemini — swap providers in one line of config. All calls are sandboxed, audited, and budget-tracked.
+
+### 🏥 Industry Templates
+Healthcare (HIPAA), Banking (PCI-DSS), Insurance, Accounting (SOX), Government (FedRAMP), Legal — production-ready sector workflows out of the box.
+
+</td>
+</tr>
+</table>
+
+## 📝 Workflow Schema
+
+AKIOS orchestrates YAML-defined workflows through **4 secure agents** — each running inside the security cage:
 
 ```yaml
 # workflow.yml — every step runs inside the cage
 name: "document-analysis"
 steps:
   - name: "read-document"
-    agent: filesystem
+    agent: filesystem           # 📁 Path-whitelisted file access
     action: read
     parameters:
       path: "data/input/report.pdf"
 
   - name: "analyze-with-ai"
-    agent: llm
+    agent: llm                  # 🤖 Token-tracked, PII-scrubbed
     action: complete
     parameters:
       prompt: "Summarize this document: {previous_output}"
       model: "gpt-4o"
       max_tokens: 500
+
+  - name: "notify-team"
+    agent: http                 # 🌐 Domain-whitelisted, rate-limited
+    action: post
+    parameters:
+      url: "https://api.example.com/webhook"
+      json:
+        summary: "{previous_output}"
 ```
+
+<details>
+<summary><b>🔍 Preview what the LLM actually sees (after PII redaction)</b></summary>
 
 ```bash
-akios run workflow.yml
-# ✅ PII automatically redacted from prompt
-# ✅ Budget tracked ($0.003 of $1.00 used)
-# ✅ Audit event logged with Merkle proof
-# ✅ Output saved to data/output/run_*/
+$ akios protect show-prompt workflow.yml
+
+Interpolated prompt (redacted):
+  "Summarize this document: The patient [NAME_REDACTED] with
+   SSN [SSN_REDACTED] was seen at [ADDRESS_REDACTED]..."
+
+# 3 PII patterns redacted before reaching OpenAI
 ```
+</details>
 
-## Security Levels
+## 🔐 Security Levels
 
-| Environment | Isolation | PII | Audit | Budget |
-|-------------|-----------|-----|-------|--------|
-| **Native Linux** (recommended) | seccomp-bpf + cgroups v2 | ✅ | ✅ | ✅ |
-| **Docker** (all platforms) | Container + policy-based | ✅ | ✅ | ✅ |
+| Environment | Isolation | PII | Audit | Budget | Best For |
+|:---|:---|:---:|:---:|:---:|:---|
+| **Native Linux** | seccomp-bpf + cgroups v2 | ✅ | ✅ | ✅ | Production, maximum guarantees |
+| **Docker** (all platforms) | Container + policy-based | ✅ | ✅ | ✅ | Development, cross-platform |
 
-Native Linux provides kernel-level guarantees. Docker provides strong, reliable security across macOS, Linux, and Windows.
+> **Native Linux** provides kernel-level guarantees where dangerous syscalls are physically blocked. **Docker** provides strong, reliable security across macOS, Linux, and Windows.
 
-## CLI at a Glance
+## ⌨️ CLI Reference
 
-```bash
-akios init my-project          # Create secure workspace
-akios setup                    # Configure LLM provider (interactive)
-akios run workflow.yml         # Execute workflow in cage
-akios status                   # Security & budget dashboard
-akios status --budget          # Cost tracking breakdown
-akios cage up / down           # Activate / destroy cage + data
-akios protect scan file.txt    # Scan file for PII
-akios protect show-prompt w.yml # Preview what the LLM sees
-akios audit verify             # Verify Merkle integrity
-akios audit export --format json # Export for compliance
-akios doctor                   # System health check
-akios templates list           # Browse workflow templates
-akios http GET https://...     # Secure HTTP request
-```
+<table>
+<tr><th>Command</th><th>Description</th></tr>
+<tr><td><code>akios init my-project</code></td><td>Create secure workspace with templates</td></tr>
+<tr><td><code>akios setup</code></td><td>Configure LLM provider (interactive)</td></tr>
+<tr><td><code>akios run workflow.yml</code></td><td>Execute workflow inside security cage</td></tr>
+<tr><td><code>akios status</code></td><td>Security & budget dashboard</td></tr>
+<tr><td><code>akios status --budget</code></td><td>Cost tracking breakdown per workflow</td></tr>
+<tr><td><code>akios cage up / down</code></td><td>Activate / destroy cage + all data</td></tr>
+<tr><td><code>akios protect scan file.txt</code></td><td>Scan file for PII patterns</td></tr>
+<tr><td><code>akios protect show-prompt w.yml</code></td><td>Preview what the LLM sees (redacted)</td></tr>
+<tr><td><code>akios audit verify</code></td><td>Verify Merkle chain integrity</td></tr>
+<tr><td><code>akios audit export --format json</code></td><td>Export audit logs for compliance</td></tr>
+<tr><td><code>akios doctor</code></td><td>System health check</td></tr>
+<tr><td><code>akios templates list</code></td><td>Browse industry workflow templates</td></tr>
+<tr><td><code>akios http GET https://...</code></td><td>Secure HTTP request via agent</td></tr>
+</table>
 
-## Performance
+## ⚡ Performance
 
-Measured on AWS EC2 t4g.micro (ARM64, 1 GB RAM) — the smallest instance available:
+> Measured on AWS EC2 **t4g.micro** (ARM64, 1 GB RAM) — the smallest instance available.
 
-| Operation | Latency |
-|-----------|---------|
-| Full security pipeline (PII + policy + audit + budget) | **0.47 ms** |
-| PII scan (50+ patterns) | 0.46 ms |
-| SHA-256 Merkle hash | 0.001 ms |
-| CLI cold start (Docker) | ~1.4 s |
+| Operation | Latency | Notes |
+|:---|:---:|:---|
+| Full security pipeline | **0.47 ms** | PII + policy + audit + budget |
+| PII scan (50+ patterns) | 0.46 ms | All 6 categories |
+| SHA-256 Merkle hash | 0.001 ms | Per audit event |
+| CLI cold start (Docker) | ~1.4 s | One-time startup |
 
-Sub-millisecond overhead means security adds virtually zero cost to your workflows.
+**Sub-millisecond overhead** means security adds virtually zero cost to your workflows.
 
-> Reproducible: see [EC2 Performance Testing](docs/ec2-performance-testing.md) for methodology and validation procedures.
+<details>
+<summary><b>📊 Reproducibility & methodology</b></summary>
 
-## Documentation
+All benchmarks are reproducible. See [EC2 Performance Testing](docs/ec2-performance-testing.md) for the full methodology, validation procedures, and instructions to run on your own infrastructure.
 
-| Guide | Description |
-|-------|-------------|
-| [Getting Started](GETTING_STARTED.md) | 3-minute setup guide |
-| [CLI Reference](docs/cli-reference.md) | All commands and flags |
-| [Configuration](docs/configuration.md) | Settings, `.env`, `config.yaml` |
-| [Security](docs/security.md) | Architecture and threat model |
-| [Agents](AGENTS.md) | Filesystem, HTTP, LLM, Tool Executor |
-| [Deployment](docs/deployment.md) | Docker, native Linux, EC2 |
-| [Troubleshooting](TROUBLESHOOTING.md) | Common issues and fixes |
-| [Changelog](CHANGELOG.md) | Release history |
+</details>
 
-## Architecture
+## 📚 Documentation
+
+| | Guide | Description |
+|:---:|:---|:---|
+| 🚀 | [Getting Started](GETTING_STARTED.md) | 3-minute setup guide |
+| ⌨️ | [CLI Reference](docs/cli-reference.md) | All commands and flags |
+| ⚙️ | [Configuration](docs/configuration.md) | Settings, `.env`, `config.yaml` |
+| 🔒 | [Security](docs/security.md) | Architecture and threat model |
+| 🤖 | [Agents](AGENTS.md) | Filesystem, HTTP, LLM, Tool Executor |
+| 🐳 | [Deployment](docs/deployment.md) | Docker, native Linux, EC2 |
+| 🔧 | [Troubleshooting](TROUBLESHOOTING.md) | Common issues and fixes |
+| 📝 | [Changelog](CHANGELOG.md) | Release history |
+
+## 🏛️ Project Structure
+
+<details>
+<summary><b>Click to expand source tree</b></summary>
 
 ```
 src/akios/
@@ -195,34 +288,36 @@ src/akios/
 └── config/         # YAML + .env configuration
 ```
 
-## Research
+</details>
+
+## 🔬 Research
 
 AKIOS introduces **compliance-by-construction** — the idea that security guarantees should be architectural properties of the runtime, not features that can be misconfigured or bypassed.
 
-Our NeurIPS 2026 submission formalizes this paradigm. Preprint coming soon on arXiv.
+> Our NeurIPS 2026 submission formalizes this paradigm. Preprint coming soon on arXiv.
 
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ```bash
-# Development setup
 git clone https://github.com/akios-ai/akios.git
 cd akios
-make build          # Build Docker image
-make test           # Run test suite
+make build    # Build Docker image
+make test     # Run test suite
 ```
 
 Good first issues are tagged with [`good first issue`](https://github.com/akios-ai/akios/labels/good%20first%20issue).
 
-## Community
+## 💬 Community
 
 - 📖 [Documentation](docs/README.md)
 - 💬 [GitHub Discussions](https://github.com/akios-ai/akios/discussions)
 - 🐛 [Issue Tracker](https://github.com/akios-ai/akios/issues)
 - 🔒 Security issues → [security@akioud.ai](mailto:security@akioud.ai) (private disclosure)
 
-## ⚖️ Legal & Disclaimers
+<details>
+<summary><b>⚖️ Legal & Disclaimers</b></summary>
 
 > **EU AI Act:** AKIOS is not designed for "high-risk" use cases under the EU AI Act. For such deployments, consult a compliance expert and implement additional regulatory controls on top of AKIOS.
 
@@ -236,7 +331,9 @@ Good first issues are tagged with [`good first issue`](https://github.com/akios-
 
 AKIOS is **not responsible** for: cloud infrastructure charges, credential leaks, data breaches from misconfigured deployments, performance on untested platforms, or regulatory compliance decisions. See [LEGAL.md](LEGAL.md) and [SECURITY.md](SECURITY.md) for full details.
 
-## License
+</details>
+
+## 📄 License
 
 AKIOS is licensed under [GPL-3.0-only](LICENSE).
 See [NOTICE](NOTICE), [LEGAL.md](LEGAL.md), and [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
@@ -247,4 +344,6 @@ See [NOTICE](NOTICE), [LEGAL.md](LEGAL.md), and [THIRD_PARTY_LICENSES.md](THIRD_
   <strong>Run AI agents safely — anywhere.</strong>
   <br><br>
   <a href="GETTING_STARTED.md">Get Started</a> · <a href="docs/cli-reference.md">CLI Reference</a> · <a href="AGENTS.md">Agents</a> · <a href="CHANGELOG.md">Changelog</a>
+  <br><br>
+  <sub>Built by <a href="https://github.com/akios-ai">akios-ai</a> · Licensed under <a href="LICENSE">GPL-3.0-only</a></sub>
 </div>
