@@ -277,15 +277,25 @@ All benchmarks are reproducible. See [EC2 Performance Testing](docs/ec2-performa
 
 ```
 src/akios/
-├── cli/            # 18 CLI commands (argparse)
+├── cli/                        # 18 CLI commands (argparse)
+│   └── commands/               # audit, compliance, doctor, http, protect, run, ...
+├── config/                     # YAML + .env configuration, themes, detection
 ├── core/
-│   ├── engine.py   # Sequential workflow orchestrator
-│   ├── agents/     # LLM, HTTP, Filesystem, ToolExecutor
-│   ├── audit/      # Merkle-chained JSONL ledger
-│   └── sandbox.py  # seccomp-bpf + cgroups v2
-├── security/
-│   └── pii/        # 50+ regex patterns, 6 categories
-└── config/         # YAML + .env configuration
+│   ├── analytics/              # Cost tracking (cost_tracker.py)
+│   ├── audit/                  # Merkle-chained JSONL ledger
+│   │   └── merkle/             # SHA-256 Merkle tree (tree.py, node.py)
+│   ├── compliance/             # Compliance report generation
+│   ├── runtime/
+│   │   ├── agents/             # LLM, HTTP, Filesystem, ToolExecutor
+│   │   ├── engine/             # Workflow orchestrator + kill switches
+│   │   ├── llm_providers/      # OpenAI, Anthropic, Grok, Mistral, Gemini
+│   │   └── workflow/           # YAML parser + validator
+│   └── ui/                     # Rich terminal output, PII display, colors
+└── security/
+    ├── pii/                    # 50+ regex patterns, 6 categories (detector, redactor, rules)
+    ├── sandbox/                # cgroups v2 resource isolation (manager, quotas)
+    ├── syscall/                # seccomp-bpf policy + interceptor
+    └── validation.py           # Runtime security validation
 ```
 
 </details>
