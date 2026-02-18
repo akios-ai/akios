@@ -353,7 +353,7 @@ paths:
 audit:
   enabled: true
   storage_path: ./audit
-  export_format: pdf              # pdf, json, csv
+  export_format: json             # json (default)
 
 # Performance
 performance:

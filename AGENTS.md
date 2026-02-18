@@ -342,6 +342,8 @@ Safe, commonly needed commands:
 - `wc`, `sort`, `uniq`, `cut`, `tr`
 - `date`, `pwd`, `ls`
 - `find`, `ps`, `df`, `free`
+- `sh`, `true`, `false`, `sleep`
+- `env`, `file`
 
 ### Resource Limits
 

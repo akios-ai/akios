@@ -2,7 +2,7 @@
 
 ## Overview
 
-AKIOS v1.0.5 introduces a **Semantic Rich-powered terminal UI** for professional, structured output. The system enforces a strict semantic color scheme to ensure consistency, accessibility, and security-focused aesthetics across all environments.
+AKIOS v1.0.6 includes a **Semantic Rich-powered terminal UI** for professional, structured output. The system enforces a strict semantic color scheme to ensure consistency, accessibility, and security-focused aesthetics across all environments.
 
 ## Features
 

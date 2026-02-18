@@ -154,7 +154,7 @@ akios init my-project
 cd my-project
 ```
 
-### 3. Configure API Access
+### 4. Configure API Access
 
 AKIOS includes an interactive setup wizard that makes configuration effortless.
 
@@ -181,7 +181,7 @@ cp .env.example .env
 # Edit .env and add your API key
 ```
 
-### 4. Run Your First Workflow
+### 5. Run Your First Workflow
 ```bash
 # See available templates
 akios templates list
@@ -192,7 +192,7 @@ akios run templates/hello-workflow.yml
 
 **🎉 Success!** You'll see real AI output and security features in action.
 
-### 5. Explore More (Optional)
+### 6. Explore More (Optional)
 ```bash
 # Check project status anytime
 akios status

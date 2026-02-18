@@ -28,7 +28,7 @@
 
 AKIOS (AI Knowledge & Intelligence Operating System) is a **security-first runtime** for AI agent workflows that provides:
 
-### 🛡️ **Military-Grade Security**
+### 🛡️ **Kernel-Level Security**
 - **Sandboxing**: Complete process isolation (kernel-hard on native Linux, strong policy-based in Docker)
 - **PII Protection**: Automatic sensitive data redaction
 - **Audit Trails**: Cryptographic logging of all operations
@@ -90,10 +90,12 @@ cd my-project
 akios run templates/hello-workflow.yml
 ```
 
-> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.6). 
 > For specific versions: `pip install akios==1.0.6`.
 
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
+
+> *Note: The "Pip Package" section below provides equivalent instructions with additional detail.*
 
 #### 🐧 **Pip Package** (For Python Developers)
 **Maximum security on native Linux:**
@@ -116,7 +118,7 @@ cd my-project
 akios run templates/hello-workflow.yml
 ```
 
-> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0). 
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.6). 
 > For specific versions: `pip install akios==1.0.6`.
 > **🛡️ Security Note:** On Linux, `pip install akios` includes the seccomp module for kernel-hard security. Run with `sudo` for full protection.
 
@@ -684,7 +686,7 @@ AKIOS_BUDGET_LIMIT_PER_RUN=5.0
 
 ### Security Cage
 
-AKIOS v1.0.5 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
+AKIOS v1.0.6 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
 
 **Activate the cage:**
 ```bash

@@ -187,19 +187,17 @@ AKIOS may be subject to French and EU export control regulations. Users must com
 ### Performance Validation Responsibility
 
 **AKIOS validates and documents:**
-- ✅ Baseline performance on t3.medium EC2 (25ms startup, 44.44 wf/s)
-- ✅ Docker performance on all platforms (<1000ms startup, >5 wf/s)
-- ✅ Scaling characteristics (100% efficient on native Linux)
+- ✅ Security pipeline overhead on AWS EC2 t4g.micro (0.47 ms full pipeline)
+- ✅ Docker performance on all platforms (sub-2s startup, functional security)
 - ✅ Security overhead analysis (policy-based vs kernel-hard)
 
 **YOU must validate:**
-- ✅ Performance on YOUR instance type (use provided testing guide)
-- ✅ Performance in YOUR region and network conditions
+- ✅ Performance on YOUR instance type and region
 - ✅ Performance meets YOUR application requirements
 - ✅ Cost-benefit trade-offs for your use case
 - ✅ Compatibility with your existing systems
 
-See [EC2 Performance Testing Guide](./docs/ec2-performance-testing.md) for complete validation procedures.
+See [EC2 Performance Testing Guide](./docs/ec2-performance-testing.md) for validation procedures.
 
 ### Compliance Responsibility
 
@@ -232,7 +230,7 @@ YOU are responsible for:
    - I am responsible for additional security measures appropriate to my use case
 
 2. **I understand the performance metrics**
-   - AKIOS achieves documented baselines on t3.medium EC2 and Docker
+   - AKIOS achieves documented baselines on t4g.micro EC2 (0.47 ms security pipeline) and Docker
    - Performance on other infrastructure may differ
    - I will validate performance on MY infrastructure before production use
 

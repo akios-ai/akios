@@ -16,7 +16,7 @@
 ✅ **Security of the AKIOS sandbox** (if you follow security best practices)  
 ✅ **PII redaction works as documented**  
 ✅ **Audit trails are cryptographically sound**  
-✅ **Performance on t3.medium instances** (our baseline test platform)
+✅ **Performance on t4g.micro instances** (our validated baseline: 0.47 ms security pipeline)
 
 #### What AKIOS Does NOT Guarantee
 ❌ **AWS infrastructure performance** beyond our tested configuration  
@@ -86,15 +86,14 @@
 
 ### Choose Based on Your Use Case
 
-| Use Case | Recommended | vCPU | Memory | Baseline Performance | Cost/Month | Notes |
-|----------|------------|------|--------|----------------------|-----------|-------|
-| **Testing & Learning** | t3.medium | 2 | 4GB | 25ms startup, 44.44 wf/s | ~$15 | ⭐ AKIOS validated baseline |
-| **Light Production** | t3.large | 2 | 8GB | ~20ms startup, ~80 wf/s | ~$30 | 2x resources, burstable |
-| **Standard Production** | t3.xlarge | 4 | 16GB | ~15ms startup, ~120 wf/s | ~$60 | 4x resources, high burst |
-| **High Performance** | c6i.large | 2 | 4GB | ~18ms startup, ~90 wf/s | ~$70 | Compute optimized |
-| **Very High Volume** | c6i.2xlarge | 8 | 16GB | ~10ms startup, ~250+ wf/s | ~$280 | Extreme performance |
-| **Memory Intensive** | r6i.large | 2 | 16GB | ~22ms startup, ~50 wf/s | ~$150 | Memory optimized |
-| **Budget Testing** | t3.small | 1 | 2GB | ~50ms startup, ~20 wf/s | ~$8 | Minimal resources |
+| Use Case | Recommended | vCPU | Memory | Security Pipeline | Cost/Month | Notes |
+|----------|------------|------|--------|-------------------|-----------|-------|
+| **Budget Testing** | t4g.micro | 1 | 1GB | **0.47 ms** | ~$3 | ⭐ AKIOS validated baseline |
+| **Testing & Learning** | t3.medium | 2 | 4GB | ~0.4 ms (est.) | ~$15 | Good general testing |
+| **Light Production** | t3.large | 2 | 8GB | ~0.4 ms (est.) | ~$30 | 2x resources, burstable |
+| **Standard Production** | t3.xlarge | 4 | 16GB | ~0.4 ms (est.) | ~$60 | 4x resources, high burst |
+| **Compute Optimized** | c6i.large | 2 | 4GB | ~0.3 ms (est.) | ~$70 | Sustained performance |
+| **High Volume** | c6i.2xlarge | 8 | 16GB | ~0.3 ms (est.) | ~$280 | Multi-workflow parallel |
 
 **Legend:**
 - ⭐ **AKIOS Validated:** We officially test & validate on this instance
@@ -109,7 +108,7 @@
 - Burst to higher performance when needed
 - Cost-effective for non-continuous workloads
 - Good for development & testing
-- **Example:** `t3.medium` for AKIOS testing (our validated baseline)
+- **Example:** `t3.medium` for AKIOS testing
 
 #### **c6i Family** (Compute Optimized)
 **Best for:** Sustained high-performance workloads
@@ -141,7 +140,7 @@ Performance may vary by region due to:
 - Regional pricing differences
 - Data center hardware variations
 
-**AKIOS validated in:** `us-east-1` (N. Virginia)
+**AKIOS validated on:** `t4g.micro` in `us-east-1` (N. Virginia)
 
 **For other regions:**
 - Performance characteristics may differ
@@ -155,36 +154,32 @@ Performance may vary by region due to:
 
 ### Performance Scaling Model
 
-**Based on AKIOS v1.0.6 validation:**
+**Based on AKIOS v1.0.6 validation on t4g.micro (ARM64, 1 GB RAM):**
 
 ```
-Startup Latency:  ~25ms (base on t3.medium)
-                  = baseline_latency + per_workflow_setup
-
-Throughput:       ~44.44 wf/s (on t3.medium)
-                  = CPU_count * base_throughput * scaling_factor
-
-Memory Usage:     ~21MB (base + workflow data)
-                  = constant_overhead + variable_per_workflow
+Security Pipeline:  0.47 ms (full pipeline: PII + policy + audit + budget)
+PII Scan:           0.46 ms (40+ regex patterns)
+Merkle Hash:        0.001 ms (SHA-256)
+Docker Cold Start:  ~1.4 s
 ```
 
-### Performance Projections
+> **Note:** These are the only validated benchmarks. Performance on larger instances
+> will be comparable or better. Run the benchmark script on your instance to get
+> your own numbers.
 
-| Instance | vCPU | Expected Startup | Expected Throughput | Scaling |
-|----------|------|-----------------|-------------------|---------|
-| t3.medium | 2 | **25ms** ⭐ | **44.44 wf/s** ⭐ | Baseline |
-| t3.large | 2 | ~22ms | ~60 wf/s | +35% (more burst) |
-| t3.xlarge | 4 | ~20ms | ~100 wf/s | +125% (2x capacity) |
-| c6i.large | 2 | ~20ms | ~80 wf/s | +80% (always fast) |
-| c6i.2xlarge | 8 | ~15ms | ~280 wf/s | +520% (extreme) |
-| r6i.large | 2 | ~22ms | ~50 wf/s | +12% (memory overhead) |
-| t3.small | 1 | ~40ms | ~22 wf/s | -50% (half resources) |
+### Performance by Instance Type
 
-**⚠️ Important:**
-- These are **projections** based on EC2 architecture
-- Actual results depend on workload, instance load, AWS region
-- **Test on YOUR instance before assuming performance**
-- Burstable instances (t3) vary based on CPU credit balance
+The security pipeline overhead (0.47 ms) is CPU-bound and will be comparable or better on any instance with equal or greater compute resources than t4g.micro.
+
+| Instance | vCPU | RAM | Security Pipeline | Status |
+|----------|------|-----|-------------------|--------|
+| t4g.micro | 1 | 1 GB | **0.47 ms** | ⭐ Validated |
+| t3.medium | 2 | 4 GB | ≤ 0.47 ms (est.) | Not yet validated |
+| c6i.large | 2 | 4 GB | ≤ 0.47 ms (est.) | Not yet validated |
+| c6i.2xlarge | 8 | 16 GB | ≤ 0.47 ms (est.) | Not yet validated |
+
+⚠️ **Run `benchmark.sh` on your target instance to get validated numbers.**
+Do not assume these estimates for production capacity planning.
 
 ---
 
@@ -645,7 +640,7 @@ CLEANUP
 > - Compliance with AWS terms of service
 > - Data security and privacy in their workflows
 > 
-> AKIOS provides performance validation scripts and baseline metrics to help users validate their setup, but does NOT guarantee specific performance on any instance other than t3.medium in us-east-1.
+> AKIOS provides performance validation scripts and baseline metrics (validated on t4g.micro in us-east-1) to help users validate their setup, but does NOT guarantee specific performance on any other instance type.
 > 
 > By using AKIOS on AWS EC2, you accept full responsibility for your infrastructure, costs, and data security.
 

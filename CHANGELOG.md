@@ -172,40 +172,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-01-24
 
 ### Added
-- **🚀 Hybrid Distribution**: Revolutionary multi-deployment options
-  - **Standalone Binaries**: Zero-dependency executables for instant deployment
-    - Linux x64/ARM64, macOS Universal, Windows x64 binaries
-    - Air-gapped capable, no Python/Docker required
-    - SHA256 cryptographic verification for all downloads
-  - **Pip Packages**: Maximum security with kernel-hard features on Linux
-  - **Docker Containers**: Cross-platform consistency with policy-based security
+- **🚀 Multi-Deployment Options**
+  - **Pip Package**: Maximum security with kernel-hard features on Linux
+  - **Docker Container**: Cross-platform consistency with policy-based security
 - **🔒 Enhanced Security Architecture**: Defense-in-depth across all platforms
   - **Native Linux**: seccomp-bpf + cgroups v2 kernel-hard isolation
   - **Docker**: Policy-based container security (allowlisting, PII redaction, audit)
-  - **Binaries**: Embedded security with platform-appropriate isolation
   - **Unified PII Protection**: 50+ pattern detection, real-time redaction
   - **Cryptographic Audit Trails**: Merkle tree verification, tamper-evident logs
-- **⚡ Zero-Setup Deployment**: Download-and-run experience
-  - Pre-built binaries with all dependencies included
-  - Cross-platform compatibility (Linux/macOS/Windows)
-  - Instant startup, no configuration required
 - **📊 Production-Ready Features**: Complete AI workflow security
   - Real AI provider integration (OpenAI, Anthropic, Grok, Mistral, Gemini)
   - Cost kill-switches ($1.00 default budget limits)
   - Resource controls (CPU, memory, file size limits)
   - Comprehensive error handling and recovery
-- **🎯 Perfect User Experience**: 10/10 UX across all interactions
+- **🎯 User Experience**
   - **Terminal Width Awareness**: Templates list adapts to screen width
   - **File Discovery Commands**: `akios files` shows available input/output files
   - **Enhanced Template Guidance**: Clear file availability and usage tips
   - **Improved Progress Feedback**: Better status indicators and next steps
-  - **10/10 Setup Wizard**: Revolutionary user onboarding experience
-    - **Mock-First Approach**: 80% of users can test instantly without API keys
-    - **Skip Option**: Visible from start, no obligation to configure
-    - **Dynamic Pricing Examples**: Budget explanations adapt to selected provider
-    - **Real-Time Validation**: Spinner feedback during API key testing
-    - **Forgiving UX**: Backup options, cancel anytime, clear defaults
-    - **Professional Polish**: Bold headers, inline previews, actionable next steps
+  - **Setup Wizard** with mock-first approach, skip option, dynamic pricing examples, real-time API key validation, and forgiving UX
   - **Comprehensive Help System**: Complete command documentation
 - **📚 Complete Documentation Suite**: User experience focused
   - Installation decision tree and platform guidance
@@ -219,22 +204,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Version synchronization across all components
 
 ### Changed
-- **Installation Experience**: From single Docker method to hybrid distribution choice
+- **Installation Experience**: From single Docker method to pip + Docker dual deployment
 - **Security Communication**: Clear platform capability explanations
 - **Documentation Structure**: Comprehensive user guides and troubleshooting
 - **Release Process**: Automated pipeline with quality assurance
 
 ### Security
-- **Military-grade sandboxing** with platform-appropriate isolation
+- **Kernel-level sandboxing** with platform-appropriate isolation
 - **Automatic PII redaction** across all deployment methods
 - **Cryptographic audit trails** with integrity verification
 - **Cost and resource controls** preventing abuse
 - **Tamper-evident logging** for regulatory compliance
-- **SHA256 verification** for all binary downloads
 
 ### Technical
-- **Cross-platform binary builds** using PyInstaller unified specs
-- **Embedded dependencies** eliminating external requirements
 - **Platform-specific optimizations** for performance and security
 - **Unified configuration** across all deployment methods
 - **Automated testing** and quality assurance pipelines
