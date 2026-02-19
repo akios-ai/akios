@@ -1,110 +1,97 @@
-# AKIOS Roadmap – v1.0, Future Open & PRO  
-**Document Version:** 1.0.6  
-**Date:** 2026-02-13  
+# AKIOS Roadmap
+**Document Version:** 1.0.7  
+**Date:** 2026-02-19  
+**License:** GPL-3.0-only  
 
-This roadmap clearly separates the three tracks:  
-- **AKIOS Open Runtime v1.0** (free, minimal security cage – locked)  
-- **Future Open Releases** (V1.x / V2.0 – gradual usability improvements, community-driven)  
-- **AKIOS PRO** (paid legal upgrade – regulated sectors only)
+This roadmap covers the open-source AKIOS project — the security-cage runtime for AI agents.
 
-No feature bleed. Open stays clean & viral. PRO captures regulated industry.
+---
 
-### 1. AKIOS Open Runtime v1.0 – Current & Locked (January 2026)
+## Current: AKIOS v1.0 (January 2026)
 
-**Focus**: Strong cross-platform security foundation – Docker-based protection
-**License**: GPL-3.0-only (free, open-source)
-**Status**: ✅ Final & locked – ship this
+**Focus:** Strong cross-platform security foundation  
+**Status:** ✅ Released and stable
 
-**Key Features (no changes allowed)**:
-- Policy-based container isolation (Docker security across all platforms)
-- Full kernel-hard sandbox on native Linux (cgroups + seccomp + resource quotas)
-- Syscall-level I/O interception & access control (Linux native)
-- Real-time PII redaction (>95% accuracy, <50ms)
-- Cryptographic Merkle tamper-evident audit ledger + clean PDF/JSON export
+### What's Shipped
+- Policy-based container isolation (Docker + native Linux cgroups v2 + seccomp-bpf)
+- Real-time PII redaction (50+ patterns, 6 categories, >95% accuracy, <1ms overhead)
+- Cryptographic Merkle tamper-evident audit ledger + PDF/JSON export
 - Hard cost & infinite loop kill-switches
-- Sequential execution only
-- 4 core agents: LLM, HTTP/web, Filesystem, Tool Executor
-- Minimal CLI (20 commands: init, run, status, cage, doctor, templates, files, logs, audit, clean, setup, compliance, testing, output, timeline, docs, protect, http)
-- 3–4 high-quality static example workflows
-- Docker wrapper + native Linux binary (cross-platform capable)
+- 4 core agents: LLM, HTTP, Filesystem, Tool Executor
+- Multi-provider LLM support (OpenAI, Anthropic, Grok, Mistral, Gemini)
+- 20-command CLI with Rich UI panels
+- Docker wrapper + native Linux sandbox
+- 6 sector demo workflows (healthcare, banking, insurance, accounting, government, legal)
+- 0.47ms enforcement overhead (benchmarked on EC2 t4g.micro ARM64)
 
-**Philosophy**: Minimal by design. Strong security foundation across all platforms.
+---
 
-### 2. Future Open Releases (V1.x / V2.0) – Planned Gradual Improvements
+## Next: v1.0.7 — "Integrity" (Target: March 2026)
 
-**Focus**: Make the cage more usable without diluting security  
-**License**: GPL-3.0-only (free, open-source)  
-**Timeline**: 2026–2027 (no fixed dates – community & contributor-driven)
+**Theme:** Fix critical integrity issues. No new features — only truth.
 
-**Prioritized Evolution** (rough order – no promises on dates):
+- **Real compliance scoring** — replace hardcoded scores with actual computed values
+- **Audit log integrity** — fix 10K event cap, Merkle coverage gaps, O(n²) appends. Add log rotation
+- **Secure data erasure** — overwrite-before-delete for `cage down` (GDPR Art. 17)
+- **PII pattern overlaps** — resolve duplicate regexes, fix ICD-10 misclassification
+- **Ablation benchmark support** — toggle individual enforcement primitives for research
+- **Multi-instance benchmarks** — validate performance across ARM64 and x86_64 instances
+- **Workflow validation** — expand `akios workflow` beyond stub
+- **Repo hygiene** — remove dead dependencies and duplicate files
 
-**V1.1 – Usability & Developer Experience** (High Priority – Next logical step)  
-- Full CLI suite (15–23 essential commands)  
-- Basic REST API (20–30 endpoints)  
-- 10+ high-quality example templates  
-- Improved logging & error messages  
-- Configuration documentation generator  
+---
 
-**V1.2 – Orchestration Expansion** (Medium–High Priority)  
-- Parallel simple + conditional execution  
-- Loop & retry patterns  
-- Fan-out / map-reduce basics  
-- Enhanced state persistence (filesystem only)  
-- Basic multi-agent coordination  
+## v1.0.8 — "Science + Orchestration" (Target: May 2026)
 
-**V1.3 – Agent Ecosystem Growth** (Medium Priority)  
-- Database connectors (PostgreSQL, SQLite)  
-- Email & Slack agents  
-- GitHub agent (issue/comment/PR)  
-- Webhooks receiver  
-- More local model support (llama.cpp, etc.)  
+**Theme:** Research-grade evaluation AND workflow improvements.
 
-**V2.0 Horizon – Advanced** (Low Priority – Long-term)  
-- Prometheus / Jaeger basic integration  
-- Plugin system for community agents  
-- Basic multi-tenant isolation  
-- Community marketplace for templates/agents  
+- **Pluggable PII backend** — abstract detector interface; support regex (default) and Presidio
+- **LangGraph integration** — working example of LangGraph tool calls through AKIOS enforcement
+- **TLA+ formal specification** — model-checked safety invariants for the enforcement pipeline
+- **PII accuracy evaluation** — annotated test corpus with precision/recall/F1 by category
+- **Conditional execution** — `condition` field on workflow steps
+- **Error recovery & retry** — `retry` and `on_error` fields with configurable backoff
+- **Step output piping** — structured JSON output, JSONPath references between steps
+- **Engine refactoring** — split monolithic engine.py into focused modules
 
-**Guiding Rules for All Future Open Releases**:
-1. Security & governance first — every feature must preserve or strengthen the cage  
-2. Minimalism remains — add only what makes the cage more usable for security-conscious users  
-3. No legal/certified features — FranceConnect, eIDAS, hard HDS, official PDFs → PRO only  
-4. Community-driven — priorities shift based on real user needs & contributions  
-5. No fixed dates — progress depends on contributors & core team
+---
 
-### 3. AKIOS PRO – Paid Legal Upgrade (Q2–Q3 2026 Initial Launch)
+## v1.0.9 — "Integration" (Target: July 2026)
 
-**Focus**: Instant legal permission for regulated/high-risk use  
-**License**: Proprietary (encrypted plugin + license key)  
-**Pricing**: €48,000+/year (unlimited agents, on-prem)  
-**Status**: Planned – after v1.0 Open ships
+**Theme:** Programmatic access for self-hosted deployments.
 
-**Exclusive Features** (only these in initial PRO – no more):
-- FranceConnect / ProConnect-S official identity verification  
-- La Poste qualified eIDAS timestamping & signatures  
-- Official 12-page regulator-ready PDF reports (CNIL/ANSM templates)  
-- Hard HDS/SecNumCloud enforcement blocks  
-- Qualified eIDAS human approval workflows  
-- License validation & basic usage tracking  
+- **REST API** — self-hosted FastAPI server (`akios serve`) with workflow execution, audit, compliance, and status endpoints. OpenAPI/Swagger auto-generated
+- **Webhook agent** — new agent for workflow event notifications (Slack, Discord, Teams)
+- **Parallel step execution** — `parallel:` blocks with per-step sandboxing
+- **SQLite state persistence** — replace in-memory state for workflow resume and history
 
-**How it works**:  
-- Load encrypted plugin + valid license key  
-- Same workflows, same infrastructure  
-- `--fr-strict` mode activates PRO features  
-- Fallback to open behavior if no/invalid license  
+---
 
-**Target Customers**:  
-- Banks & insurance  
-- Hospitals & health  
-- Public sector & administrations  
-- Any EU AI Act high-risk deployment
+## v2.0 — "Platform" (Target: Q4 2026)
 
-**No** distributed clustering, AI governance, threat detection, multi-cloud optimization in initial PRO — those are future expansions.
+**Theme:** From CLI tool to security platform.
 
-### 4. Timeline Summary (High-Level)
+- Plugin system for community agents (pip-installable)
+- Database agents (PostgreSQL, SQLite with query whitelisting)
+- Fan-out / map-reduce execution patterns
+- Prometheus metrics + OpenTelemetry traces
+- Community template marketplace
+- Streaming LLM output with per-token PII filtering
+- Multi-tenant isolation
 
-- **Jan 2026**: AKIOS Open v1.0 launch (free cage)  
-- **2026**: V1.x open releases (gradual usability)  
-- **Q2–Q3 2026**: AKIOS PRO initial pilots & launch (€48k+)  
-- **2027+**: PRO expansions (if demand justifies)
+---
+
+## Guiding Principles
+
+1. **Security first** — every feature must preserve or strengthen the cage
+2. **Minimalism** — add only what makes the cage more useful
+3. **Honesty** — no hardcoded scores, no fake benchmarks, no approximated claims
+4. **Community-driven** — priorities shift based on real user needs and contributions
+5. **Backward compatible** — workflow YAML is additive only; deprecated CLI flags warn for 2 minor versions
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get involved. Feature requests and bug reports welcome via GitHub Issues.
 

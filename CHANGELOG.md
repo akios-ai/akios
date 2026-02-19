@@ -1,11 +1,35 @@
 # Changelog
-**Document Version:** 1.0.6  
+**Document Version:** 1.0.7  
 **Date:** 2026-02-12  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.7] - 2026-02-12
+
+### Added
+- **📊 `akios audit stats`** — Show audit ledger statistics: event count, ledger size, archive segments, Merkle root hash, rotation threshold. Supports `--json` output.
+- **🔄 `akios audit rotate`** — Manually trigger audit log rotation with Merkle chain linkage. Archives current ledger and starts fresh. Supports `--json` output.
+- **✅ `akios workflow validate <file.yml>`** — Validate workflow YAML against the AKIOS schema: YAML syntax, required fields, agent/action existence, step schema, file path existence warnings. Supports `--json` output. (WI-6)
+- **🧪 Ablation study support** — `akios cage up --no-pii --no-audit --no-budget` flags for controlled benchmarking. Engine respects these flags: audit event emission and cost kill-switch enforcement are conditional on settings. (WI-5)
+- **🔑 `context_keywords` field on PIIPattern** — Ambiguous patterns (france_id, germany_id, bank_account_us, routing_number) now carry context keywords for disambiguation. (WI-4)
+
+### Changed
+- **🏦 Routing number pattern** — Now requires context keyword prefix (routing, aba, transit) instead of matching any bare 9-digit number. Reduces false positives significantly. (WI-4)
+- **🗑️ `cage down --passes N`** — Configure number of secure overwrite passes for data erasure (default: 1). More passes increase security; SSD caveat documented. (WI-3)
+- **⚡ `cage down --fast`** — Skip secure overwrite for speed; files deleted without shredding. Warning displayed when used. (WI-3)
+- **🔐 Audit log integrity** — No silent event drops; O(1) event counter; automatic log rotation at 50K events with Merkle chain linkage between segments. (WI-2)
+- **📈 Real compliance scoring** — Compliance report uses weighted scoring (PII 30%, Audit 25%, Security 25%, Config 20%) instead of binary pass/fail. (WI-1)
+
+### Security
+- **Engine ablation guards** — `audit_enabled=False` suppresses all audit event emission in the runtime engine. `cost_kill_enabled=False` disables budget enforcement. Prevents ablation benchmarks from generating noise. (WI-5)
+- **Secure data erasure** — `_secure_overwrite_file()` performs random bytes → fsync → zeros → fsync → unlink per pass. SSD wear-leveling caveat documented. (WI-3)
+
+### Fixed
+- **Dead dependency removed** — Removed unused `click` from pyproject.toml and requirements.txt. (WI-7)
+- **Repository hygiene** — 18 duplicate/stale files removed, .gitignore updated. (WI-8)
 
 ## [1.0.6] - 2026-02-12
 

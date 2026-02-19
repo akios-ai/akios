@@ -769,7 +769,7 @@ Welcome to your AKIOS (AI Knowledge & Intelligence Operating System) project! Th
 
    **Direct Docker (if you do not have `{get_command_prefix()}`):**
    ```bash
-   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 run templates/hello-workflow.yml
+   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 run templates/hello-workflow.yml
    ```
 
 2. **Configure for API workflows** (if using batch_processing.yml):
@@ -838,7 +838,7 @@ AKIOS comes with 4 pre-built workflow templates. Here's what each one does:
 {FILE_ANALYSIS_COMMAND}
 
 # Direct Docker (if you do not have {get_command_prefix()})
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 run templates/hello-workflow.yml
 ```
 
 ### Creating Custom Workflows

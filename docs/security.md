@@ -1,10 +1,10 @@
 # Security Features
-**Document Version:** 1.0.6  
-**Date:** 2026-02-12  
+**Document Version:** 1.0.7  
+**Date:** 2026-02-21  
 
 ## Security Overview
 
-AKIOS v1.0.6 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
+AKIOS v1.0.7 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
 
 ## Supported Versions
 
@@ -45,6 +45,9 @@ The Security Cage is the core abstraction — a controlled environment where AI 
 # Activate full security: PII redaction, network lock, sandbox, audit
 akios cage up
 
+# Ablation mode — disable specific protections for benchmarking
+akios cage up --no-pii --no-audit --no-budget
+
 # Check current security posture
 akios cage status
 
@@ -64,6 +67,12 @@ When the cage is **ACTIVE**, these protections are enforced:
 ```bash
 # Full cage down — destroy ALL session data (default)
 akios cage down
+
+# Secure overwrite with multiple passes (GDPR Art. 17)
+akios cage down --passes 3
+
+# Fast mode — skip secure overwrite for speed (dev only)
+akios cage down --fast
 
 # Dev mode — relax protections but keep data for debugging
 akios cage down --keep-data
@@ -210,6 +219,14 @@ akios audit verify
 
 # Machine-readable verification (includes stored root and match status)
 akios audit verify --json
+
+# View audit ledger statistics (event count, size, Merkle root)
+akios audit stats
+akios audit stats --json
+
+# Rotate audit log (archive current + start fresh with Merkle chain linkage)
+akios audit rotate
+akios audit rotate --json
 
 # Export full audit trail for compliance systems
 akios audit export --json

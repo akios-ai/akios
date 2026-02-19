@@ -117,11 +117,11 @@ chmod +x akios
 ### For **Emergency Recovery**
 ```bash
 # Direct Docker - When wrapper download fails
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 init my-project
 cd my-project
 # Create wrapper for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 "$@"' > akios
 chmod +x akios
 ```
 

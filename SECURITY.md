@@ -53,6 +53,12 @@ Send private reports to: **security@akioud.ai**
 - `cage up` → activate protections → workflows execute → data generated
 - `cage down` → **all data destroyed** (audit/, data/output/, data/input/) → zero residue
 
+**Secure Data Erasure (cage down):**
+- Each file is overwritten with cryptographically random bytes, fsynced to disk, overwritten with zeros, fsynced again, then deleted (`unlink`)
+- `--passes N` option repeats the overwrite cycle N times (default: 1)
+- `--fast` option skips overwrite and just deletes (for CI/CD cleanup where forensic recovery is not a concern)
+- ⚠️ **SSD caveat**: On solid-state drives with wear-leveling, overwritten sectors may be remapped. Extra passes have limited benefit. For maximum security on SSDs, use full-disk encryption (LUKS/FileVault) as the underlying layer.
+
 **Network Security:**
 - Default: All network access blocked
 - `allowed_domains` whitelist for HTTP agent (specific domains only)

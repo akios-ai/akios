@@ -118,6 +118,30 @@ def register_audit_command(subparsers: argparse._SubParsersAction) -> None:
     )
     verify_parser.set_defaults(func=run_audit_verify_command)
 
+    # audit rotate subcommand
+    rotate_parser = subparsers_audit.add_parser(
+        "rotate",
+        help="Manually trigger audit log rotation"
+    )
+    rotate_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output rotation result as JSON"
+    )
+    rotate_parser.set_defaults(func=run_audit_rotate_command)
+
+    # audit stats subcommand
+    stats_parser = subparsers_audit.add_parser(
+        "stats",
+        help="Show audit log statistics"
+    )
+    stats_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output stats as JSON"
+    )
+    stats_parser.set_defaults(func=run_audit_stats_command)
+
 
 def export_audit_report(format_type: str = "json", output_path: str = None) -> dict:
     """
@@ -439,3 +463,203 @@ def run_audit_verify_command(args: argparse.Namespace) -> int:
         
     except Exception as e:
         raise CLIError(f"Audit verification failed: {str(e)}")
+
+
+def run_audit_rotate_command(args: argparse.Namespace) -> int:
+    """
+    Execute the audit rotate command.
+
+    Manually triggers audit log rotation — archives the current ledger
+    and starts a fresh one with Merkle chain linkage.
+
+    Args:
+        args: Parsed command line arguments
+
+    Returns:
+        Exit code
+    """
+    try:
+        check_project_context()
+
+        audit_file = Path("./audit/audit_events.jsonl")
+        if not audit_file.exists():
+            raise CLIError("Audit ledger not found: ./audit/audit_events.jsonl")
+
+        from ...core.audit.ledger import get_ledger
+        ledger = get_ledger()
+
+        # Capture pre-rotation stats
+        pre_count = ledger._total_event_count
+        pre_root = ledger.merkle_tree.get_root_hash()
+
+        if pre_count == 0:
+            if getattr(args, 'json', False):
+                print(json.dumps({"rotated": False, "reason": "ledger is empty"}, indent=2))
+            else:
+                print_panel("Audit Rotation", "Ledger is empty — nothing to rotate.", style="yellow")
+            return 0
+
+        # Perform rotation (acquires state lock internally)
+        with ledger._state_lock:
+            ledger._rotate_ledger()
+
+        result = {
+            "rotated": True,
+            "archived_events": pre_count,
+            "archived_merkle_root": pre_root,
+            "archive_dir": str(Path("./audit/archive")),
+            "rotated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        }
+
+        if getattr(args, 'json', False):
+            print(json.dumps(result, indent=2))
+        else:
+            success_color = get_theme_color('success')
+            status_text = (
+                f"[bold {success_color}]Rotation complete[/]\n\n"
+                f"• Events archived: [bold]{pre_count}[/]\n"
+                f"• Merkle root: [dim]{pre_root[:32] if pre_root else 'none'}...[/]\n"
+                f"• Archive dir: [dim]./audit/archive[/]\n\n"
+                f"[{success_color}]Fresh ledger started with chain linkage.[/]"
+            )
+            print_panel("🔄 Audit Log Rotated", status_text, style=success_color)
+
+        return 0
+
+    except CLIError:
+        raise
+    except Exception as e:
+        raise CLIError(f"Audit rotation failed: {str(e)}")
+
+
+def run_audit_stats_command(args: argparse.Namespace) -> int:
+    """
+    Execute the audit stats command.
+
+    Shows audit ledger statistics: event count, ledger size, archive info,
+    Merkle root hash, and rotation threshold.
+
+    Args:
+        args: Parsed command line arguments
+
+    Returns:
+        Exit code
+    """
+    try:
+        check_project_context()
+
+        audit_dir = Path("./audit")
+        if not audit_dir.exists():
+            if getattr(args, 'json', False):
+                print(json.dumps({"error": "no audit directory"}, indent=2))
+            else:
+                output_with_mode("No audit directory found.", output_type="warning")
+            return 0
+
+        ledger_file = audit_dir / "audit_events.jsonl"
+        archive_dir = audit_dir / "archive"
+        counter_file = audit_dir / ".event_count"
+
+        # Current ledger stats
+        ledger_size = ledger_file.stat().st_size if ledger_file.exists() else 0
+        ledger_lines = 0
+        if ledger_file.exists():
+            with open(ledger_file, 'r', encoding='utf-8') as f:
+                ledger_lines = sum(1 for line in f if line.strip())
+
+        # Counter file (O(1) total count)
+        total_count = 0
+        if counter_file.exists():
+            try:
+                total_count = int(counter_file.read_text().strip())
+            except (ValueError, OSError):
+                total_count = ledger_lines
+
+        # Archive stats
+        archive_segments = 0
+        archive_total_events = 0
+        archive_total_bytes = 0
+        if archive_dir.exists():
+            for f in archive_dir.glob("ledger_*.jsonl"):
+                archive_segments += 1
+                archive_total_bytes += f.stat().st_size
+
+            chain_file = archive_dir / "chain.jsonl"
+            if chain_file.exists():
+                with open(chain_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                entry = json.loads(line)
+                                archive_total_events += entry.get("event_count", 0)
+                            except json.JSONDecodeError:
+                                pass
+
+        # Merkle root
+        root_file = audit_dir / "merkle_root.hash"
+        merkle_root = None
+        if root_file.exists():
+            merkle_root = root_file.read_text(encoding='utf-8').strip()
+
+        def _format_size(b: int) -> str:
+            if b < 1024:
+                return f"{b} B"
+            elif b < 1024 * 1024:
+                return f"{b / 1024:.1f} KB"
+            return f"{b / (1024 * 1024):.2f} MB"
+
+        stats = {
+            "current_ledger": {
+                "events": ledger_lines,
+                "size": ledger_size,
+                "size_human": _format_size(ledger_size),
+                "file": str(ledger_file),
+            },
+            "total_events": total_count,
+            "rotation_threshold": 50000,
+            "merkle_root": merkle_root,
+            "archive": {
+                "segments": archive_segments,
+                "total_events": archive_total_events,
+                "total_size": archive_total_bytes,
+                "total_size_human": _format_size(archive_total_bytes),
+            },
+        }
+
+        if getattr(args, 'json', False):
+            print(json.dumps(stats, indent=2))
+        else:
+            info_color = get_theme_color('info')
+            success_color = get_theme_color('success')
+
+            lines = [
+                f"[bold {info_color}]Current Ledger[/]",
+                f"  Events:    [bold]{ledger_lines}[/]",
+                f"  Size:      {_format_size(ledger_size)}",
+                f"  Threshold: 50,000 events",
+                "",
+                f"[bold {info_color}]Totals[/]",
+                f"  All-time events: [bold]{total_count}[/]",
+            ]
+
+            if merkle_root:
+                lines.append(f"  Merkle root: [dim]{merkle_root[:32]}...[/]")
+
+            if archive_segments > 0:
+                lines.extend([
+                    "",
+                    f"[bold {info_color}]Archive[/]",
+                    f"  Segments:  {archive_segments}",
+                    f"  Events:    {archive_total_events}",
+                    f"  Size:      {_format_size(archive_total_bytes)}",
+                ])
+            else:
+                lines.append("\n[dim]No archived segments yet.[/]")
+
+            print_panel("📊 Audit Statistics", "\n".join(lines), style=info_color)
+
+        return 0
+
+    except Exception as e:
+        raise CLIError(f"Failed to read audit stats: {str(e)}")

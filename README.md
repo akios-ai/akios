@@ -225,12 +225,17 @@ Interpolated prompt (redacted):
 <tr><td><code>akios init my-project</code></td><td>Create secure workspace with templates</td></tr>
 <tr><td><code>akios setup</code></td><td>Configure LLM provider (interactive)</td></tr>
 <tr><td><code>akios run workflow.yml</code></td><td>Execute workflow inside security cage</td></tr>
+<tr><td><code>akios workflow validate w.yml</code></td><td>Validate workflow YAML against schema</td></tr>
 <tr><td><code>akios status</code></td><td>Security & budget dashboard</td></tr>
 <tr><td><code>akios status --budget</code></td><td>Cost tracking breakdown per workflow</td></tr>
 <tr><td><code>akios cage up / down</code></td><td>Activate / destroy cage + all data</td></tr>
+<tr><td><code>akios cage up --no-pii --no-audit</code></td><td>Ablation mode (benchmarking)</td></tr>
+<tr><td><code>akios cage down --passes N</code></td><td>Secure overwrite with N passes</td></tr>
 <tr><td><code>akios protect scan file.txt</code></td><td>Scan file for PII patterns</td></tr>
 <tr><td><code>akios protect show-prompt w.yml</code></td><td>Preview what the LLM sees (redacted)</td></tr>
 <tr><td><code>akios audit verify</code></td><td>Verify Merkle chain integrity</td></tr>
+<tr><td><code>akios audit stats</code></td><td>Audit ledger statistics (event count, Merkle root)</td></tr>
+<tr><td><code>akios audit rotate</code></td><td>Rotate audit log with Merkle chain linkage</td></tr>
 <tr><td><code>akios audit export --format json</code></td><td>Export audit logs for compliance</td></tr>
 <tr><td><code>akios doctor</code></td><td>System health check</td></tr>
 <tr><td><code>akios templates list</code></td><td>Browse industry workflow templates</td></tr>

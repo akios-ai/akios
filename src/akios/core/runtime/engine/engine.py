@@ -158,9 +158,11 @@ class RuntimeEngine:
         This ensures that all required agents are available and functional
         before attempting workflow execution.
         """
+        # Skip audit logging if ablation flag disables it
+        audit_on = getattr(self.settings, 'audit_enabled', True)
+
         try:
             from akios.core.runtime.agents import validate_agent_health, get_supported_agents
-            from akios.core.audit import append_audit_event
 
             agent_health_issues = []
 
@@ -171,24 +173,26 @@ class RuntimeEngine:
                 if not health['healthy']:
                     agent_health_issues.extend(health['issues'])
 
-                # Log agent health status
-                append_audit_event({
-                    'workflow_id': 'system_startup',
-                    'step': 0,
-                    'agent': 'runtime_engine',
-                    'action': 'agent_health_check',
-                    'result': 'success' if health['healthy'] else 'warning',
-                    'metadata': {
-                        'agent_type': agent_type,
-                        'healthy': health['healthy'],
-                        'issues': health['issues'],
-                        'capabilities': health['capabilities']
-                    }
-                })
+                # Log agent health status (only if audit enabled)
+                if audit_on:
+                    from akios.core.audit import append_audit_event
+                    append_audit_event({
+                        'workflow_id': 'system_startup',
+                        'step': 0,
+                        'agent': 'runtime_engine',
+                        'action': 'agent_health_check',
+                        'result': 'success' if health['healthy'] else 'warning',
+                        'metadata': {
+                            'agent_type': agent_type,
+                            'healthy': health['healthy'],
+                            'issues': health['issues'],
+                            'capabilities': health['capabilities']
+                        }
+                    })
 
             # If any critical agent health issues, log warning but don't fail startup
-            # This allows systems to start even with optional agent issues
-            if agent_health_issues:
+            if agent_health_issues and audit_on:
+                from akios.core.audit import append_audit_event
                 append_audit_event({
                     'workflow_id': 'system_startup',
                     'step': 0,
@@ -197,29 +201,29 @@ class RuntimeEngine:
                     'result': 'warning',
                     'metadata': {
                         'total_issues': len(agent_health_issues),
-                        'issues': agent_health_issues[:5],  # Limit logged issues
+                        'issues': agent_health_issues[:5],
                         'message': 'Some agents have health issues but system startup continues'
                     }
                 })
 
         except Exception as e:
             # Health check failure should not prevent startup
-            try:
-                from akios.core.audit import append_audit_event
-                append_audit_event({
-                    'workflow_id': 'system_startup',
-                    'step': 0,
-                    'agent': 'runtime_engine',
-                    'action': 'startup_health_check_error',
-                    'result': 'error',
-                    'metadata': {
-                        'error': str(e),
-                        'message': 'Agent health checks failed during startup'
-                    }
-                })
-            except Exception:
-                # If even audit logging fails, silently continue
-                pass
+            if audit_on:
+                try:
+                    from akios.core.audit import append_audit_event
+                    append_audit_event({
+                        'workflow_id': 'system_startup',
+                        'step': 0,
+                        'agent': 'runtime_engine',
+                        'action': 'startup_health_check_error',
+                        'result': 'error',
+                        'metadata': {
+                            'error': str(e),
+                            'message': 'Agent health checks failed during startup'
+                        }
+                    })
+                except Exception:
+                    pass
 
     @property
     def cost_kill(self):
@@ -755,7 +759,8 @@ class RuntimeEngine:
         - Global timeout reached
         """
         # ENFORCEMENT: Cost kill switch - actually stops execution
-        if self.cost_kill.should_kill():
+        # Respects ablation flag: --no-budget disables cost enforcement for benchmarking
+        if getattr(self.settings, 'cost_kill_enabled', True) and self.cost_kill.should_kill():
             cost_status = self.cost_kill.get_status()
             raise RuntimeError(
                 f"🚫 COST KILL-SWITCH ENFORCED: Budget exceeded\n"
@@ -794,31 +799,31 @@ class RuntimeEngine:
         """Finalize successful workflow execution"""
         execution_time = time.time() - start_time
 
-        _get_append_audit_event()({
-            'workflow_id': self.current_workflow_id,
-            'step': len(workflow.steps),
-            'agent': 'engine',
-            'action': 'workflow_complete',
-            'result': 'success',
-            'metadata': {
-                'total_steps': len(workflow.steps),
-                'execution_time': execution_time,
-                'cost_status': self.cost_kill.get_status(),
-                'loop_status': self.loop_kill.get_status(),
-                'template_source': self.template_source
-            }
-        })
+        # Emit audit event only if audit is enabled (respects --no-audit ablation flag)
+        if getattr(self.settings, 'audit_enabled', True):
+            _get_append_audit_event()({
+                'workflow_id': self.current_workflow_id,
+                'step': len(workflow.steps),
+                'agent': 'engine',
+                'action': 'workflow_complete',
+                'result': 'success',
+                'metadata': {
+                    'total_steps': len(workflow.steps),
+                    'execution_time': execution_time,
+                    'cost_status': self.cost_kill.get_status(),
+                    'loop_status': self.loop_kill.get_status(),
+                    'template_source': self.template_source
+                }
+            })
 
         # CRITICAL: Flush audit buffer to ensure all events are written to disk
-        # Audit logging is a core security guarantee - events must be persisted
-        try:
-            audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
-            ledger = audit_flush()
-            ledger.flush_buffer()
-        except Exception as e:
-            # Audit flush failure should not break workflow completion
-            # But this indicates a serious audit system issue that needs investigation
-            pass
+        if getattr(self.settings, 'audit_enabled', True):
+            try:
+                audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
+                ledger = audit_flush()
+                ledger.flush_buffer()
+            except Exception as e:
+                pass
 
         result = {
             'status': 'completed',
@@ -835,7 +840,7 @@ class RuntimeEngine:
                 import json as _json
                 output_json_path = self._output_dir / "output.json"
                 deployable = {
-                    'akios_version': '1.0.6',
+                    'akios_version': '1.0.7',
                     'workflow_name': workflow.name,
                     'workflow_id': self.current_workflow_id,
                     'status': 'completed',
@@ -870,28 +875,29 @@ class RuntimeEngine:
 
     def _handle_workflow_failure(self, workflow, exception: Exception, start_time: float) -> None:
         """Handle workflow execution failure"""
-        _get_append_audit_event()({
-            'workflow_id': self.current_workflow_id or 'unknown',
-            'step': 0,
-            'agent': 'engine',
-            'action': 'workflow_failed',
-            'result': 'error',
-                'metadata': {
-                    'error': str(exception),
-                    AUDIT_EXECUTION_TIME_KEY: time.time() - start_time,
-                    AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}': {str(exception)}"
-                }
-        })
+        # Emit audit event only if audit is enabled (respects --no-audit ablation flag)
+        if getattr(self.settings, 'audit_enabled', True):
+            _get_append_audit_event()({
+                'workflow_id': self.current_workflow_id or 'unknown',
+                'step': 0,
+                'agent': 'engine',
+                'action': 'workflow_failed',
+                'result': 'error',
+                    'metadata': {
+                        'error': str(exception),
+                        AUDIT_EXECUTION_TIME_KEY: time.time() - start_time,
+                        AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}': {str(exception)}"
+                    }
+            })
 
         # CRITICAL: Flush audit buffer even on failure to ensure all events are written to disk
-        # Audit logging must work even when workflows fail - core security requirement
-        try:
-            audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
-            ledger = audit_flush()
-            ledger.flush_buffer()
-        except Exception:
-            # Audit flush failure during error handling - very serious issue
-            pass
+        if getattr(self.settings, 'audit_enabled', True):
+            try:
+                audit_flush = _import_module('akios.core.audit.ledger', 'get_ledger')
+                ledger = audit_flush()
+                ledger.flush_buffer()
+            except Exception:
+                pass
 
     def _execute_step(self, step, workflow) -> Dict[str, Any]:
         """
@@ -979,20 +985,21 @@ class RuntimeEngine:
             if isinstance(result, dict) and 'cost_incurred' in result:
                 self.cost_kill.add_cost(result['cost_incurred'])
 
-            # Step execution audit
+            # Step execution audit (respects --no-audit ablation flag)
             step_time = time.time() - step_start
-            _get_append_audit_event()({
-                'workflow_id': self.current_workflow_id,
-                'step': step.step_id,
-                'agent': step.agent,
-                'action': step.action,
-                'result': 'success',
-                'metadata': {
-                    'execution_time': step_time,
-                    'agent_type': step.agent,
-                    'has_result': bool(result)
-                }
-            })
+            if getattr(self.settings, 'audit_enabled', True):
+                _get_append_audit_event()({
+                    'workflow_id': self.current_workflow_id,
+                    'step': step.step_id,
+                    'agent': step.agent,
+                    'action': step.action,
+                    'result': 'success',
+                    'metadata': {
+                        'execution_time': step_time,
+                        'agent_type': step.agent,
+                        'has_result': bool(result)
+                    }
+                })
 
             return {
                 'step_id': step.step_id,
@@ -1006,19 +1013,20 @@ class RuntimeEngine:
         except (RuntimeError, ValueError, ConnectionError, TimeoutError) as e:
             # Handle known exception types
             step_time = time.time() - step_start
-            _get_append_audit_event()({
-                'workflow_id': self.current_workflow_id,
-                'step': step.step_id,
-                'agent': step.agent,
-                'action': step.action,
-                'result': 'error',
-                'metadata': {
-                    'error': str(e),
-                    'error_type': type(e).__name__,
-                    AUDIT_EXECUTION_TIME_KEY: step_time,
-                    AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}' Step {step.step_id}: {str(e)}"
-                }
-            })
+            if getattr(self.settings, 'audit_enabled', True):
+                _get_append_audit_event()({
+                    'workflow_id': self.current_workflow_id,
+                    'step': step.step_id,
+                    'agent': step.agent,
+                    'action': step.action,
+                    'result': 'error',
+                    'metadata': {
+                        'error': str(e),
+                        'error_type': type(e).__name__,
+                        AUDIT_EXECUTION_TIME_KEY: step_time,
+                        AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}' Step {step.step_id}: {str(e)}"
+                    }
+                })
 
             return {
                 'step_id': step.step_id,
@@ -1033,20 +1041,21 @@ class RuntimeEngine:
             # Handle unexpected exceptions with enhanced logging
             step_time = time.time() - step_start
             print(f"⚠️  Unexpected error in step {step.step_id}: {type(e).__name__}: {e}", file=sys.stderr)
-            _get_append_audit_event()({
-                'workflow_id': self.current_workflow_id,
-                'step': step.step_id,
-                'agent': step.agent,
-                'action': step.action,
-                'result': 'error',
-                'metadata': {
-                    'error': str(e),
-                    'error_type': type(e).__name__,
-                    'unexpected_error': True,
-                    AUDIT_EXECUTION_TIME_KEY: step_time,
-                    AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}' Step {step.step_id}: Unexpected {type(e).__name__}: {str(e)}"
-                }
-            })
+            if getattr(self.settings, 'audit_enabled', True):
+                _get_append_audit_event()({
+                    'workflow_id': self.current_workflow_id,
+                    'step': step.step_id,
+                    'agent': step.agent,
+                    'action': step.action,
+                    'result': 'error',
+                    'metadata': {
+                        'error': str(e),
+                        'error_type': type(e).__name__,
+                        'unexpected_error': True,
+                        AUDIT_EXECUTION_TIME_KEY: step_time,
+                        AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}' Step {step.step_id}: Unexpected {type(e).__name__}: {str(e)}"
+                    }
+                })
 
             return {
                 'step_id': step.step_id,

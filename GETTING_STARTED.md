@@ -1,6 +1,6 @@
-# 🚀 AKIOS v1.0.6 - Get Started in 3 Minutes
-**Document Version:** 1.0.6  
-**Date:** 2026-02-13  
+# 🚀 AKIOS v1.0.7 - Get Started in 3 Minutes
+**Document Version:** 1.0.7  
+**Date:** 2026-02-21  
 
 **Secure AI workflows made simple.**
 
@@ -30,7 +30,7 @@ pipx install akios
 pip install akios
 
 # Or install a specific version:
-pip install akios==1.0.6
+pip install akios==1.0.7
 
 # Verify installation
 akios --version
@@ -43,14 +43,14 @@ akios init my-project
 **Containerized deployment works everywhere - no Python/dependencies needed**
 ```bash
 # Pull the Docker image
-docker pull akiosai/akios:v1.0.6
+docker pull akiosai/akios:v1.0.7
 
 # Initialize a new project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 init my-project
 
 # Run workflows
 cd my-project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 run templates/hello-workflow.yml
 ```
 
 **OR use the wrapper script for easier commands:**
@@ -117,8 +117,17 @@ akios run workflow.yml
 # Deactivate cage and destroy all session data
 akios cage down
 
+# Secure overwrite with multiple passes (GDPR Art. 17)
+akios cage down --passes 3
+
+# Fast mode — skip secure overwrite (dev only)
+akios cage down --fast
+
 # OR keep data for debugging (dev mode only)
 akios cage down --keep-data
+
+# Ablation mode — disable specific protections for benchmarking
+akios cage up --no-pii --no-audit --no-budget
 ```
 
 **⚠️ WARNING:** `cage down` permanently destroys:
@@ -203,6 +212,15 @@ akios status --security
 # View budget dashboard and cost tracking
 akios status --budget
 
+# Validate a workflow file before running
+akios workflow validate workflow.yml
+
+# View audit ledger statistics
+akios audit stats
+
+# Rotate audit log (archive + fresh start)
+akios audit rotate
+
 # Scan text for PII
 akios protect scan "Patient John Smith, NPI 1234567893"
 
@@ -241,4 +259,4 @@ akios clean
 
 ---
 
-*AKIOS v1.0.6 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0.7 - Where AI meets unbreakable security* 🛡️🤖

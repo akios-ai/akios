@@ -143,23 +143,109 @@ class PIIDetector:
         if not force_detection and not self.settings.pii_redaction_enabled:
             return {}
 
-        detected_pii = defaultdict(list)
+        # Phase 1: Collect all matches with spans
+        # Each entry: (start, end, pattern_name, matched_text, priority)
+        all_matches: List[Tuple[int, int, str, str, int]] = []
 
         # Filter patterns based on categories and sensitivity
         patterns_to_check = self._filter_patterns(categories, sensitivity_levels)
 
         for pattern_name, pattern in patterns_to_check.items():
-            # Use finditer to get full match text (findall with groups returns
-            # tuples of group values which lose the actual matched string)
-            matches = [m.group(0) for m in pattern.compiled_pattern.finditer(text)]
-            if matches:
-                # Clean and deduplicate matches
-                cleaned_matches = self._clean_matches(matches, pattern_name)
-                if cleaned_matches:
-                    detected_pii[pattern_name].extend(cleaned_matches)
-                    self.detection_stats[pattern_name] += len(cleaned_matches)
+            priority = getattr(pattern, 'priority', 50)
+            for m in pattern.compiled_pattern.finditer(text):
+                matched_text = m.group(0)
+                # Clean and validate the match
+                cleaned = self._clean_single_match(matched_text, pattern_name)
+                if cleaned:
+                    all_matches.append((m.start(), m.end(), pattern_name, cleaned, priority))
+
+        # Phase 2: Resolve overlapping matches by priority
+        resolved = self._resolve_overlaps(all_matches)
+
+        # Phase 3: Build result dict
+        detected_pii: Dict[str, List[str]] = defaultdict(list)
+        for _start, _end, pattern_name, matched_text, _priority in resolved:
+            if matched_text not in detected_pii[pattern_name]:
+                detected_pii[pattern_name].append(matched_text)
+                self.detection_stats[pattern_name] += 1
 
         return dict(detected_pii)
+
+    def _resolve_overlaps(self, matches: List[Tuple[int, int, str, str, int]]) -> List[Tuple[int, int, str, str, int]]:
+        """
+        Resolve overlapping matches by keeping the highest-priority match.
+
+        When two patterns match overlapping text spans, only the one with
+        higher priority survives. Equal priority: keep the more specific
+        (shorter span) match. Still equal: keep both (different pattern names
+        both flagging the same text is still useful for redaction).
+
+        Args:
+            matches: List of (start, end, name, text, priority) tuples
+
+        Returns:
+            Deduplicated list of matches
+        """
+        if len(matches) <= 1:
+            return matches
+
+        # Sort by start position, then by priority descending
+        matches.sort(key=lambda m: (m[0], -m[4], m[1]))
+
+        resolved = []
+        for candidate in matches:
+            c_start, c_end, c_name, c_text, c_prio = candidate
+            suppressed = False
+
+            for i, kept in enumerate(resolved):
+                k_start, k_end, k_name, k_text, k_prio = kept
+
+                # Check for overlap
+                if c_start < k_end and c_end > k_start:
+                    # Overlapping spans detected
+                    if c_prio > k_prio:
+                        # Candidate has higher priority — replace the kept one
+                        resolved[i] = candidate
+                        suppressed = True  # Don't add again
+                        break
+                    elif c_prio < k_prio:
+                        # Kept one has higher priority — suppress candidate
+                        suppressed = True
+                        break
+                    else:
+                        # Equal priority — suppress the duplicate to avoid noise
+                        # (same span, different label = pick whichever was first)
+                        suppressed = True
+                        break
+
+            if not suppressed:
+                resolved.append(candidate)
+
+        return resolved
+
+    def _clean_single_match(self, match: str, pattern_name: str) -> Optional[str]:
+        """
+        Clean and validate a single detected match.
+
+        Args:
+            match: Raw matched text
+            pattern_name: Name of the pattern that produced the match
+
+        Returns:
+            Cleaned match string, or None if invalid
+        """
+        if isinstance(match, tuple):
+            match = ' '.join(g for g in match if g)
+        if not isinstance(match, str):
+            match = str(match)
+
+        cleaned = match.strip()
+        if not cleaned:
+            return None
+
+        if self._is_valid_match(cleaned, pattern_name):
+            return cleaned
+        return None
 
     def _filter_patterns(self, categories: Optional[List[str]],
                         sensitivity_levels: Optional[List[str]]) -> Dict[str, PIIPattern]:
