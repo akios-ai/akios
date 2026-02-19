@@ -1,23 +1,10 @@
-# AKIOS v1.0.7 – Configuration Reference
-**Document Version:** 1.0.7  
-**Date:** 2026-02-13  
+# AKIOS v1.0 – Configuration Reference
+**Document Version:** 1.0  
+**Date:** 2026-01-25  
 
 **Complete configuration guide for the AKIOS security cage.**
 
 AKIOS uses a single `config.yaml` file for all settings. Configuration is loaded at startup and cannot be changed during execution for security. All settings have security-first defaults.
-
-## 📁 Configuration File Location
-
-AKIOS looks for `config.yaml` in the current working directory:
-
-```
-project/
-├── config.yaml          # Main configuration file
-├── workflows/           # Workflow definitions
-├── templates/           # Workflow templates
-├── data/               # Input/output data
-└── audit/              # Audit logs
-```
 
 ## First-Time Setup & Configuration Management
 
@@ -51,12 +38,9 @@ AKIOS_LLM_PROVIDER=grok
 GROK_API_KEY=xai-your-key-here
 AKIOS_LLM_MODEL=grok-3
 
-# Network Configuration
-AKIOS_NETWORK_ACCESS_ALLOWED=false     # Allow external HTTP API calls
-AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.mycompany.com"  # HTTPS whitelist for HTTP agent
-
 # Mode Settings
 AKIOS_MOCK_LLM=0              # 0=real LLM calls, 1=mock LLM output
+AKIOS_NETWORK_ACCESS_ALLOWED=1 # Allow external API calls
 
 # Docker Wrapper Controls
 AKIOS_FORCE_PULL=1            # Always pull the latest image before running
@@ -68,27 +52,6 @@ GROK_API_KEY=xai-...
 MISTRAL_API_KEY=your-mistral-key...
 GEMINI_API_KEY=your-gemini-key...
 ```
-
-**Network whitelist environment variable:**
-- `AKIOS_NETWORK_ACCESS_ALLOWED=true` to enable HTTP agent
-- `AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.example.com"` to whitelist domains (comma-separated)
-
-### Real API Mode Flag
-
-For convenience, you can enable real API mode directly from the command line:
-
-```bash
-# Enable real API mode with interactive setup
-akios run workflow.yml --real-api
-
-# This automatically:
-# - Sets AKIOS_MOCK_LLM=0
-# - Enables network access
-# - Prompts for missing API keys interactively
-# - Validates configuration
-```
-
-**The `--real-api` flag provides a seamless transition from mock testing to real API usage without manual configuration changes.**
 
 ### Configuration Corruption Detection
 
@@ -114,6 +77,19 @@ Fix: Change to AKIOS_LLM_PROVIDER=grok
 3. **`config.yaml`** (base configuration file)
 4. **Built-in defaults** (secure fallbacks)
 
+## 📁 Configuration File Location
+
+AKIOS looks for `config.yaml` in the current working directory:
+
+```
+project/
+├── config.yaml          # Main configuration file
+├── workflows/           # Workflow definitions
+├── templates/           # Workflow templates
+├── data/               # Input/output data
+└── audit/              # Audit logs
+```
+
 ## ⚙️ Configuration Structure
 
 ```yaml
@@ -131,7 +107,7 @@ redaction_strategy: "mask"
 
 # Cost & loop protection
 cost_kill_enabled: true
-max_tokens_per_call: 1000
+max_tokens_per_call: 500
 budget_limit_per_run: 1.0
 
 # Audit & paths
@@ -219,59 +195,20 @@ network_access_allowed: false  # Block all network access (secure)
 network_access_allowed: true   # Allow HTTP agent network calls
 ```
 
-### `allowed_domains`
-**Type:** `list of strings`  
-**Default:** `[]` (empty — only LLM APIs allowed)  
-**Description:** HTTPS domains whitelist for HTTP agent requests
-
-**Important:** LLM APIs (OpenAI, Anthropic, Grok, Mistral, Gemini) **always pass through** regardless of this setting — they are core to AKIOS functionality and never blocked.
-
-This setting controls only the **HTTP agent** for custom API calls (CRM, data services, 3rd-party APIs).
-
-**Example: Allow Salesforce and Custom API:**
-```yaml
-network_access_allowed: true
-allowed_domains:
-  - "api.salesforce.com"
-  - "api.mycompany.com"
-  - "data.example.org"
-```
-
-**All requests to domains NOT in this list will be blocked** (except LLM APIs).
-
-**Via Environment Variable:**
-```bash
-# Single domain
-AKIOS_ALLOWED_DOMAINS="api.salesforce.com"
-
-# Multiple domains (comma-separated)
-AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.mycompany.com,data.example.org"
-```
-
-**Security Note:** Each domain is checked against the whitelist. Subdomains are NOT automatically allowed — add them explicitly:
-```yaml
-allowed_domains:
-  - "api.salesforce.com"
-  - "analytics.salesforce.com"  # Must add separately
-```
-
 ## 🛡️ PII & Compliance Settings
 
 ### `pii_redaction_enabled`
 **Type:** `boolean`  
 **Default:** `true`  
-**Description:** Enable real-time PII redaction on agent inputs
+**Description:** Enable real-time PII redaction on all agent inputs/outputs
 
-Automatically detects and redacts sensitive data in prompts and messages:
+Automatically detects and redacts:
 - Email addresses
 - Phone numbers
 - Social security numbers
 - Credit card numbers
 - IP addresses
 - API keys and passwords
-- NPI (National Provider Identifier)
-- DEA Registration Numbers
-- Medical Record Numbers (MRN-prefixed)
 
 ```yaml
 pii_redaction_enabled: true  # Recommended: always true
@@ -290,37 +227,6 @@ pii_redaction_enabled: true  # Recommended: always true
 redaction_strategy: "mask"  # Safe, preserves data structure
 ```
 
-### `pii_redaction_outputs`
-**Type:** `boolean`  
-**Default:** `true`  
-**Description:** Enable PII redaction on LLM outputs
-
-Applies additional PII filtering to AI-generated responses to prevent accidental data leakage. Uses conservative patterns suitable for generated content.
-
-**Security Impact:** Prevents PII exposure in AI responses  
-**Performance Impact:** Minimal (<1ms per response)
-
-```yaml
-pii_redaction_outputs: true  # Recommended: always true for security
-```
-
-### `pii_redaction_aggressive`
-**Type:** `boolean`  
-**Default:** `false`  
-**Description:** Use aggressive PII redaction rules
-
-When enabled, applies stricter patterns including:
-- Generic address detection
-- Extended phone number formats
-- Additional sensitive pattern matching
-
-**Use Case:** High-security environments requiring maximum protection  
-**Trade-off:** May have false positives on legitimate content
-
-```yaml
-pii_redaction_aggressive: false  # Use only when maximum security required
-```
-
 ## 💰 Cost & Resource Protection
 
 ### `cost_kill_enabled`
@@ -336,14 +242,14 @@ cost_kill_enabled: true  # Recommended: always true
 
 ### `max_tokens_per_call`
 **Type:** `integer` (> 0)  
-**Default:** `1000`  
+**Default:** `500`  
 **Description:** Maximum tokens per LLM API call
 
 Limits individual LLM requests to prevent excessive API costs.
 
 ```yaml
-max_tokens_per_call: 500   # Conservative limit
-max_tokens_per_call: 1000  # Default limit for complex tasks
+max_tokens_per_call: 500  # Conservative limit
+max_tokens_per_call: 1000 # Higher limit for complex tasks
 ```
 
 ### `budget_limit_per_run`
@@ -358,9 +264,7 @@ budget_limit_per_run: 1.0   # $1.00 per workflow (recommended)
 budget_limit_per_run: 5.0   # $5.00 for complex workflows
 ```
 
-> **Tip:** Run `akios status --budget` to view current spend vs. configured limit in real time.
-
-##  Audit & Logging Settings
+## 📊 Audit & Logging Settings
 
 ### `audit_enabled`
 **Type:** `boolean`  
@@ -388,13 +292,59 @@ audit_storage_path: "/var/log/akios/"  # Custom path
 ### `audit_export_format`
 **Type:** `string` ("json")
 **Default:** `"json"`
-**Description:** Export format for audit reports
+**Description:** Default format for audit exports
 
-- `"json"`: Machine-readable JSON format with cryptographic integrity verification
+- `"json"`: Machine-readable JSON format for audit data
 
 ```yaml
-audit_export_format: "json"   # JSON format with integrity verification
+audit_export_format: "json"  # Machine-readable audit data
 ```
+
+## 🧪 Ablation Flags (Benchmarking)
+
+AKIOS supports ablation flags for controlled performance benchmarking. These flags
+disable specific security features to measure their overhead. **Use only for testing.**
+
+### CLI Usage
+
+```bash
+# Disable PII redaction (measure PII overhead)
+akios cage up --no-pii
+
+# Disable audit logging (measure audit overhead)
+akios cage up --no-audit
+
+# Disable cost kill-switch (measure budget enforcement overhead)
+akios cage up --no-budget
+
+# Combine flags for full ablation study
+akios cage up --no-pii --no-audit --no-budget
+```
+
+### How It Works
+
+Each flag sets the corresponding `.env` variable:
+
+| Flag | Environment Variable | Config Key | Default |
+|------|---------------------|------------|---------|
+| `--no-pii` | `AKIOS_PII_REDACTION_ENABLED=false` | `pii_redaction_enabled` | `true` |
+| `--no-audit` | `AKIOS_AUDIT_ENABLED=false` | `audit_enabled` | `true` |
+| `--no-budget` | `AKIOS_COST_KILL_ENABLED=false` | `cost_kill_enabled` | `true` |
+
+### Engine Enforcement
+
+When ablation flags are active:
+- **`audit_enabled=false`**: Engine skips all audit event emission (startup health checks, per-step logs, workflow completion/failure events). No ledger writes occur.
+- **`cost_kill_enabled=false`**: Engine skips cost budget enforcement. Cost overspend will not halt workflow execution.
+- **`pii_redaction_enabled=false`**: Agents skip PII redaction on inputs/outputs. Data flows unmasked.
+
+### Restoring Defaults
+
+```bash
+# Restore full security (resets all ablation flags)
+akios cage up
+```
+
 
 ## ⚙️ General Settings
 
@@ -438,7 +388,7 @@ export AKIOS_LOG_LEVEL=DEBUG
 ## 📋 Complete Example Configuration
 
 ```yaml
-# AKIOS v1.0 Production Configuration
+# AKIOS V1.0.O Production Configuration
 # Security-maximized settings for production workloads
 
 # Security cage - maximum protection
@@ -523,72 +473,3 @@ log_level: "DEBUG"
 ```
 
 **Remember:** Configuration cannot be changed during workflow execution. Plan your settings carefully for the security and performance profile you need.
-
-## 🛠️ Installation Method Impact on Configuration
-
-The way you install AKIOS affects available security features and default configurations:
-
-### Pip Package Deployment
-**Platforms:** Linux only (recommended)
-**Security Level:** Full kernel-hard security
-**Configuration Notes:**
-- Maximum security features available
-- Kernel-level sandboxing (seccomp-bpf, cgroups)
-- Native filesystem permissions
-- Best performance and security
-
-### Docker Deployment
-**Platforms:** Linux, macOS, Windows
-**Security Level:** Strong policy-based security
-**Configuration Notes:**
-- Consistent behavior across platforms
-- Container isolation instead of kernel sandboxing
-- Network controls via container policies
-- Memory and CPU limits via Docker
-
-### Choosing the Right Installation
-
-| Use Case | Recommended Method | Why |
-|----------|-------------------|-----|
-| **Maximum security, Linux production** | Pip Package | Kernel-hard security features |
-| **Cross-platform development team** | Docker | Consistent environment everywhere |
-| **Python ecosystem integration** | Pip Package | Full Python compatibility |
-
-### Platform-Specific Configuration
-
-#### Linux (All Methods)
-```yaml
-# Maximum security available
-sandbox_enabled: true  # seccomp-bpf + cgroups
-environment: "production"
-```
-
-#### macOS/Windows (Docker)
-```yaml
-# Strong policy-based security
-sandbox_enabled: true  # Container policies + allowlisting
-environment: "production"
-# Note: No kernel-hard seccomp-bpf available
-```
-
-#### Docker (All Platforms)
-```yaml
-# Container-aware settings
-sandbox_enabled: true
-network_access_allowed: true  # For HTTP agent
-# Docker handles resource isolation
-```
-
-### Configuration Validation by Method
-
-AKIOS validates configuration compatibility with your deployment method:
-
-```bash
-# Pip package - validates Linux kernel features
-akios status  # Shows kernel-hard security status
-
-# Docker - validates container environment
-akios status  # Shows policy-based security status
-```
-
-**Tip:** Run `akios status` after installation to see your security capabilities and configuration status.

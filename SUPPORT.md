@@ -110,7 +110,7 @@ When reporting issues, please include:
 ## 🚀 Getting Started - Your First Steps
 
 1. **Read the [Getting Started](GETTING_STARTED.md)** guide
-2. **Install AKIOS** using your preferred method (Binary, Docker, or Pip)
+2. **Install AKIOS** using your preferred method (pip or Docker)
 3. **Run the hello-world template** to verify your setup
 4. **Join our community** on GitHub Discussions
 5. **Explore the documentation** as you build your workflows

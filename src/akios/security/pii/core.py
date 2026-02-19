@@ -16,8 +16,8 @@
 """
 PII Detection and Redaction Core
 
-Provides PII detection and redaction functionality for templates.
-PII redaction is mandatory and cannot be disabled for compliance.
+Thin wrapper around the canonical PII detector for template compatibility.
+All patterns are defined in rules.py — no duplicates here.
 """
 
 import re
@@ -28,11 +28,28 @@ logger = logging.getLogger(__name__)
 
 
 class PIIDetector:
-    """PII detector for templates - detects emails, phones, SSNs"""
+    """PII detector for templates — delegates to canonical detector."""
+
+    def __init__(self):
+        self._detector = None
+
+    @property
+    def _canonical(self):
+        """Lazy-load the canonical detector to avoid circular imports."""
+        if self._detector is None:
+            try:
+                from .detector import create_pii_detector
+                self._detector = create_pii_detector()
+            except Exception:
+                self._detector = None
+        return self._detector
 
     def detect_pii(self, text) -> Dict[str, List[str]]:
         """
-        Detect PII in text using regex patterns.
+        Detect PII in text.
+
+        Delegates to the canonical PIIDetector from detector.py.
+        Falls back to minimal inline detection only if import fails.
 
         Args:
             text: Text to scan for PII
@@ -40,31 +57,24 @@ class PIIDetector:
         Returns:
             Dictionary of detected PII types and values
         """
-        # Ensure text is a string
         if not isinstance(text, str):
-            # Debug: log unexpected types
-            import os
-            if os.environ.get('AKIOS_DEBUG_ENABLED') == '1':
-                logger.debug(f"detect_pii received {type(text)} instead of str")
             text = str(text)
 
+        canonical = self._canonical
+        if canonical is not None:
+            try:
+                return canonical.detect_pii(text, force_detection=True)
+            except Exception:
+                pass
+
+        # Last-resort fallback — only used if canonical detector fails entirely
         detected = {}
-
-        # Email detection
-        email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        if re.search(email_pattern, text, re.IGNORECASE):
+        if re.search(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', text, re.IGNORECASE):
             detected['email'] = ['detected']
-
-        # Phone detection (US format)
-        phone_pattern = r'\b\d{3}-\d{3}-\d{4}\b'
-        if re.search(phone_pattern, text):
+        if re.search(r'\b\d{3}-\d{3}-\d{4}\b', text):
             detected['phone'] = ['detected']
-
-        # SSN detection
-        ssn_pattern = r'\b\d{3}-\d{2}-\d{4}\b'
-        if re.search(ssn_pattern, text):
+        if re.search(r'\b\d{3}-\d{2}-\d{4}\b', text):
             detected['ssn'] = ['detected']
-
         return detected
 
 
@@ -89,7 +99,7 @@ class PIIRedactor:
         if not detected:
             return text
 
-        # Apply redaction
+        # Apply redaction for common types
         redacted = text
         redacted = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', redacted, flags=re.IGNORECASE)
         redacted = re.sub(r'\b\d{3}-\d{3}-\d{4}\b', '[PHONE]', redacted)
@@ -109,7 +119,6 @@ def apply_pii_redaction(text, strategy: str = 'mask') -> str:
     Returns:
         Redacted text
     """
-    # Ensure text is a string
     if not isinstance(text, str):
         text = str(text)
 

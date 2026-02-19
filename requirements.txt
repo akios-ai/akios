@@ -4,7 +4,6 @@
 # Core functionality
 pydantic[email]>=2.0.0
 pydantic-settings>=2.0.0
-click>=8.0.0
 pyyaml>=6.0
 jsonschema>=4.21.0
 

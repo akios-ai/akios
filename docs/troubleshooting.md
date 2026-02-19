@@ -836,7 +836,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 
 2. **Pull specific version:**
    ```bash
-   docker pull akiosai/akios:v1.0.6
+   docker pull akiosai/akios:v1.0.7
    ```
 
 3. **Clear Docker cache:**
@@ -860,7 +860,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 1. **Check volume mounts:**
    ```bash
    # Ensure correct mount syntax
-   docker run -v $(pwd):/app akiosai/akios:v1.0.6
+   docker run -v $(pwd):/app akiosai/akios:v1.0.7
    ```
 
 2. **Fix file permissions:**

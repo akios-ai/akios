@@ -60,26 +60,49 @@ class AuditLedger:
         # Memory management: limit events in memory to prevent leaks
         self._max_memory_events = 1000  # Keep only last 1000 events in memory
 
-        # Performance safeguard: limit total audit events to prevent O(n²) Merkle tree scaling
-        # This bounds the performance impact while maintaining audit integrity
-        self._max_total_events = 10000  # Hard limit on total audit events
+        # Log rotation: rotate ledger at configurable threshold instead of dropping events
+        self._rotation_threshold = 50000  # Rotate ledger at 50K events
+        self._counter_file = audit_path / ".event_count"
+        self._archive_dir = audit_path / "archive"
+        self._total_event_count = self._read_counter()  # O(1) from counter file
 
         # Register shutdown handler to ensure buffers are flushed
         atexit.register(self._shutdown_flush)
 
         self._load_events_lazy()
 
-    def _count_total_events_on_disk(self) -> int:
-        """Count total audit events stored on disk (for performance limiting)"""
+    def _read_counter(self) -> int:
+        """Read event count from counter file — O(1) instead of O(n) file scan"""
+        if self._counter_file.exists():
+            try:
+                return int(self._counter_file.read_text().strip())
+            except (ValueError, OSError):
+                # Counter corrupted, fall back to line count and rebuild
+                count = self._count_lines_on_disk()
+                self._write_counter(count)
+                return count
+        else:
+            # No counter file yet (pre-rotation ledger), count from disk
+            count = self._count_lines_on_disk()
+            self._write_counter(count)
+            return count
+
+    def _count_lines_on_disk(self) -> int:
+        """Count lines in ledger file — fallback for when counter file is missing"""
         if not self.ledger_file.exists():
             return 0
-
         try:
             with open(self.ledger_file, 'r', encoding='utf-8') as f:
                 return sum(1 for _ in f)
         except Exception:
-            # If we can't count, assume we're at the limit to be safe
-            return self._max_total_events
+            return 0
+
+    def _write_counter(self, count: int) -> None:
+        """Write event count to counter file"""
+        try:
+            self._counter_file.write_text(str(count))
+        except Exception as e:
+            logger.warning(f"Failed to write event counter: {e}")
 
     def flush_buffer(self) -> None:
         """Force flush any buffered events to disk (thread-safe)"""
@@ -90,13 +113,8 @@ class AuditLedger:
         if not self.ledger_file.exists():
             return
 
-        # Just store file info, don't load all events into memory
-        try:
-            with open(self.ledger_file, 'r', encoding='utf-8') as f:
-                self._event_count = sum(1 for _ in f)
-        except (PermissionError, OSError) as e:
-            logger.warning(f"Cannot read audit file for lazy count: {e}")
-            self._event_count = 0
+        # Use persistent counter for O(1) event count (no file scan)
+        self._event_count = self._total_event_count
 
     def _load_all_events(self) -> None:
         """Load all events from disk into memory.
@@ -166,19 +184,20 @@ class AuditLedger:
             self._loaded_all_events = True
 
     def append_event(self, event_data: Dict[str, Any]) -> AuditEvent:
-        """Append an audit event to the ledger with buffered writing for performance"""
+        """Append an audit event to the ledger with buffered writing for performance.
+
+        Events are NEVER silently dropped. When the rotation threshold is
+        reached, the current ledger is archived and a fresh one is started
+        with Merkle chain linkage to the previous segment.
+        """
         event = create_audit_event(event_data)
 
-        # Performance safeguard: check total events limit to prevent O(n²) Merkle tree scaling
-        total_events_on_disk = self._count_total_events_on_disk()
-        if total_events_on_disk >= self._max_total_events:
-            logger.warning(f"Audit event limit reached ({self._max_total_events}). "
-                          "Further audit events will be dropped to maintain performance. "
-                          "Consider rotating audit logs or increasing the limit.")
-            # Return a dummy event to avoid breaking calling code
-            return event
-
         with self._state_lock:
+            # Rotation check INSIDE lock (fixes TOCTOU race from v1.0.6)
+            if self._total_event_count >= self._rotation_threshold:
+                self._rotate_ledger()
+
+            self._total_event_count += 1
             self.events.append(event)
             self.merkle_tree.append(event.to_json())
 
@@ -207,7 +226,7 @@ class AuditLedger:
         return event
 
     def _flush_buffer(self) -> None:
-        """Flush buffered events to disk (thread-safe)"""
+        """Flush buffered events to disk and update counter (thread-safe)"""
         with self._buffer_lock:
             if not self._event_buffer:
                 return
@@ -218,12 +237,11 @@ class AuditLedger:
                 for event_json in self._event_buffer:
                     f.write(event_json + '\n')
 
-            logger.debug(f"Flushed {count} audit events to disk (Docker tmpfs)")
-            # Clear buffer and force flush to disk
+            logger.debug(f"Flushed {count} audit events to disk")
             self._event_buffer.clear()
-            # Note: Removed chmod to prevent potential hanging on some filesystems
 
-        # Persist Merkle root hash for later verification
+        # Persist event counter and Merkle root hash
+        self._write_counter(self._total_event_count)
         self._save_root_hash()
 
     def _shutdown_flush(self) -> None:
@@ -249,6 +267,74 @@ class AuditLedger:
                     f.write(root)
         except Exception as e:
             logger.warning(f"Failed to save Merkle root hash: {e}")
+
+    def _rotate_ledger(self) -> None:
+        """Rotate the current ledger file to archive directory.
+
+        Flushes pending events, saves Merkle chain metadata, and starts
+        a fresh ledger.  Must be called while holding _state_lock.
+        """
+        from datetime import datetime, timezone
+        import shutil
+
+        # Flush any pending buffer to current file first
+        with self._buffer_lock:
+            if self._event_buffer:
+                try:
+                    with open(self.ledger_file, 'a', encoding='utf-8') as f:
+                        for event_json in self._event_buffer:
+                            f.write(event_json + '\n')
+                    self._event_buffer.clear()
+                except Exception as e:
+                    logger.error(f"Failed to flush buffer before rotation: {e}")
+                    return  # Don't rotate if we can't flush
+
+        # Create archive directory
+        self._archive_dir.mkdir(parents=True, exist_ok=True)
+
+        # Capture Merkle root of current segment for chain verification
+        merkle_root = self.merkle_tree.get_root_hash()
+
+        # Generate timestamp-based archive name (microseconds to avoid collisions)
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        archive_name = f"ledger_{timestamp}.jsonl"
+        archive_file = self._archive_dir / archive_name
+
+        try:
+            # Move current ledger to archive
+            shutil.move(str(self.ledger_file), str(archive_file))
+
+            # Append chain metadata (one JSON line per rotation)
+            chain_file = self._archive_dir / "chain.jsonl"
+            chain_entry = json.dumps({
+                "segment": archive_name,
+                "merkle_root": merkle_root,
+                "event_count": self._total_event_count,
+                "rotated_at": datetime.now(timezone.utc).isoformat()
+            }, sort_keys=True)
+            with open(chain_file, 'a', encoding='utf-8') as f:
+                f.write(chain_entry + '\n')
+
+            # Create fresh ledger file
+            self.ledger_file.touch()
+
+            # Reset in-memory state
+            self.events.clear()
+            self.merkle_tree = MerkleTree()
+            self._total_event_count = 0
+            self._write_counter(0)
+            self._loaded_all_events = False
+
+            logger.info(
+                f"Audit log rotated: {archive_name} "
+                f"({self._rotation_threshold} events, "
+                f"root: {merkle_root[:16] if merkle_root else 'none'}...)"
+            )
+        except Exception as e:
+            logger.error(f"Failed to rotate audit log: {e}")
+            # If rotation fails, keep appending to current file
+            if not self.ledger_file.exists():
+                self.ledger_file.touch()
 
     def get_merkle_root(self) -> Optional[str]:
         """Get the current Merkle root hash"""
@@ -280,13 +366,19 @@ class AuditLedger:
         """
         Verify that stored audit file matches the in-memory ledger.
         This detects file-based tampering (the real threat).
+
+        Loads all events from disk first to ensure complete comparison
+        (in-memory events may be truncated for memory management).
         """
-        import json
 
         audit_path = self.ledger_file
 
         if not audit_path.exists():
             return False
+
+        # Ensure all events are loaded from disk (memory may be truncated
+        # to _max_memory_events after many appends — v1.0.7 fix)
+        self._load_all_events()
 
         try:
             # Read stored events from file
@@ -365,6 +457,9 @@ def reset_ledger() -> None:
         ledger_file = audit_path / "audit_events.jsonl"
         if ledger_file.exists():
             ledger_file.unlink()  # Delete the file
+        counter_file = audit_path / ".event_count"
+        if counter_file.exists():
+            counter_file.unlink()
     except Exception:
         # Ignore errors during testing cleanup
         pass

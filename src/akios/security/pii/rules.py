@@ -38,6 +38,8 @@ class PIIPattern:
     description: str
     examples: List[str]
     enabled: bool = True  # Can be disabled per pattern
+    priority: int = 50  # Higher = more specific, wins over lower in overlap
+    context_keywords: Optional[List[str]] = None  # Nearby words that boost confidence
 
 
 class ComplianceRules:
@@ -241,7 +243,8 @@ class ComplianceRules:
                 category='personal',
                 sensitivity='high',
                 description='US Social Security Numbers',
-                examples=['123-45-6789', '123456789']
+                examples=['123-45-6789', '123456789'],
+                priority=90
             ),
 
             'france_id': PIIPattern(
@@ -251,7 +254,9 @@ class ComplianceRules:
                 category='personal',
                 sensitivity='high',
                 description='French national ID numbers (simplified)',
-                examples=['123456789012']
+                examples=['123456789012'],
+                priority=40,
+                context_keywords=['carte', 'identité', 'cni', 'national', 'french', 'france']
             ),
 
             'germany_id': PIIPattern(
@@ -261,7 +266,9 @@ class ComplianceRules:
                 category='personal',
                 sensitivity='high',
                 description='German ID numbers',
-                examples=['123456789012']
+                examples=['123456789012'],
+                priority=40,
+                context_keywords=['personalausweis', 'ausweis', 'german', 'germany', 'deutsch']
             ),
 
             'passport_eu': PIIPattern(
@@ -271,7 +278,8 @@ class ComplianceRules:
                 category='personal',
                 sensitivity='high',
                 description='European passport numbers',
-                examples=['AB1234567', 'P123456789']
+                examples=['AB1234567', 'P123456789'],
+                priority=45
             ),
 
             'drivers_license_us': PIIPattern(
@@ -281,7 +289,8 @@ class ComplianceRules:
                 category='personal',
                 sensitivity='high',
                 description='US driver license numbers',
-                examples=['A12345678', 'B9876543']
+                examples=['A12345678', 'B9876543'],
+                priority=55
             ),
 
             'birth_date': PIIPattern(
@@ -311,7 +320,8 @@ class ComplianceRules:
                 category='personal',
                 sensitivity='high',
                 description='French Social Security numbers (numéro de sécurité sociale, 15 digits)',
-                examples=['2 85 03 75 123 456 78', '185037512345678']
+                examples=['2 85 03 75 123 456 78', '185037512345678'],
+                priority=80
             ),
 
             'tax_id_us': PIIPattern(
@@ -341,7 +351,9 @@ class ComplianceRules:
                 category='personal',
                 sensitivity='high',
                 description='US bank account numbers',
-                examples=['123456789012', '987654321098']
+                examples=['123456789012', '987654321098'],
+                priority=30,
+                context_keywords=['account', 'bank', 'checking', 'savings', 'deposit', 'acct']
             ),
 
             'license_plate': PIIPattern(
@@ -493,7 +505,8 @@ class ComplianceRules:
                 category='financial',
                 sensitivity='high',
                 description='Credit card numbers',
-                examples=['4111-1111-1111-1111', '4111111111111111']
+                examples=['4111-1111-1111-1111', '4111111111111111'],
+                priority=80
             ),
 
             'credit_card_amex': PIIPattern(
@@ -513,7 +526,8 @@ class ComplianceRules:
                 category='financial',
                 sensitivity='high',
                 description='IBAN account numbers',
-                examples=['FR1420041010050500013M02606', 'DE89370400440532013000']
+                examples=['FR1420041010050500013M02606', 'DE89370400440532013000'],
+                priority=75
             ),
 
             'bic': PIIPattern(
@@ -528,12 +542,14 @@ class ComplianceRules:
 
             'routing_number': PIIPattern(
                 name='routing_number',
-                pattern=r'\b\d{9}\b',
-                compiled_pattern=re.compile(r'\b\d{9}\b'),
+                pattern=r'(?:routing|aba|transit)\s*(?:number|no|#)?[\s:]*\b(\d{9})\b',
+                compiled_pattern=re.compile(r'(?:routing|aba|transit)\s*(?:number|no|#)?[\s:]*\b(\d{9})\b', re.IGNORECASE),
                 category='financial',
                 sensitivity='high',
-                description='Bank routing numbers (ABA)',
-                examples=['021000021', '123456789']
+                description='Bank routing numbers (ABA) — requires context keyword to reduce false positives on bare 9-digit numbers',
+                examples=['routing number 021000021', 'ABA: 123456789'],
+                priority=30,
+                context_keywords=['routing', 'aba', 'transit', 'bank', 'wire', 'ach']
             ),
 
             'wire_transfer': PIIPattern(
@@ -587,7 +603,8 @@ class ComplianceRules:
                 category='health',
                 sensitivity='high',
                 description='US health insurance member IDs (BCBS, Aetna, UHC, Cigna etc.)',
-                examples=['AB123456789', 'XY987654321', 'UHC12345678', 'AET123456']
+                examples=['AB123456789', 'XY987654321', 'UHC12345678', 'AET123456'],
+                priority=55
             ),
 
             'medical_record': PIIPattern(
@@ -667,7 +684,8 @@ class ComplianceRules:
                 category='health',
                 sensitivity='high',
                 description='US National Provider Identifier (NPI)',
-                examples=['NPI: 1234567890', 'NPI:1234567890']
+                examples=['NPI: 1234567890', 'NPI:1234567890'],
+                priority=85
             ),
 
             'us_dea': PIIPattern(
@@ -677,7 +695,8 @@ class ComplianceRules:
                 category='health',
                 sensitivity='high',
                 description='US Drug Enforcement Administration number',
-                examples=['DEA: AM9812345', 'DEA:AB1234567']
+                examples=['DEA: AM9812345', 'DEA:AB1234567'],
+                priority=85
             ),
 
             'medical_record_number': PIIPattern(
@@ -687,7 +706,8 @@ class ComplianceRules:
                 category='health',
                 sensitivity='high',
                 description='Medical Record Numbers (MRN format)',
-                examples=['MRN-882-441-7739', 'MRN 882 441 7739']
+                examples=['MRN-882-441-7739', 'MRN 882 441 7739'],
+                priority=85
             )
         }
 

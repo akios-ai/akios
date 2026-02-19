@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.0.6"
+version = "1.0.7"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOS Team", email = "hello@akios.ai" },
@@ -12,7 +12,6 @@ dependencies = [
     # Core functionality
     "pydantic[email]>=2.0.0",
     "pydantic-settings>=2.0.0",
-    "click>=8.0.0",
     "pyyaml>=6.0",
     "jsonschema>=4.21.0",
 

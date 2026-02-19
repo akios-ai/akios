@@ -1,10 +1,10 @@
-# AKIOS v1.0.6 CLI Reference
-**Document Version:** 1.0.6  
+# AKIOS v1.0.7 CLI Reference
+**Document Version:** 1.0.7  
 **Date:** 2026-02-12  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.0.6 supports three deployment methods:
+AKIOS v1.0.7 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.6 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -334,6 +334,80 @@ akios audit export --output audit-report.json
 - `--format`: Export format: json (default: json)
 - `--output`: Output file path (default: auto-generated timestamp filename)
 
+### `akios audit verify` - Verify Audit Log Integrity
+
+Reconstruct the Merkle tree from raw events and verify the cryptographic chain of custody.
+
+```bash
+# Verify audit log integrity
+akios audit verify
+
+# Get verification proof as JSON
+akios audit verify --json
+```
+
+**Options:**
+- `--json`: Output structured verification proof as JSON
+
+**Output includes:** integrity status (VERIFIED/TAMPERED), event count, Merkle root hash, stored root comparison, time range.
+
+### `akios audit rotate` - Rotate Audit Log
+
+Manually trigger audit log rotation. Archives the current ledger with Merkle chain linkage and starts a fresh ledger.
+
+```bash
+# Rotate audit log
+akios audit rotate
+
+# Get rotation result as JSON
+akios audit rotate --json
+```
+
+**Options:**
+- `--json`: Output rotation result as JSON
+
+**How it works:** The current `audit_events.jsonl` is moved to `audit/archive/ledger_<timestamp>.jsonl`. A chain metadata entry is appended to `audit/archive/chain.jsonl` with the Merkle root of the archived segment.
+
+### `akios audit stats` - Show Audit Statistics
+
+Display audit ledger statistics: event count, ledger size, archive segments, Merkle root hash, and rotation threshold.
+
+```bash
+# Show audit stats
+akios audit stats
+
+# Get stats as JSON
+akios audit stats --json
+```
+
+**Options:**
+- `--json`: Output statistics as JSON
+
+**Output includes:** current ledger events/size, total event count (all-time), rotation threshold (50,000), Merkle root hash, archive segment count/size.
+
+### `akios workflow validate` - Validate Workflow YAML
+
+Validate a workflow YAML file against the AKIOS schema without executing it.
+
+```bash
+# Validate a workflow file
+akios workflow validate templates/hello-workflow.yml
+
+# Get validation result as JSON
+akios workflow validate workflow.yml --json
+```
+
+**Options:**
+- `--json`: Output validation result as JSON
+
+**Checks performed:**
+- YAML syntax validation
+- Required fields: `name`, `steps`
+- Agent existence (filesystem, http, llm, tool_executor)
+- Action validity per agent
+- Step schema (integer step numbers, sequential numbering)
+- File path existence for filesystem read/stat steps (warning)
+
 ### `akios logs` - View Execution Logs
 
 Show recent workflow execution logs.
@@ -495,7 +569,7 @@ The output includes:
 Example output:
 ```json
 {
-  "akios_version": "1.0.6",
+  "akios_version": "1.0.7",
   "workflow_name": "Hello World Workflow",
   "status": "completed",
   "steps_executed": 3,
@@ -580,6 +654,8 @@ The `.env` file is reset to relaxed defaults (PII off, network open).
 
 **Options:**
 - `--keep-data`: Relax protections without wiping data (development convenience)
+- `--passes N`: Number of overwrite passes for secure erasure (default: 1). More passes increase security. On SSDs, extra passes have limited benefit due to wear-leveling.
+- `--fast`: Skip secure overwrite — files deleted without shredding. **WARNING**: data may be recoverable with forensic tools.
 
 ```bash
 # Full cage down — destroy all data (default)
@@ -587,6 +663,12 @@ akios cage down
 
 # Dev mode — relax protections, keep data for debugging
 akios cage down --keep-data
+
+# 3-pass DoD-style overwrite for maximum security
+akios cage down --passes 3
+
+# Fast wipe — just delete, no overwrite (CI/CD cleanup)
+akios cage down --fast
 ```
 
 > **Security guarantee**: Default `cage down` ensures zero data residue. Use `--keep-data` only during active development when you need to inspect outputs.

@@ -96,8 +96,8 @@ def register_all_commands(subparsers: argparse._SubParsersAction) -> None:
     timeline_module = _import_command_module('timeline')
     timeline_module.register_timeline_command(subparsers)
 
-    # workflow_module = _lazy_import_command('workflow')
-    # workflow_module.register_workflow_command(subparsers)  # Removed for minimal scope
+    workflow_module = _import_command_module('workflow')
+    workflow_module.register_workflow_command(subparsers)
 
 
 def get_command_descriptions() -> Dict[str, str]:
@@ -127,6 +127,7 @@ def get_command_descriptions() -> Dict[str, str]:
         "cage": "Manage security cage (alias for security)",
         "protect": "Analyze and preview PII protection for workflows",
         "http": "Make secure HTTP requests through the security cage",
+        "workflow": "Validate and inspect AKIOS workflow files",
     }
 
 

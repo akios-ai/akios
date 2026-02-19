@@ -1,6 +1,6 @@
-# AKIOS v1.0.6 – Core Agents Reference
-**Document Version:** 1.0.6  
-**Date:** 2026-02-12  
+# AKIOS v1.0.7 – Core Agents Reference
+**Document Version:** 1.0.7  
+**Date:** 2026-02-19  
 
 **The 4 core agents that power AKIOS workflows with military-grade security.**
 
@@ -342,6 +342,8 @@ Safe, commonly needed commands:
 - `wc`, `sort`, `uniq`, `cut`, `tr`
 - `date`, `pwd`, `ls`
 - `find`, `ps`, `df`, `free`
+- `sh`, `true`, `false`, `sleep`
+- `env`, `file`
 
 ### Resource Limits
 

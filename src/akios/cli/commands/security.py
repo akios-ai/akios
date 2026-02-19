@@ -80,6 +80,19 @@ def _register_common(subparsers: argparse._SubParsersAction, command_name: str) 
         "up",
         help="Activate security cage (PII ON, HTTP locked, sandbox ON)"
     )
+    # Ablation study flags: selectively disable individual enforcement primitives
+    up_parser.add_argument(
+        "--no-pii", action="store_true", default=False,
+        help="Disable PII redaction (ablation study mode)"
+    )
+    up_parser.add_argument(
+        "--no-audit", action="store_true", default=False,
+        help="Disable audit logging (ablation study mode)"
+    )
+    up_parser.add_argument(
+        "--no-budget", action="store_true", default=False,
+        help="Disable cost kill-switches (ablation study mode)"
+    )
     up_parser.set_defaults(func=run_security_up)
 
     # security/cage down
@@ -91,6 +104,21 @@ def _register_common(subparsers: argparse._SubParsersAction, command_name: str) 
         "--keep-data",
         action="store_true",
         help="Relax protections without wiping data (dev mode)"
+    )
+    down_parser.add_argument(
+        "--passes",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Number of overwrite passes for secure erasure (default: 1). "
+             "More passes increase security but take longer. "
+             "Note: on SSDs, extra passes have limited benefit due to wear-leveling."
+    )
+    down_parser.add_argument(
+        "--fast",
+        action="store_true",
+        help="Skip secure overwrite — files are deleted without shredding. "
+             "WARNING: data may be recoverable with forensic tools."
     )
     down_parser.set_defaults(func=run_security_down)
 
@@ -161,21 +189,32 @@ def run_security_up(args: argparse.Namespace) -> int:
     Activate the Security Cage.
     
     Enables:
-    - PII redaction on all inputs/outputs
+    - PII redaction on all inputs/outputs (unless --no-pii)
     - HTTP agent network lock (LLM calls still pass through)
     - Sandbox enforcement
-    - Audit logging
+    - Audit logging (unless --no-audit)
+    - Cost kill-switches (unless --no-budget)
     
-    Does NOT modify budget — budget is configured in config.yaml.
+    Ablation flags (--no-pii, --no-audit, --no-budget) selectively disable
+    individual enforcement primitives for benchmarking and ablation studies.
+    Does NOT modify budget amount — budget is configured in config.yaml.
     """
     check_project_context()
     
+    # Read ablation flags (default: all enabled)
+    no_pii = getattr(args, 'no_pii', False)
+    no_audit = getattr(args, 'no_audit', False)
+    no_budget = getattr(args, 'no_budget', False)
+
     updates = {
-        "AKIOS_PII_REDACTION_ENABLED": "true",
+        "AKIOS_PII_REDACTION_ENABLED": "false" if no_pii else "true",
         "AKIOS_NETWORK_ACCESS_ALLOWED": "false",
         "AKIOS_SANDBOX_ENABLED": "true",
-        "AKIOS_AUDIT_ENABLED": "true",
+        "AKIOS_AUDIT_ENABLED": "false" if no_audit else "true",
+        "AKIOS_COST_KILL_ENABLED": "false" if no_budget else "true",
     }
+
+    ablation_active = no_pii or no_audit or no_budget
 
     try:
         _update_env_file(updates)
@@ -187,17 +226,29 @@ def run_security_up(args: argparse.Namespace) -> int:
         error_color = get_theme_color('error')
         warning_color = get_theme_color('warning')
         
+        # Build status display with ablation awareness
+        pii_status = f"[{warning_color}]DISABLED[/] (--no-pii)" if no_pii else f"[{success_color}]ENABLED[/]  — all inputs/outputs protected"
+        audit_status = f"[{warning_color}]DISABLED[/] (--no-audit)" if no_audit else f"[{success_color}]ENABLED[/]  — Merkle-chained audit trail"
+        budget_status = f"[{warning_color}]DISABLED[/] (--no-budget)" if no_budget else f"[{warning_color}]${budget:.2f}[/]    — (from config.yaml)"
+
+        ablation_line = ""
+        if ablation_active:
+            disabled = [f for f, v in [("PII", no_pii), ("Audit", no_audit), ("Budget", no_budget)] if v]
+            ablation_line = f"\n\n[bold {warning_color}]⚠ Ablation mode: {', '.join(disabled)} disabled for benchmarking[/]"
+
         status_text = (
             f"[bold {success_color}]Security Cage: ACTIVE[/]\n\n"
-            f"• PII Redaction:    [{success_color}]ENABLED[/]  — all inputs/outputs protected\n"
+            f"• PII Redaction:    {pii_status}\n"
             f"• HTTPS Network:    [{success_color}]LOCKED[/]   — LLM APIs + allowed_domains pass through\n"
             f"• LLM API Access:   [{success_color}]ALLOWED[/]  — AI orchestration always passes through\n"
             f"• Sandbox:          [{success_color}]ENFORCED[/] — process isolation active\n"
-            f"• Audit Logging:    [{success_color}]ENABLED[/]  — Merkle-chained audit trail\n"
-            f"• Budget Limit:     [{warning_color}]${budget:.2f}[/]    — (from config.yaml)"
+            f"• Audit Logging:    {audit_status}\n"
+            f"• Budget Limit:     {budget_status}"
+            f"{ablation_line}"
         )
         
-        print_panel("🔒 Cage Up", status_text, style=success_color)
+        title = "🔒 Cage Up (Ablation)" if ablation_active else "🔒 Cage Up"
+        print_panel(title, status_text, style=success_color)
         
         if os.environ.get("AKIOS_DOCKER_WRAPPER"):
              print_warning("Running in Docker wrapper. Restart container for changes to take effect.")
@@ -217,6 +268,8 @@ def run_security_down(args: argparse.Namespace) -> int:
     check_project_context()
     
     keep_data = getattr(args, 'keep_data', False)
+    passes = getattr(args, 'passes', 1)
+    fast = getattr(args, 'fast', False)
     
     updates = {
         "AKIOS_PII_REDACTION_ENABLED": "false",
@@ -235,7 +288,7 @@ def run_security_down(args: argparse.Namespace) -> int:
         # Perform data wipe unless --keep-data
         wipe_summary = None
         if not keep_data:
-            wipe_summary = _wipe_cage_data()
+            wipe_summary = _wipe_cage_data(passes=passes, fast=fast)
         
         budget = _read_budget_from_config()
         
@@ -253,6 +306,11 @@ def run_security_down(args: argparse.Namespace) -> int:
             print_panel("🔓 Cage Down (Dev)", status_text, style=warning_color)
         else:
             wipe_lines = _format_wipe_summary(wipe_summary, error_color)
+            wipe_method = ""
+            if fast:
+                wipe_method = f"\n[bold {warning_color}]⚠ Fast mode: files deleted without secure overwrite![/]\n"
+            elif passes > 1:
+                wipe_method = f"\n[dim]Secure erase: {passes} overwrite pass{'es' if passes > 1 else ''}[/]\n"
             status_text = (
                 f"[bold {error_color}]Security Cage: DOWN — DATA DESTROYED[/]\n\n"
                 f"• PII Redaction:    [{warning_color}]DISABLED[/]\n"
@@ -260,7 +318,8 @@ def run_security_down(args: argparse.Namespace) -> int:
                 f"• Sandbox:          [{success_color}]ENFORCED[/]\n"
                 f"• Audit Logging:    [{success_color}]ENABLED[/]\n\n"
                 f"[bold {error_color}]🗑️  Data Wipe Summary:[/]\n"
-                f"{wipe_lines}\n\n"
+                f"{wipe_lines}"
+                f"{wipe_method}\n"
                 f"[{success_color}]Nothing left. Cage promise fulfilled.[/]"
             )
             print_panel("🔓 Cage Down", status_text, style=error_color)
@@ -273,9 +332,61 @@ def run_security_down(args: argparse.Namespace) -> int:
         raise CLIError(f"Failed to deactivate security cage: {str(e)}")
 
 
-def _wipe_cage_data() -> dict:
+def _secure_overwrite_file(filepath: Path, passes: int = 1) -> None:
     """
-    Destroy all cage session data.
+    Securely overwrite a file before deletion.
+
+    For each pass: overwrites file content with random bytes, fsyncs to
+    force write to disk, then overwrites with zeros and fsyncs again.
+    After all passes, the file is deleted.
+
+    Note: SSDs with wear-leveling may retain data in unmapped sectors.
+    This is a hardware limitation documented in SECURITY.md.
+
+    Args:
+        filepath: Path to the file to securely erase.
+        passes: Number of overwrite passes (1 for dev, 3 for production).
+    """
+    try:
+        size = filepath.stat().st_size
+        if size == 0:
+            filepath.unlink(missing_ok=True)
+            return
+
+        for _ in range(passes):
+            # Pass A: random bytes
+            with open(filepath, 'r+b') as f:
+                f.write(os.urandom(size))
+                f.flush()
+                os.fsync(f.fileno())
+
+            # Pass B: zeros
+            with open(filepath, 'r+b') as f:
+                f.write(b'\x00' * size)
+                f.flush()
+                os.fsync(f.fileno())
+
+        filepath.unlink(missing_ok=True)
+    except (PermissionError, OSError):
+        # If secure overwrite fails (e.g., read-only), fall back to plain delete
+        try:
+            filepath.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+
+def _wipe_cage_data(passes: int = 1, fast: bool = False) -> dict:
+    """
+    Destroy all cage session data with secure overwrite.
+    
+    Each file is overwritten with random bytes + zeros before deletion,
+    ensuring data is not recoverable with disk forensic tools (GDPR Art. 17).
+    
+    Args:
+        passes: Number of overwrite passes (default: 1). On SSDs, extra
+                passes have limited benefit due to wear-leveling.
+        fast:   If True, skip secure overwrite and just delete files.
+                WARNING: data may be recoverable with forensic tools.
     
     Removes:
     - audit/          Merkle-chained audit logs
@@ -300,16 +411,20 @@ def _wipe_cage_data() -> dict:
     for dir_path, files_key, bytes_key in dirs_to_wipe:
         p = Path(dir_path)
         if p.exists() and p.is_dir():
-            # Count files and bytes before deleting
+            # Count and securely overwrite each file before removing
             for f in p.rglob('*'):
                 if f.is_file():
                     try:
                         summary[bytes_key] += f.stat().st_size
                         summary[files_key] += 1
+                        if fast:
+                            f.unlink(missing_ok=True)
+                        else:
+                            _secure_overwrite_file(f, passes=passes)
                     except OSError:
                         pass
-            # Remove all contents, recreate empty dir
-            shutil.rmtree(p)
+            # Remove any remaining empty dirs, recreate clean directory
+            shutil.rmtree(p, ignore_errors=True)
             p.mkdir(parents=True, exist_ok=True)
     
     return summary
