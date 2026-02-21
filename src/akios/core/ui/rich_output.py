@@ -323,8 +323,8 @@ def clear_screen():
     if _should_use_rich():
         _get_console().clear()
     else:
-        # Fallback for standard terminals
-        os.system('cls' if os.name == 'nt' else 'clear')
+        # Fallback for standard terminals — ANSI escape (no shell invocation)
+        print('\033[2J\033[H', end='', flush=True)
 
 def get_status_badge(status: str) -> str:
     """Get a colored status badge string."""

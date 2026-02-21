@@ -47,7 +47,7 @@ def colored_error(message: str) -> str:
             return f"{get_theme_ansi('error')}{message}{ANSI_RESET}"
         else:
             return message
-    except:
+    except Exception:
         return message
 
 

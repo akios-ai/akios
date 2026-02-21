@@ -471,9 +471,9 @@ class RuntimeEngine:
 
         This prevents agent state contamination between different workflow runs.
         """
-        # Agents are typically stateless, but this provides a hook for future
-        # stateful agent cleanup if needed
-        pass
+        # Agents are stateless in v1.0 — log for audit trail
+        if hasattr(self, 'logger'):
+            self.logger.debug("Agent state cleared (stateless — no-op)")
 
     def _clear_audit_state(self) -> None:
         """
@@ -481,9 +481,9 @@ class RuntimeEngine:
 
         Ensures audit logging doesn't interfere with subsequent executions.
         """
-        # Audit system is append-only, but this provides cleanup hooks
-        # for any temporary audit state if implemented in the future
-        pass
+        # Audit system is append-only in v1.0 — log for audit trail
+        if hasattr(self, 'logger'):
+            self.logger.debug("Audit state cleared (append-only — no-op)")
 
     def _validate_workflow_structure(self, workflow) -> None:
         """

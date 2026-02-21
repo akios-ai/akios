@@ -1,10 +1,10 @@
-# AKIOS v1.0.9 CLI Reference
+# AKIOS v1.0.10 CLI Reference
 **Document Version:** 1.0.9  
 **Date:** 2026-02-19  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.0.9 supports three deployment methods:
+AKIOS v1.0.10 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.9 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.10 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.9 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.10 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
