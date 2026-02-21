@@ -1,0 +1,30 @@
+# AKIOS V1.0 Core Runtime Dependencies
+# ======================================
+
+# Core functionality
+pydantic[email]>=2.0.0
+pydantic-settings>=2.0.0
+pyyaml>=6.0
+jsonschema>=4.21.0
+
+# Agent integrations
+openai>=1.0.0
+anthropic>=0.30.0
+httpx>=0.25.0
+tiktoken>=0.5.0  # Required for accurate LLM token counting
+
+# Security and compliance
+cryptography>=42.0.0
+psutil>=5.9.0
+
+# Monitoring and observability
+prometheus-client>=0.17.0
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+
+# Document processing (REQUIRED for multi-format file support)
+PyPDF2>=3.0.0
+pdfminer.six>=20231228
+python-docx>=1.1.0
+
+# Development and testing dependencies are in requirements-build.txt

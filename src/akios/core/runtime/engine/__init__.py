@@ -17,6 +17,15 @@
 Engine module - Main runtime coordination for AKIOS
 
 Orchestrates sequential workflow execution with security and audit integration.
+
+Submodules:
+  - engine:              RuntimeEngine orchestrator
+  - condition_evaluator: AST-safe step condition evaluation
+  - output_extractor:    Canonical output key probing
+  - template_renderer:   Template substitution and output-path transforms
+  - step_executor:       Single-step dispatch, retry, and validation
+  - kills:               Cost and loop kill-switches
+  - retry:               Retry and fallback handlers
 """
 
 from .engine import RuntimeEngine, run_workflow
@@ -30,5 +39,5 @@ __all__ = [
     "LoopKillSwitch",
     "KillSwitchManager",
     "RetryHandler",
-    "FallbackHandler"
+    "FallbackHandler",
 ]

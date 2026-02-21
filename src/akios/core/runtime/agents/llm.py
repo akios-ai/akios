@@ -49,6 +49,9 @@ except Exception:
     )
     apply_pii_redaction = lambda x: "[PII_REDACTION_UNAVAILABLE]"
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class LLMAgent(BaseAgent):
     """
@@ -812,13 +815,12 @@ class LLMAgent(BaseAgent):
         # Check if cost kill switch is enabled
         if not self.settings.cost_kill_enabled:
             # Log warning but allow execution
-            print(f"⚠️  Warning: Cost controls disabled. Estimated cost: ${estimated_cost:.6f}", file=__import__('sys').stderr)
+            logger.warning("Cost controls disabled. Estimated cost: $%.6f", estimated_cost)
             return
 
         # Validate budget limit is reasonable (not extremely low for testing)
         if budget_limit < 0.00001:  # Cost validation works consistently in both mock and real modes
-            print(f"⚠️  Warning: Very low budget limit (${budget_limit:.6f}) detected. "
-                  f"Estimated cost: ${estimated_cost:.6f}.", file=__import__('sys').stderr)
+            logger.warning("Very low budget limit ($%.6f) detected. Estimated cost: $%.6f.", budget_limit, estimated_cost)
 
         # Main cost limit check
         if projected_total_cost > budget_limit:

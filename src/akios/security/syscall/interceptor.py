@@ -25,8 +25,11 @@ import signal
 import sys
 import threading
 import platform
+import logging
 from typing import Optional, Callable, Dict, Any, List
 from contextlib import contextmanager
+
+logger = logging.getLogger(__name__)
 
 # Platform-specific imports and feature detection
 # This ensures clean separation of platform-dependent functionality
@@ -262,7 +265,7 @@ class SyscallInterceptor:
                 continue
             except Exception as e:
                 # Log other errors but continue
-                print(f"Warning: Failed to add syscall rule for {syscall_name}: {e}", file=sys.stderr)
+                logger.warning("Failed to add syscall rule for %s: %s", syscall_name, e)
                 continue
 
         # Load the filter
@@ -503,8 +506,7 @@ class SyscallInterceptor:
 
         except Exception as e:
             # Fallback to policy-only monitoring if seccomp fails
-            print(f"Warning: Failed to install seccomp filter: {e}", file=__import__('sys').stderr)
-            print("Falling back to policy-based syscall monitoring", file=__import__('sys').stderr)
+            logger.warning("Failed to install seccomp filter: %s — falling back to policy-based syscall monitoring", e)
             self.monitoring_enabled = True  # Still enable monitoring with policy checks
 
     def _alloc_buffer(self, data: bytes) -> int:
@@ -621,7 +623,7 @@ class SyscallInterceptor:
             })
         except Exception as e:
             # Never let audit logging failure prevent security enforcement
-            print(f"⚠️  Audit logging failed for syscall violation: {e}", file=sys.stderr)
+            logger.error("Audit logging failed for syscall violation: %s", e)
 
         raise SyscallViolationError(
             f"Syscall '{syscall_name}' blocked by security policy for agent type "

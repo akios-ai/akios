@@ -63,8 +63,8 @@ def initialize_core_services() -> bool:
         return True
     except Exception as e:
         # Log error but don't crash - services can be initialized lazily
-        import sys
-        print(f"Warning: Core services initialization failed: {e}", file=sys.stderr)
+        import logging
+        logging.getLogger(__name__).warning("Core services initialization failed: %s", e)
         return False
 
 __all__ = [

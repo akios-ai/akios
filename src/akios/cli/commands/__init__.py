@@ -99,6 +99,9 @@ def register_all_commands(subparsers: argparse._SubParsersAction) -> None:
     workflow_module = _import_command_module('workflow')
     workflow_module.register_workflow_command(subparsers)
 
+    serve_module = _import_command_module('serve')
+    serve_module.register_serve_command(subparsers)
+
 
 def get_command_descriptions() -> Dict[str, str]:
     """
@@ -128,6 +131,7 @@ def get_command_descriptions() -> Dict[str, str]:
         "protect": "Analyze and preview PII protection for workflows",
         "http": "Make secure HTTP requests through the security cage",
         "workflow": "Validate and inspect AKIOS workflow files",
+        "serve": "Start the AKIOS REST API server (requires akios[api])",
     }
 
 
