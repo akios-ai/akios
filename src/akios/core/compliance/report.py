@@ -316,7 +316,12 @@ class ComplianceGenerator:
             "audit": audit_score,
             "cost": cost_score,
         }
-        overall_score = round(sum(component_scores.values()) / len(component_scores), 1)
+        # Weighted average: security 50%, audit 30%, cost 20%
+        # Security is the most critical dimension for a security-first product.
+        _WEIGHTS = {"security": 0.50, "audit": 0.30, "cost": 0.20}
+        overall_score = round(
+            sum(score * _WEIGHTS[name] for name, score in component_scores.items()), 1
+        )
 
         # Map score to level
         if overall_score >= 4.5:

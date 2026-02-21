@@ -18,6 +18,8 @@ PII detector for AKIOS
 
 Identify personally identifiable information in text/data.
 Provides >95% accuracy using carefully crafted patterns.
+
+v1.0.8: Renamed to RegexPIIDetector, implements PIIDetectorProtocol.
 """
 
 import re
@@ -28,12 +30,19 @@ from ...config import get_settings
 from .rules import ComplianceRules, PIIPattern, load_compliance_rules
 
 
-class PIIDetector:
-    """
-    PII detection engine with >95% accuracy
+# Context window size (chars) to search for keywords around a match
+_CONTEXT_WINDOW = 100
 
-    Uses compliance rule packs to identify sensitive information
-    in text and data streams.
+
+class RegexPIIDetector:
+    """
+    Regex-based PII detection engine with >95% accuracy.
+
+    Implements PIIDetectorProtocol. Uses compliance rule packs to identify
+    sensitive information in text and data streams.
+
+    v1.0.8: Renamed from PIIDetector, implements context_keywords for
+    ambiguous patterns (france_id, germany_id, bank_account_us).
     """
 
     def __init__(self):
@@ -152,8 +161,21 @@ class PIIDetector:
 
         for pattern_name, pattern in patterns_to_check.items():
             priority = getattr(pattern, 'priority', 50)
+            context_keywords = getattr(pattern, 'context_keywords', None)
             for m in pattern.compiled_pattern.finditer(text):
                 matched_text = m.group(0)
+
+                # v1.0.8: context_keywords gate — if a pattern declares keywords,
+                # at least one must appear within ±_CONTEXT_WINDOW chars of the
+                # match. This suppresses false positives on broad patterns like
+                # germany_id, bank_account_us, france_id.
+                if context_keywords:
+                    window_start = max(0, m.start() - _CONTEXT_WINDOW)
+                    window_end = min(len(text), m.end() + _CONTEXT_WINDOW)
+                    context_text = text[window_start:window_end].lower()
+                    if not any(kw in context_text for kw in context_keywords):
+                        continue  # No keyword nearby — suppress match
+
                 # Clean and validate the match
                 cleaned = self._clean_single_match(matched_text, pattern_name)
                 if cleaned:
@@ -491,6 +513,7 @@ class PIIDetector:
             Dict with detector metadata
         """
         return {
+            'backend': 'regex',
             'enabled': self.settings.pii_redaction_enabled,
             'patterns_loaded': len(self.rules.get_all_patterns()),
             'rule_summary': self.rules.get_rule_summary(),
@@ -498,14 +521,20 @@ class PIIDetector:
         }
 
 
-def create_pii_detector() -> PIIDetector:
+# Backward compatibility alias — PIIDetector was renamed to RegexPIIDetector in v1.0.8
+PIIDetector = RegexPIIDetector
+
+
+def create_pii_detector() -> RegexPIIDetector:
     """
-    Create a PII detector instance
+    Create a PII detector instance (regex backend).
+
+    For pluggable backend support, use protocols.create_pii_detector(backend=...).
 
     Returns:
-        Configured PIIDetector instance
+        Configured RegexPIIDetector instance
     """
-    return PIIDetector()
+    return RegexPIIDetector()
 
 
 def detect_pii_in_text(text: str, categories: Optional[List[str]] = None) -> Dict[str, List[str]]:

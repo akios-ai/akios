@@ -84,22 +84,33 @@ def _substitute_env_vars(data: Any) -> Any:
 class WorkflowStep:
     """Represents a single workflow step"""
 
-    def __init__(self, step_id: int, agent: str, action: str, parameters: Optional[Dict[str, Any]] = None, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, step_id: int, agent: str, action: str,
+                 parameters: Optional[Dict[str, Any]] = None,
+                 config: Optional[Dict[str, Any]] = None,
+                 condition: Optional[str] = None,
+                 on_error: Optional[str] = None):
         self.step_id = step_id
         self.agent = agent
         self.action = action
         self.parameters = parameters or {}
         self.config = config or {}
+        self.condition = condition  # e.g. "step_1_output.status == 'success'"
+        self.on_error = on_error    # "skip" | "fail" | "retry"
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert step to dictionary"""
-        return {
+        d = {
             "step_id": self.step_id,
             "agent": self.agent,
             "action": self.action,
             "parameters": self.parameters,
             "config": self.config
         }
+        if self.condition:
+            d["condition"] = self.condition
+        if self.on_error:
+            d["on_error"] = self.on_error
+        return d
 
     def __repr__(self) -> str:
         return f"WorkflowStep({self.step_id}: {self.agent}.{self.action})"
@@ -252,13 +263,17 @@ def _parse_workflow_data(workflow_data: Dict[str, Any]) -> Workflow:
         action = step_data.get('action', '')
         parameters = step_data.get('parameters', {})
         config = step_data.get('config', {})
+        condition = step_data.get('condition', None)
+        on_error = step_data.get('on_error', None)
 
         step = WorkflowStep(
             step_id=step_id,
             agent=agent,
             action=action,
             parameters=parameters,
-            config=config
+            config=config,
+            condition=condition,
+            on_error=on_error,
         )
 
         workflow.add_step(step)

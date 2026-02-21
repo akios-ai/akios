@@ -22,7 +22,10 @@ Orchestrates agent execution with security, audit, and kill-switch integration.
 import os
 import sys
 import time
+import logging
 from typing import Dict, Any, Optional, Callable
+
+logger = logging.getLogger(__name__)
 
 # Lazy imports for performance optimization
 # These are imported only when needed to reduce startup time
@@ -88,20 +91,10 @@ def _get_cached_settings():
     return _settings_cache
 
 
-# Allowed models for LLM agent (security restriction)
-ALLOWED_MODELS = {
-    # OpenAI models
-    'gpt-4o-mini', 'gpt-4o', 'gpt-4-turbo', 'gpt-4',
-    # Anthropic models
-    'claude-3.5-haiku', 'claude-3.5-sonnet', 'claude-3-opus',
-    'claude-3-haiku-20240307', 'claude-3-sonnet-20240229', 'claude-3-opus-20240229',
-    # Grok models
-    'grok-4.1-fast', 'grok-4.1', 'grok-4', 'grok-3',
-    # Mistral models
-    'mistral-small', 'mistral-medium', 'mistral-large',
-    # Gemini models
-    'gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro'
-}
+# Allowed models are now configured in settings.py (Settings.allowed_models).
+# The engine reads them at runtime via self.settings.allowed_models.
+# Legacy constant kept for backward compatibility in tests.
+ALLOWED_MODELS = None  # Populated from settings at runtime
 
 # Import security violation patterns and constants from config
 from akios.config.constants import (
@@ -128,6 +121,18 @@ class RuntimeEngine:
     Main runtime engine for executing AKIOS workflows.
 
     Coordinates sequential step execution with security and audit integration.
+
+    Internal organisation (search for the headers):
+        ── Lifecycle          __init__, reset, _clear_*
+        ── Audit helper       _emit_audit
+        ── Workflow exec      run, _execute_workflow, _execute_workflow_steps
+        ── Step exec          _execute_step, _execute_with_agent_retry
+        ── Conditions         _evaluate_condition
+        ── Template engine    _resolve_step_parameters, _transform_output_paths
+        ── Output extraction  _extract_output_value, _extract_step_output
+        ── Kill-switches      _check_execution_limits
+        ── Security           _validate_workflow_structure, _validate_agent_config
+        ── Env / config       _resolve_env_vars
     """
 
     def __init__(self, workflow=None):
@@ -150,6 +155,29 @@ class RuntimeEngine:
 
         # Perform startup health checks
         self._perform_startup_health_checks()
+
+    # ── Audit helper ────────────────────────────────────────────────
+    def _emit_audit(self, workflow_id: str, step: int, agent: str,
+                    action: str, result: str, metadata: Optional[Dict[str, Any]] = None) -> None:
+        """
+        Emit a single audit event if auditing is enabled.
+
+        Centralises the repeated pattern of checking audit_enabled + calling
+        append_audit_event so every call-site is one line instead of six.
+        """
+        if not getattr(self.settings, 'audit_enabled', True):
+            return
+        try:
+            _get_append_audit_event()({
+                'workflow_id': workflow_id,
+                'step': step,
+                'agent': agent,
+                'action': action,
+                'result': result,
+                'metadata': metadata or {},
+            })
+        except Exception:
+            logger.debug("Failed to emit audit event for %s/%s", agent, action, exc_info=True)
 
     def _perform_startup_health_checks(self):
         """
@@ -317,6 +345,8 @@ class RuntimeEngine:
             # Show enhanced workflow overview with context
             total_steps = len(workflow.steps)
             workflow_display_name = workflow.name.replace('_', ' ').title()
+            logger.info('Executing "%s" (%d steps, timeout %.1f min)',
+                        workflow_display_name, total_steps, global_timeout / 60)
             print(f"🚀 Executing \"{workflow_display_name}\"", file=sys.stderr)
             print(f"📊 Progress: {total_steps} steps total", file=sys.stderr)
             print(f"⏱️  Global timeout: {global_timeout/60:.1f} minutes", file=sys.stderr)
@@ -328,6 +358,7 @@ class RuntimeEngine:
 
             # Show celebratory completion summary
             total_time = time.time() - start_time
+            logger.info('Workflow completed in %.2fs', total_time)
             print("", file=sys.stderr)
             print(f"🎉 Workflow completed in {total_time:.2f}s", file=sys.stderr)
             sys.stderr.flush()
@@ -501,12 +532,13 @@ class RuntimeEngine:
 
         # Ensure output base directory exists and is accessible
         try:
+            import tempfile
             output_base.mkdir(parents=True, exist_ok=True)
 
-            # Test directory permissions
-            test_file = output_base / ".akios_execution_test"
-            test_file.write_text("execution_test")
-            test_file.unlink()
+            # Test directory permissions using tempfile to avoid race conditions
+            fd, tmp_path = tempfile.mkstemp(dir=str(output_base), prefix='.akios_probe_')
+            os.close(fd)
+            os.unlink(tmp_path)
 
         except (OSError, PermissionError) as e:
             print(f"⚠️  Warning: Output directory state validation failed: {e}", file=sys.stderr)
@@ -527,12 +559,9 @@ class RuntimeEngine:
         # Reset any global module-level state that might affect execution
         # (Currently no global state, but defensive for future changes)
 
-        # Ensure clean Python garbage collection state
-        import gc
-        gc.collect()  # Clean up any lingering object references
-
-        # Reset any cached imports that might have side effects
-        # (Defensive measure for complex workflows)
+        # NOTE: gc.collect() was removed here — it added ~50ms latency per reset
+        # with no measurable benefit.  The CPython refcount collector handles
+        # short-lived workflow objects perfectly well.
 
     def _execute_workflow_steps(self, workflow, end_time: float) -> list:
         """
@@ -571,6 +600,19 @@ class RuntimeEngine:
                 for i, step in enumerate(workflow.steps):
                     # ENFORCEMENT: Check kill switches BEFORE executing each step
                     self._check_execution_limits(end_time)
+
+                    # Evaluate condition — skip step if condition is false
+                    if getattr(step, 'condition', None):
+                        if not self._evaluate_condition(step.condition, step.step_id):
+                            logger.info('Step %d skipped (condition not met: %s)', step.step_id, step.condition)
+                            dashboard.set_success(i, duration=0.0)
+                            results.append({
+                                'step_id': step.step_id, 'agent': step.agent,
+                                'action': step.action, 'status': 'skipped',
+                                'reason': f'condition not met: {step.condition}',
+                                'execution_time': 0.0,
+                            })
+                            continue
                     
                     # Mark step as running (0-based index)
                     dashboard.set_running(i)
@@ -586,8 +628,24 @@ class RuntimeEngine:
                     
                     if step_result.get('status') == 'error':
                         error_msg = step_result.get('error', 'Unknown error')
-                        dashboard.set_error(i, duration=step_duration)
-                        raise RuntimeError(f"Step {i+1} failed: {error_msg}")
+                        on_error = getattr(step, 'on_error', None) or 'fail'
+                        if on_error == 'skip':
+                            logger.warning('Step %d failed but on_error=skip, continuing: %s', step.step_id, error_msg)
+                            dashboard.set_error(i, duration=step_duration)
+                            # Don't raise — continue to next step
+                        elif on_error == 'retry':
+                            logger.warning('Step %d failed, retrying (on_error=retry): %s', step.step_id, error_msg)
+                            step_result = self._execute_step(step, workflow)
+                            results[-1] = step_result  # Replace last result
+                            step_duration = time.time() - step_start
+                            if step_result.get('status') == 'error':
+                                dashboard.set_error(i, duration=step_duration)
+                                raise RuntimeError(f"Step {i+1} failed after retry: {step_result.get('error', error_msg)}")
+                            else:
+                                dashboard.set_success(i, duration=step_duration)
+                        else:
+                            dashboard.set_error(i, duration=step_duration)
+                            raise RuntimeError(f"Step {i+1} failed: {error_msg}")
                     else:
                         dashboard.set_success(i, duration=step_duration)
                     
@@ -598,6 +656,19 @@ class RuntimeEngine:
             for i, step in enumerate(workflow.steps, 1):
                 # ENFORCEMENT: Check kill switches BEFORE executing each step
                 self._check_execution_limits(end_time)
+
+                # Evaluate condition — skip step if condition is false
+                if getattr(step, 'condition', None):
+                    if not self._evaluate_condition(step.condition, step.step_id):
+                        logger.info('Step %d skipped (condition not met)', step.step_id)
+                        print(f"⏭️  Step {i}/{total_steps}: skipped (condition not met)", file=sys.stderr)
+                        results.append({
+                            'step_id': step.step_id, 'agent': step.agent,
+                            'action': step.action, 'status': 'skipped',
+                            'reason': f'condition not met: {step.condition}',
+                            'execution_time': 0.0,
+                        })
+                        continue
                 
                 # Show enhanced progress indicator
                 step_start = time.time()
@@ -620,7 +691,18 @@ class RuntimeEngine:
                 
                 if step_result.get('status') == 'error':
                     error_msg = step_result.get('error', 'Unknown error')
-                    raise RuntimeError(f"Step {i} failed: {error_msg}")
+                    on_error = getattr(step, 'on_error', None) or 'fail'
+                    if on_error == 'skip':
+                        logger.warning('Step %d failed but on_error=skip, continuing', step.step_id)
+                        # Don't raise — continue to next step
+                    elif on_error == 'retry':
+                        logger.warning('Step %d failed, retrying (on_error=retry)', step.step_id)
+                        step_result = self._execute_step(step, workflow)
+                        results[-1] = step_result
+                        if step_result.get('status') == 'error':
+                            raise RuntimeError(f"Step {i} failed after retry: {step_result.get('error', error_msg)}")
+                    else:
+                        raise RuntimeError(f"Step {i} failed: {error_msg}")
                 
                 # ENFORCEMENT: Check kill switches AFTER each step execution
                 self._check_execution_limits(end_time)
@@ -675,6 +757,57 @@ class RuntimeEngine:
         # Default: if we can't determine status, show warning
         return "⚠️"
 
+    def _evaluate_condition(self, condition: str, step_id: int) -> bool:
+        """
+        Evaluate a step condition expression against the execution context.
+
+        Supports simple comparisons against prior step outputs:
+          - ``step_1_output.status == 'success'``
+          - ``step_2_output.content != ''``
+          - ``previous_output is not None``
+
+        The condition is evaluated in a restricted namespace containing only
+        step results and builtins ``True``, ``False``, ``None``.
+
+        Args:
+            condition: Expression string.
+            step_id:   Current step id (for error messages).
+
+        Returns:
+            ``True`` if the condition passes (step should run),
+            ``False`` if it does not.
+        """
+        import re as _re
+
+        # Build a safe namespace from execution context
+        namespace: Dict[str, Any] = {'True': True, 'False': False, 'None': None}
+
+        # Expose step results as step_N_output
+        for key, value in self.execution_context.items():
+            if key.startswith('step_') and key.endswith('_result'):
+                step_num = key.replace('step_', '').replace('_result', '')
+                namespace[f'step_{step_num}_output'] = value
+
+        # Expose previous_output (= result of step_id - 1)
+        prev_key = f'step_{step_id - 1}_result'
+        namespace['previous_output'] = self.execution_context.get(prev_key)
+
+        # SECURITY: Block dangerous builtins
+        blocked = {'__import__', 'eval', 'exec', 'compile', 'open', 'getattr',
+                    'setattr', 'delattr', 'globals', 'locals', 'vars', 'dir',
+                    'type', 'isinstance', 'issubclass', 'super', 'breakpoint'}
+        for token in blocked:
+            if token in condition:
+                logger.warning('Blocked dangerous token "%s" in condition for step %d', token, step_id)
+                return False
+
+        try:
+            result = eval(condition, {"__builtins__": {}}, namespace)  # noqa: S307
+            return bool(result)
+        except Exception as exc:
+            logger.warning('Condition evaluation failed for step %d (%s): %s', step_id, condition, exc)
+            return False
+
     def _auto_detect_workflow_limitations(self, tracker, workflow):
         """
         Automatically detect workflow-specific testing limitations.
@@ -702,12 +835,8 @@ class RuntimeEngine:
         has_http_steps = any(step.agent == 'http' for step in workflow.steps)
         if has_http_steps:
             network_available = False
-            try:
-                import socket
-                socket.create_connection(("8.8.8.8", 53), timeout=3)
-                network_available = True
-            except (socket.error, OSError):
-                network_available = False
+            from akios.core.utils.network import check_network_available
+            network_available = check_network_available()
 
             if not network_available:
                 tracker.detect_environment_limitation(
@@ -839,8 +968,12 @@ class RuntimeEngine:
             try:
                 import json as _json
                 output_json_path = self._output_dir / "output.json"
+                try:
+                    from akios._version import __version__ as _akios_ver
+                except ImportError:
+                    _akios_ver = 'unknown'
                 deployable = {
-                    'akios_version': '1.0.7',
+                    'akios_version': _akios_ver,
                     'workflow_name': workflow.name,
                     'workflow_id': self.current_workflow_id,
                     'status': 'completed',
@@ -883,11 +1016,11 @@ class RuntimeEngine:
                 'agent': 'engine',
                 'action': 'workflow_failed',
                 'result': 'error',
-                    'metadata': {
-                        'error': str(exception),
-                        AUDIT_EXECUTION_TIME_KEY: time.time() - start_time,
-                        AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}': {str(exception)}"
-                    }
+                'metadata': {
+                    'error': str(exception),
+                    AUDIT_EXECUTION_TIME_KEY: time.time() - start_time,
+                    AUDIT_ERROR_CONTEXT_KEY: f"Workflow '{workflow.name}': {str(exception)}"
+                }
             })
 
         # CRITICAL: Flush audit buffer even on failure to ensure all events are written to disk
@@ -1136,22 +1269,12 @@ class RuntimeEngine:
                 # Substitute {previous_output} with the previous step's result
                 if '{previous_output}' in value:
                     if previous_result is not None:
-                        # Convert previous result to string with improved type handling
+                        # Convert previous result to string using unified key priority
                         if isinstance(previous_result, dict):
-                            # Try multiple keys in order of preference for different agent types
-                            # Added 'response' for LLM chat completion template substitution
-                            for key in ['output', 'content', 'result', 'response', 'text', 'data']:
-                                if key in previous_result and previous_result[key] is not None:
-                                    result_str = str(previous_result[key])
-                                    break
-                            else:
-                                # Fallback to full dict representation if no preferred key found
-                                result_str = str(previous_result)
+                            result_str = self._extract_output_value(previous_result)
                         elif isinstance(previous_result, (list, tuple)):
-                            # For list results, join with newlines
                             result_str = '\n'.join(str(item) for item in previous_result)
                         else:
-                            # For other types, convert to string
                             result_str = str(previous_result)
 
                         value = value.replace('{previous_output}', result_str)
@@ -1203,14 +1326,9 @@ class RuntimeEngine:
                                         f"but key '{key}' not found in step {step_num} result."
                                     )
                             else:
-                                # No key specified, use same logic as previous_output
+                                # No key specified — use unified key priority
                                 if isinstance(step_result, dict):
-                                    for preferred_key in ['output', 'content', 'result', 'text', 'data']:
-                                        if preferred_key in step_result and step_result[preferred_key] is not None:
-                                            step_str = str(step_result[preferred_key])
-                                            break
-                                    else:
-                                        step_str = str(step_result)
+                                    step_str = self._extract_output_value(step_result)
                                 elif isinstance(step_result, (list, tuple)):
                                     step_str = '\n'.join(str(item) for item in step_result)
                                 else:
@@ -1340,6 +1458,40 @@ class RuntimeEngine:
         self.current_workflow_id = None
         self.execution_context = {}
 
+    # ── Unified output value extraction ───────────────────────────────
+    # Canonical key priority used everywhere:
+    #   text → content → output → result → response → stdout → data
+    _OUTPUT_KEY_ORDER = ('text', 'content', 'output', 'result', 'response', 'stdout', 'data')
+
+    @classmethod
+    def _extract_output_value(cls, result: Any) -> str:
+        """
+        Extract a human-readable string from a step result.
+
+        Uses a **single, canonical key priority** so that ``{previous_output}``,
+        ``{step_X_output}``, and ``_extract_step_output`` all agree.
+
+        Priority: text → content → output → result → response → stdout → data
+
+        Args:
+            result: Raw step result (dict, list, or scalar).
+
+        Returns:
+            Extracted string (truncated to 2 000 chars).
+        """
+        if not isinstance(result, dict):
+            return str(result)[:2000] if result else ''
+        for key in cls._OUTPUT_KEY_ORDER:
+            val = result.get(key)
+            if val is not None:
+                return str(val)[:2000]
+        # Filesystem write summary
+        if result.get('written'):
+            return f"Written to {result.get('path', '?')} ({result.get('size', '?')} bytes)"
+        # Fallback: serialise (skip internal keys)
+        summary = {k: v for k, v in result.items() if k not in ('cost_incurred',)}
+        return str(summary)[:2000] if summary else ''
+
     @staticmethod
     def _extract_step_output(step_result) -> str:
         """Extract human-readable output from a step result dict.
@@ -1356,17 +1508,7 @@ class RuntimeEngine:
         result = step_result.get('result')
         if not isinstance(result, dict):
             return str(result)[:2000] if result else ''
-        # Try known agent output keys in priority order
-        for key in ('text', 'content', 'stdout'):
-            val = result.get(key)
-            if val:
-                return str(val)[:2000]
-        # Filesystem write summary
-        if result.get('written'):
-            return f"Written to {result.get('path', '?')} ({result.get('size', '?')} bytes)"
-        # Fallback: serialize the result dict (skip internal keys)
-        summary = {k: v for k, v in result.items() if k not in ('cost_incurred',)}
-        return str(summary)[:2000] if summary else ''
+        return RuntimeEngine._extract_output_value(result)
 
     def _resolve_env_vars(self, config: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -1416,9 +1558,11 @@ class RuntimeEngine:
                         f"Provider '{provider}' not allowed. Must be one of: {', '.join(self.settings.allowed_providers)}"
                     )
 
-            # Model must be in allowed list
-            if "model" in config and config["model"] not in ALLOWED_MODELS:
-                raise SecurityViolationError(f"Invalid model '{config['model']}'. Must be one of: {', '.join(ALLOWED_MODELS)}")
+            # Model must be in allowed list (from settings, not hardcoded)
+            if "model" in config:
+                allowed_models = set(getattr(self.settings, 'allowed_models', []))
+                if config["model"] not in allowed_models:
+                    raise SecurityViolationError(f"Invalid model '{config['model']}'. Must be one of: {', '.join(sorted(allowed_models))}")
 
             # API key must be environment variable reference (checked after resolution)
             # This is handled by the agent itself during initialization

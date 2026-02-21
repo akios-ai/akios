@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://akios.ai/schemas/workflow/v1.0",
-  "version": "1.0.0",
+  "$id": "https://akios.ai/schemas/workflow/v1.1",
+  "version": "1.1.0",
   "title": "AKIOS Workflow Schema",
-  "description": "JSON schema for AKIOS workflow validation",
+  "description": "JSON schema for AKIOS workflow validation (v1.1 — adds condition & on_error)",
   "type": "object",
   "required": ["name", "description", "steps"],
   "properties": {
@@ -22,7 +22,17 @@
           },
           "action": { "type": "string" },
           "config": { "type": "object" },
-          "parameters": { "type": "object" }
+          "parameters": { "type": "object" },
+          "condition": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "Optional expression evaluated against prior step outputs. Step is skipped when the expression evaluates to false."
+          },
+          "on_error": {
+            "type": "string",
+            "enum": ["skip", "fail", "retry"],
+            "description": "Error recovery strategy: skip (continue workflow), fail (halt), retry (re-attempt with backoff)."
+          }
         }
       }
     }

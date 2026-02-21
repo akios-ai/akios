@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.0.7"
+version = "1.0.8"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOS Team", email = "hello@akios.ai" },
@@ -8,6 +8,24 @@ authors = [
 license = {text = "GPL-3.0-only"}
 readme = "README.md"
 requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Typing :: Typed",
+]
 dependencies = [
     # Core functionality
     "pydantic[email]>=2.0.0",
