@@ -347,10 +347,19 @@ class ResourceQuotas:
             raise QuotaViolationError(f"Failed to apply POSIX limits to PID {pid}", 0, 0, pid) from e
 
     def apply_all_quotas(self) -> None:
-        """Apply all resource quotas (legacy method for backward compatibility)"""
-        # This method is kept for backward compatibility but now uses cgroups
-        # In practice, apply_to_process should be used instead
-        pass
+        """Apply all resource quotas to the current process.
+
+        Legacy method kept for backward compatibility — delegates to
+        apply_to_process() with the current PID.
+        """
+        import os
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug("apply_all_quotas: delegating to apply_to_process(pid=%d)", os.getpid())
+        try:
+            self.apply_to_process(os.getpid())
+        except Exception as e:
+            logger.warning("apply_all_quotas: quota enforcement failed: %s", e)
 
     def check_resource_usage(self) -> Dict[str, Any]:
         """

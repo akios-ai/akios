@@ -1,11 +1,27 @@
 # Changelog
-**Document Version:** 1.0.9  
-**Date:** 2026-02-21  
+**Document Version:** 1.0.10  
+**Date:** 2026-02-22  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.10] - 2026-02-22
+
+### Fixed — Security
+- **🔒 `os.system` → ANSI escape** — Removed `os.system("clear")` call in `rich_output.py`, replaced with ANSI escape sequence `\033[2J\033[H`. Eliminates shell injection surface.
+- **🛡️ Bare `except` → `except Exception`** — Fixed 2 bare `except:` clauses in `loader.py` and `init.py` that silently swallowed `KeyboardInterrupt` and `SystemExit`.
+- **⚙️ `apply_all_quotas` no-op** — Was a pass-through stub; now delegates to `apply_resource_quotas()` for actual enforcement.
+- **🧹 Engine dead stubs** — Replaced no-op `_apply_security_context` / `_record_metrics` stubs with `logger.debug()` calls for transparency.
+
+### Added — Test Coverage
+- **🧪 55 new tests** across 9 test files covering `serve` CLI, `workflow validate`, MRN PII detection, compliance scoring, doctor/NPI detection, filesystem agent, HTTP agent, output filter, and `protect show-prompt`.
+- **✅ Test framework hardened** — Fixed 5 `test_init_command.py` failures (macOS platform check bypass, `--force` flag, multi-JSON output parse). All 1,495 unit tests passing, 0 failures.
+
+### Infrastructure
+- **📦 Release automation** — Auto-evidence logging added to release scripts 00–09. SHA-256 manifest generator for reproducible builds.
+- **🔧 pytest.ini** — Created with proper `pythonpath = src` for Python 3.14 compatibility.
 
 ## [1.0.9] - 2026-02-21
 
