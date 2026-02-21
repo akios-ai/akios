@@ -79,14 +79,29 @@ class PIIDetector:
 
 
 class PIIRedactor:
-    """PII redactor for templates - redacts detected PII"""
+    """PII redactor for templates — delegates to canonical redactor."""
 
     def __init__(self):
         self.detector = PIIDetector()
+        self._canonical_redactor = None
+
+    @property
+    def _canonical(self):
+        """Lazy-load the canonical redactor to avoid circular imports."""
+        if self._canonical_redactor is None:
+            try:
+                from .redactor import PIIRedactor as CanonicalRedactor
+                self._canonical_redactor = CanonicalRedactor()
+            except Exception:
+                self._canonical_redactor = None
+        return self._canonical_redactor
 
     def redact_text(self, text: str, strategy: str = 'mask') -> str:
         """
         Redact PII from text.
+
+        Delegates to the canonical PIIRedactor from redactor.py which uses
+        the full pattern set from rules.py. No duplicate regexes here.
 
         Args:
             text: Text to redact
@@ -95,16 +110,24 @@ class PIIRedactor:
         Returns:
             Text with PII redacted
         """
+        canonical = self._canonical
+        if canonical is not None:
+            try:
+                return canonical.redact_text(text)
+            except Exception:
+                pass
+
+        # Last-resort fallback — only if canonical redactor fails entirely
         detected = self.detector.detect_pii(text)
         if not detected:
             return text
-
-        # Apply redaction for common types
+        # Use detector patterns rather than inline regexes
         redacted = text
-        redacted = re.sub(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b', '[EMAIL]', redacted, flags=re.IGNORECASE)
-        redacted = re.sub(r'\b\d{3}-\d{3}-\d{4}\b', '[PHONE]', redacted)
-        redacted = re.sub(r'\b\d{3}-\d{2}-\d{4}\b', '[SSN]', redacted)
-
+        for pii_type, matches in detected.items():
+            placeholder = f'[{pii_type.upper()}]'
+            for match in matches:
+                if match != 'detected':
+                    redacted = redacted.replace(match, placeholder)
         return redacted
 
 

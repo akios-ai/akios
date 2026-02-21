@@ -708,7 +708,68 @@ class ComplianceRules:
                 description='Medical Record Numbers (MRN format)',
                 examples=['MRN-882-441-7739', 'MRN 882 441 7739'],
                 priority=85
-            )
+            ),
+
+            # v1.0.8: Insurance patterns (issue #10)
+            'insurance_policy': PIIPattern(
+                name='insurance_policy',
+                pattern=r'\b(?:HMO|PPO|EPO|POS|HDHP|BCBS|BC-BS|POL|POLICY)[-\s]?(?:[A-Z]{2}[-\s]?)?(?:\d{4}[-\s]?)?\d{4,12}\b',
+                compiled_pattern=re.compile(
+                    r'\b(?:HMO|PPO|EPO|POS|HDHP|BCBS|BC-BS|POL|POLICY)[-\s]?(?:[A-Z]{2}[-\s]?)?(?:\d{4}[-\s]?)?\d{4,12}\b',
+                    re.IGNORECASE
+                ),
+                category='health',
+                sensitivity='high',
+                description='US health/auto/home insurance policy numbers',
+                examples=['HMO-IL-2024-884712', 'BC-BS-987654321', 'POL-12345678', 'PPO-2024-556677'],
+                priority=80,
+                context_keywords=['policy', 'insurance', 'coverage', 'plan', 'premium', 'deductible', 'copay']
+            ),
+
+            'insurance_group': PIIPattern(
+                name='insurance_group',
+                pattern=r'\b(?:GRP|GROUP|EMP)[-\s]?\d{4,12}\b|\b(?:GRP|GROUP|EMP)[-\s]?\d{4}[-\s]?[A-Z]{2,6}\b',
+                compiled_pattern=re.compile(
+                    r'\b(?:GRP|GROUP|EMP)[-\s]?\d{4,12}\b|\b(?:GRP|GROUP|EMP)[-\s]?\d{4}[-\s]?[A-Z]{2,6}\b',
+                    re.IGNORECASE
+                ),
+                category='health',
+                sensitivity='high',
+                description='Insurance group numbers / employer group IDs',
+                examples=['GRP-44556789', 'GROUP-458923', 'EMP-2024-PHMC'],
+                priority=80,
+                context_keywords=['group', 'employer', 'plan', 'insurance', 'member']
+            ),
+
+            'insurance_claim': PIIPattern(
+                name='insurance_claim',
+                pattern=r'\b(?:CLM|CLAIM)[-\s]?\d{4}[-\s]?\d{3,8}\b',
+                compiled_pattern=re.compile(
+                    r'\b(?:CLM|CLAIM)[-\s]?\d{4}[-\s]?\d{3,8}\b',
+                    re.IGNORECASE
+                ),
+                category='health',
+                sensitivity='high',
+                description='Insurance claim reference numbers',
+                examples=['CLM-2024-001234', 'CLAIM-2024-56789'],
+                priority=80,
+                context_keywords=['claim', 'filed', 'adjudication', 'denied', 'approved', 'benefits']
+            ),
+
+            'prior_authorization': PIIPattern(
+                name='prior_authorization',
+                pattern=r'\b(?:PA|PRIOR[-\s]?AUTH)[-\s]?\d{4}[-\s]?\d{3,8}\b',
+                compiled_pattern=re.compile(
+                    r'\b(?:PA|PRIOR[-\s]?AUTH)[-\s]?\d{4}[-\s]?\d{3,8}\b',
+                    re.IGNORECASE
+                ),
+                category='health',
+                sensitivity='high',
+                description='Prior authorization numbers for medical treatments',
+                examples=['PA-2024-56789', 'PRIOR-AUTH-2024-12345'],
+                priority=80,
+                context_keywords=['authorization', 'prior', 'auth', 'approved', 'treatment', 'procedure']
+            ),
         }
 
     def _load_location_patterns(self) -> Dict[str, PIIPattern]:

@@ -1,11 +1,50 @@
 # Changelog
-**Document Version:** 1.0.7  
-**Date:** 2026-02-12  
+**Document Version:** 1.0.8  
+**Date:** 2026-02-19  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.8] - 2026-02-19
+
+### Added — PII Detection
+- **🔌 Pluggable PII backend** — New `PIIDetectorProtocol` (runtime-checkable Protocol) enables swappable detection engines. Factory function `create_pii_detector(backend=)` reads `pii_backend` from settings. Regex is default; Presidio reserved for future `akios-pro`.
+- **🏥 Insurance PII patterns** — 4 new patterns: `insurance_policy`, `insurance_group`, `insurance_claim`, `prior_authorization` with context keywords for disambiguation.
+- **🎯 context_keywords gate** — PII detection now checks ±100 characters around a match for contextual keywords. Patterns that lack nearby context are suppressed, significantly reducing false positives (e.g., bare 9-digit numbers no longer match as routing numbers).
+- **📊 PII accuracy test corpus** — Annotated test suite (`tests/unit/test_pii_accuracy.py`) with per-pattern precision/recall/F1 scoring. Patterns scoring below 0.80 F1 fail CI.
+
+### Added — Workflow Engine
+- **🔀 Conditional execution** — New `condition` field on workflow steps. Expressions are evaluated against prior step outputs in a restricted namespace. Steps are skipped when condition evaluates to false.
+- **🛡️ Error recovery** — New `on_error` field on workflow steps: `skip` (continue workflow), `fail` (halt, default), `retry` (re-attempt once with same parameters).
+- **📐 Workflow schema v1.1** — `workflow_schema.json` updated to include `condition` and `on_error` properties.
+
+### Added — Documentation & Specifications
+- **🔗 LangGraph integration example** — Working example at `docs/integration/langgraph_integration.py` showing AKIOS agents as LangGraph tool-calling nodes with full security cage enforcement.
+- **📜 TLA+ formal specification** — Model-checked safety invariants for the enforcement pipeline (`docs/tla/AKIOSEnforcement.tla`). Verifies: PII always redacted before output, cost kill-switch fires on overspend, audit completeness, sandbox required for execution.
+- **📖 CLI testing subcommands documented** — `akios testing show-notes`, `clear-notes`, `log-issue` now documented in CLI reference.
+- **⚙️ Config JSON Schema** — `Settings.json_schema()` method generates JSON Schema from Pydantic model for IDE auto-completion.
+
+### Changed
+- **⚖️ Weighted compliance scoring** — Overall compliance score now uses security-weighted formula (security 50%, audit 30%, cost 20%) instead of equal-weight average. Reflects security-first product philosophy.
+- **🎯 Action name unification** — Canonical actions synced with AGENTS.md: `llm={complete,chat}`, `http={get,post,put,delete}`, `filesystem={read,write,list,exists,stat}`, `tool_executor={run}`. Old names (`generate`, `execute`, `call`, `patch`, `analyze`) accepted as backward-compatible aliases.
+- **🔧 ALLOWED_MODELS to config** — Hardcoded model set moved from `engine.py` to `Settings.allowed_models` in `settings.py`. Models are now configurable via `config.yaml` or `AKIOS_ALLOWED_MODELS` env var.
+- **🔍 Unified output key-probing** — Single `_extract_output_value()` method with canonical key order (`text → content → output → result → response → stdout → data`) used consistently by `{previous_output}`, `{step_X_output}`, and `_extract_step_output()`.
+- **📝 Engine logging** — Added `logging.getLogger(__name__)` to engine.py. Key execution events now emit structured log records alongside user-facing print statements.
+- **🏗️ Engine organisation** — Class docstring documents internal method groupings. `_emit_audit()` helper centralises the repeated audit-event emission pattern (was 7+ duplicated sites).
+
+### Fixed
+- **🐛 Probe file race condition** — `_validate_output_directory_state()` now uses `tempfile.mkstemp()` instead of a fixed `.akios_execution_test` file, eliminating race conditions under concurrent runs.
+- **🐛 gc.collect() removed** — Unnecessary `gc.collect()` in `_isolate_execution_environment()` added ~50ms latency per reset with no measurable benefit. Removed.
+- **🐛 _handle_workflow_failure indentation** — Fixed indentation bug in metadata dict that caused incorrect YAML/dict nesting.
+- **🐛 Hardcoded version in output.json** — `akios_version` in workflow output now reads dynamically from `akios._version.__version__` instead of hardcoded `'1.0.7'`.
+- **🐛 PII core.py deduplication** — `PIIRedactor.redact_text()` in `core.py` now delegates to canonical redactor instead of maintaining 3 inline fallback regexes.
+- **🐛 output_filter.py consolidation** — `OutputFilter` now uses canonical `PIIRedactor` from `redactor.py` instead of maintaining independent regex patterns.
+
+### Infrastructure
+- **🌐 DNS check dedup** — Extracted `check_network_available()` to `akios.core.utils.network`. Previously duplicated in `engine.py`, `tracker.py`, and `cli/commands/run.py`.
+- **📋 ROADMAP updated** — v1.0.7 marked as "Shipped", v1.0.8 "Science + Orchestration" with 15 items listed.
 
 ## [1.0.7] - 2026-02-12
 

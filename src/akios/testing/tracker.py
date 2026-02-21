@@ -89,14 +89,18 @@ class TestingIssueTracker:
             return False
 
     def _check_network_connectivity(self) -> bool:
-        """Check basic network connectivity"""
+        """Check basic network connectivity (delegates to shared utility)."""
         try:
-            import socket
-            # Try to connect to a well-known host on port 53 (DNS)
-            socket.create_connection(("8.8.8.8", 53), timeout=2)
-            return True
-        except (socket.error, OSError):
-            return False
+            from akios.core.utils.network import check_network_available
+            return check_network_available(timeout=2)
+        except ImportError:
+            # Fallback if utils not available
+            try:
+                import socket
+                socket.create_connection(("8.8.8.8", 53), timeout=2)
+                return True
+            except (socket.error, OSError):
+                return False
 
     def _load_existing_issues(self):
         """Load existing testing issues from log file"""

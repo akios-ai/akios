@@ -2,7 +2,7 @@
 
 **Document Version:** 1.0  
 **Date:** 2026-01-30  
-**Scope:** AKIOS v1.0.7 native Linux performance & security validation on AWS EC2
+**Scope:** AKIOS v1.0.8 native Linux performance & security validation on AWS EC2
 
 ---
 
@@ -154,7 +154,7 @@ Performance may vary by region due to:
 
 ### Performance Scaling Model
 
-**Based on AKIOS v1.0.7 validation on t4g.micro (ARM64, 1 GB RAM):**
+**Based on AKIOS v1.0.8 validation on t4g.micro (ARM64, 1 GB RAM):**
 
 ```
 Security Pipeline:  0.47 ms (full pipeline: PII + policy + audit + budget)
@@ -244,7 +244,7 @@ sudo apt install -y python3-pip python3-venv
 pip install akios
 
 # Verify installation
-akios --version  # Should show "AKIOS 1.0.7"
+akios --version  # Should show "AKIOS 1.0.8"
 ```
 
 ### Step 4: Configure AKIOS

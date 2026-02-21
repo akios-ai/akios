@@ -1,5 +1,5 @@
 # AKIOS Roadmap
-**Document Version:** 1.0.7  
+**Document Version:** 1.0.8  
 **Date:** 2026-02-19  
 **License:** GPL-3.0-only  
 
@@ -26,33 +26,42 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Next: v1.0.7 — "Integrity" (Target: March 2026)
+## Shipped: v1.0.7 — "Integrity" (February 2026)
 
-**Theme:** Fix critical integrity issues. No new features — only truth.
+**Theme:** Fix critical integrity issues. No new features — only truth.  
+**Status:** ✅ Shipped
 
-- **Real compliance scoring** — replace hardcoded scores with actual computed values
-- **Audit log integrity** — fix 10K event cap, Merkle coverage gaps, O(n²) appends. Add log rotation
-- **Secure data erasure** — overwrite-before-delete for `cage down` (GDPR Art. 17)
-- **PII pattern overlaps** — resolve duplicate regexes, fix ICD-10 misclassification
-- **Ablation benchmark support** — toggle individual enforcement primitives for research
-- **Multi-instance benchmarks** — validate performance across ARM64 and x86_64 instances
-- **Workflow validation** — expand `akios workflow` beyond stub
-- **Repo hygiene** — remove dead dependencies and duplicate files
+- ✅ **Real compliance scoring** — replace hardcoded scores with actual computed values
+- ✅ **Audit log integrity** — fix 10K event cap, Merkle coverage gaps, O(n²) appends. Add log rotation
+- ✅ **Secure data erasure** — overwrite-before-delete for `cage down` (GDPR Art. 17)
+- ✅ **PII pattern overlaps** — resolve duplicate regexes, fix ICD-10 misclassification
+- ✅ **Ablation benchmark support** — toggle individual enforcement primitives for research
+- ✅ **Multi-instance benchmarks** — validate performance across ARM64 and x86_64 instances
+- ✅ **Workflow validation** — expand `akios workflow` beyond stub
+- ✅ **Repo hygiene** — remove dead dependencies and duplicate files
 
 ---
 
-## v1.0.8 — "Science + Orchestration" (Target: May 2026)
+## Current: v1.0.8 — "Science + Orchestration" (Target: March 2026)
 
-**Theme:** Research-grade evaluation AND workflow improvements.
+**Theme:** Research-grade evaluation AND workflow improvements.  
+**Status:** 🔧 In development
 
 - **Pluggable PII backend** — abstract detector interface; support regex (default) and Presidio
+- **PII accuracy evaluation** — annotated test corpus with precision/recall/F1 by category
+- **Insurance PII patterns** — policy, group, claim, prior-authorization detection
+- **context_keywords gate** — suppress false-positive PII matches without surrounding context
 - **LangGraph integration** — working example of LangGraph tool calls through AKIOS enforcement
 - **TLA+ formal specification** — model-checked safety invariants for the enforcement pipeline
-- **PII accuracy evaluation** — annotated test corpus with precision/recall/F1 by category
-- **Conditional execution** — `condition` field on workflow steps
-- **Error recovery & retry** — `retry` and `on_error` fields with configurable backoff
-- **Step output piping** — structured JSON output, JSONPath references between steps
-- **Engine refactoring** — split monolithic engine.py into focused modules
+- **Conditional execution** — `condition` field on workflow steps with safe expression evaluator
+- **Error recovery & retry** — `on_error` field (skip / fail / retry) with configurable backoff
+- **Engine refactoring** — unified output key-probing, `_emit_audit()` helper, logger integration
+- **ALLOWED_MODELS to config** — move hardcoded model set to `settings.yaml` / Pydantic settings
+- **DNS check dedup** — shared `check_network_available()` utility (was duplicated in 3 files)
+- **Weighted compliance scoring** — security 50 %, audit 30 %, cost 20 % (was equal-weight average)
+- **Action name unification** — canonical actions synced with AGENTS.md; old names accepted as aliases
+- **Config JSON Schema** — auto-generated from Pydantic settings for IDE auto-completion
+- **Dead code & tech debt** — remove `gc.collect()`, fix probe-file race, dynamic version in output.json
 
 ---
 

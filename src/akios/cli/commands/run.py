@@ -549,13 +549,10 @@ def _auto_detect_testing_limitations(tracker, args):
         )
 
     # Check for network connectivity limitations
-    network_available = False
     try:
-        import socket
-        # Try to connect to a well-known host
-        socket.create_connection(("8.8.8.8", 53), timeout=3)
-        network_available = True
-    except (socket.error, OSError):
+        from akios.core.utils.network import check_network_available
+        network_available = check_network_available()
+    except ImportError:
         network_available = False
 
     if not network_available:

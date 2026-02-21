@@ -1,10 +1,10 @@
-# AKIOS v1.0.7 CLI Reference
-**Document Version:** 1.0.7  
-**Date:** 2026-02-12  
+# AKIOS v1.0.8 CLI Reference
+**Document Version:** 1.0.8  
+**Date:** 2026-02-19  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.0.7 supports three deployment methods:
+AKIOS v1.0.8 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.8 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.7 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.8 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -569,7 +569,7 @@ The output includes:
 Example output:
 ```json
 {
-  "akios_version": "1.0.7",
+  "akios_version": "1.0.8",
   "workflow_name": "Hello World Workflow",
   "status": "completed",
   "steps_executed": 3,
@@ -844,7 +844,21 @@ View environment notes and testing context for the current project.
 ```bash
 # Show testing context and environment info
 akios testing
+
+# Show testing notes recorded during workflow execution
+akios testing show-notes
+
+# Clear all testing notes
+akios testing clear-notes
+
+# Log a manual testing issue
+akios testing log-issue "Description of the issue"
 ```
+
+**Subcommands:**
+- `show-notes` — Display all testing notes recorded during workflow execution
+- `clear-notes` — Remove all stored testing notes
+- `log-issue` — Manually log a testing issue for tracking
 
 Displays mock mode status, API key availability, and testing recommendations.
 

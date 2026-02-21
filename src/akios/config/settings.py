@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     )
     pii_redaction_outputs: bool = Field(True, description="Enable PII redaction on LLM outputs")
     pii_redaction_aggressive: bool = Field(False, description="Use aggressive PII redaction rules")
+    pii_backend: str = Field(
+        "regex",
+        pattern="^(regex|presidio)$",
+        description="PII detection backend: 'regex' (built-in) or 'presidio' (requires akios-pro)"
+    )
 
     # Cost & loop protection
     cost_kill_enabled: bool = Field(True, description="Enable cost kill-switches")
@@ -85,6 +90,22 @@ class Settings(BaseSettings):
     allowed_providers: List[str] = Field(
         ["openai", "anthropic", "grok", "mistral", "gemini"],
         description="Allowed LLM providers for security"
+    )
+    allowed_models: List[str] = Field(
+        [
+            # OpenAI
+            "gpt-4o-mini", "gpt-4o", "gpt-4-turbo", "gpt-4",
+            # Anthropic
+            "claude-3.5-haiku", "claude-3.5-sonnet", "claude-3-opus",
+            "claude-3-haiku-20240307", "claude-3-sonnet-20240229", "claude-3-opus-20240229",
+            # Grok
+            "grok-4.1-fast", "grok-4.1", "grok-4", "grok-3",
+            # Mistral
+            "mistral-small", "mistral-medium", "mistral-large",
+            # Gemini
+            "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro",
+        ],
+        description="Allowed LLM model identifiers (security restriction)"
     )
     mock_llm: bool = Field(False, description="Enable mock LLM mode for testing")
 
@@ -133,4 +154,20 @@ class Settings(BaseSettings):
         env_file=None,  # Disable .env file loading to avoid permission issues
         extra="forbid",  # Forbid extra configuration to catch typos/nesting errors
     )
+
+    @classmethod
+    def json_schema(cls) -> dict:
+        """
+        Generate a JSON Schema from this Pydantic model.
+
+        Useful for IDE auto-completion in config.yaml files and for
+        documentation generation.
+
+        Returns:
+            JSON Schema dict compatible with JSON Schema Draft 2020-12.
+        """
+        schema = cls.model_json_schema()
+        schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
+        schema["$id"] = "https://akios.ai/schemas/config/v1.0"
+        return schema
 

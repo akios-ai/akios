@@ -33,12 +33,20 @@ except ImportError:
 # Allowed agents
 ALLOWED_AGENTS = {'llm', 'http', 'filesystem', 'tool_executor'}
 
-# Agent-specific allowed actions
+# Agent-specific allowed actions (canonical — synced with AGENTS.md v1.0.8)
 ALLOWED_ACTIONS = {
-    'llm': {'generate', 'complete', 'chat'},
-    'http': {'get', 'post', 'put', 'delete', 'patch'},
-    'filesystem': {'read', 'write', 'list', 'exists', 'stat', 'analyze'},
-    'tool_executor': {'execute', 'run', 'call'}
+    'llm': {'complete', 'chat'},
+    'http': {'get', 'post', 'put', 'delete'},
+    'filesystem': {'read', 'write', 'list', 'exists', 'stat'},
+    'tool_executor': {'run'}
+}
+
+# Backward-compat aliases accepted by the validator (old names → canonical)
+_ACTION_ALIASES = {
+    'llm': {'generate': 'complete'},
+    'tool_executor': {'execute': 'run', 'call': 'run'},
+    'http': {'patch': 'put'},
+    'filesystem': {'analyze': 'read'},
 }
 
 
@@ -266,6 +274,25 @@ def _validate_single_step(step_data: Any, step_num: int) -> List[str]:
         config_errors = _validate_agent_config(step_data['agent'], step_data['config'], step_num)
         errors.extend(config_errors)
 
+    # Validate condition field (optional — simple expression string)
+    if 'condition' in step_data:
+        condition = step_data['condition']
+        if not isinstance(condition, str):
+            errors.append(f"Step {step_num}: 'condition' must be a string expression")
+        elif len(condition) > 500:
+            errors.append(f"Step {step_num}: 'condition' is too long (max 500 chars)")
+
+    # Validate on_error field (optional — error recovery strategy)
+    if 'on_error' in step_data:
+        on_error = step_data['on_error']
+        allowed_on_error = {'skip', 'fail', 'retry'}
+        if not isinstance(on_error, str):
+            errors.append(f"Step {step_num}: 'on_error' must be a string")
+        elif on_error not in allowed_on_error:
+            errors.append(
+                f"Step {step_num}: 'on_error' must be one of: {', '.join(sorted(allowed_on_error))}"
+            )
+
     return errors
 
 
@@ -284,7 +311,7 @@ def _validate_agent(agent: str, step_num: int) -> List[str]:
 
 
 def _validate_action(agent: str, action: str, step_num: int) -> List[str]:
-    """Validate action for the given agent"""
+    """Validate action for the given agent (accepts backward-compat aliases)."""
     errors = []
 
     if not isinstance(action, str):
@@ -293,8 +320,9 @@ def _validate_action(agent: str, action: str, step_num: int) -> List[str]:
 
     if agent in ALLOWED_ACTIONS:
         allowed_actions = ALLOWED_ACTIONS[agent]
-        if action not in allowed_actions:
-            errors.append(f"Step {step_num}: action '{action}' not allowed for agent '{agent}'. Must be one of: {', '.join(allowed_actions)}")
+        aliases = _ACTION_ALIASES.get(agent, {})
+        if action not in allowed_actions and action not in aliases:
+            errors.append(f"Step {step_num}: action '{action}' not allowed for agent '{agent}'. Must be one of: {', '.join(sorted(allowed_actions))}")
 
     return errors
 
@@ -366,27 +394,36 @@ def _check_forbidden_features(workflow_data: Dict[str, Any]) -> List[str]:
     """Check for features forbidden in current scope"""
     errors = []
 
-    # Check for conditional logic
-    forbidden_keys = ['if', 'condition', 'conditions', 'when', 'unless', 'switch', 'case']
+    # Check for conditional logic (some are now allowed at step level)
+    # 'condition' is allowed at step level for conditional execution
+    # 'on_error' is allowed at step level for error recovery
+    forbidden_keys = ['if', 'conditions', 'when', 'unless', 'switch', 'case']
+    # Keys allowed only at step level, not at workflow level
+    step_only_keys = ['condition', 'on_error']
 
-    def check_dict_for_forbidden(data: Any, path: str = "") -> List[str]:
+    def check_dict_for_forbidden(data: Any, path: str = "", in_step: bool = False) -> List[str]:
         forbidden_found = []
 
         if isinstance(data, dict):
             for key, value in data.items():
                 if key.lower() in forbidden_keys:
                     forbidden_found.append(f"Forbidden conditional '{key}' at {path}")
+                # step_only_keys are only forbidden when NOT inside a step
+                elif key.lower() in step_only_keys and not in_step:
+                    forbidden_found.append(f"Forbidden conditional '{key}' at {path} (only allowed inside steps)")
 
                 # Recursively check nested structures
                 if isinstance(value, (dict, list)):
                     nested_path = f"{path}.{key}" if path else key
-                    forbidden_found.extend(check_dict_for_forbidden(value, nested_path))
+                    forbidden_found.extend(check_dict_for_forbidden(value, nested_path, in_step))
 
         elif isinstance(data, list):
             for i, item in enumerate(data):
                 if isinstance(item, (dict, list)):
                     nested_path = f"{path}[{i}]"
-                    forbidden_found.extend(check_dict_for_forbidden(item, nested_path))
+                    # Items inside 'steps' array are step-level
+                    is_step_item = path.endswith('steps') or path == 'steps'
+                    forbidden_found.extend(check_dict_for_forbidden(item, nested_path, is_step_item))
 
         return forbidden_found
 

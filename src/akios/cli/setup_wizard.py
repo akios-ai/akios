@@ -1,5 +1,5 @@
 """
-Interactive Setup Wizard for AKIOS v1.0.7
+Interactive Setup Wizard for AKIOS v1.0.8
 
 Provides step-by-step configuration prompts using questionary.
 Supports back/skip navigation and input validation.
