@@ -248,7 +248,7 @@ def _validate_startup_security() -> None:
 
 def _validate_configuration(args: argparse.Namespace) -> None:
     """Validate environment configuration early."""
-    if args.command not in ['init', 'setup']:
+    if args.command not in ['init', 'setup', 'serve']:
         try:
             if getattr(sys, 'frozen', False):
                 import akios.config as config_module
@@ -310,7 +310,9 @@ def main() -> int:
             return 2
 
         # Validate security requirements at startup
-        _validate_startup_security()
+        # Skip for commands that don't need kernel-level security
+        if args.command not in ('serve',):
+            _validate_startup_security()
 
         # Validate environment configuration
         _validate_configuration(args)

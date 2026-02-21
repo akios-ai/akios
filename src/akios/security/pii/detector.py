@@ -19,12 +19,15 @@ PII detector for AKIOS
 Identify personally identifiable information in text/data.
 Provides >95% accuracy using carefully crafted patterns.
 
-v1.0.8: Renamed to RegexPIIDetector, implements PIIDetectorProtocol.
+v1.0.9: Renamed to RegexPIIDetector, implements PIIDetectorProtocol.
 """
 
 import re
+import logging
 from typing import Dict, List, Set, Optional, Tuple, Any
 from collections import defaultdict
+
+logger = logging.getLogger(__name__)
 
 from ...config import get_settings
 from .rules import ComplianceRules, PIIPattern, load_compliance_rules
@@ -41,7 +44,7 @@ class RegexPIIDetector:
     Implements PIIDetectorProtocol. Uses compliance rule packs to identify
     sensitive information in text and data streams.
 
-    v1.0.8: Renamed from PIIDetector, implements context_keywords for
+    v1.0.9: Renamed from PIIDetector, implements context_keywords for
     ambiguous patterns (france_id, germany_id, bank_account_us).
     """
 
@@ -59,7 +62,7 @@ class RegexPIIDetector:
                 self._settings = get_settings()
             except Exception as e:
                 # Fallback to basic settings if config unavailable
-                print(f"Warning: Could not load PII detector settings: {e}", file=__import__('sys').stderr)
+                logger.warning("Could not load PII detector settings: %s", e)
                 self._settings = self._create_fallback_settings()
         return self._settings
 
@@ -121,7 +124,7 @@ class RegexPIIDetector:
         except Exception as e:
             # If pattern compilation fails, log warning and return empty patterns
             # This ensures the system doesn't crash but PII detection will be minimal
-            print(f"⚠️  PII pattern compilation failed: {e}", file=__import__('sys').stderr)
+            logger.warning("PII pattern compilation failed: %s", e)
 
         return patterns
 
@@ -165,7 +168,7 @@ class RegexPIIDetector:
             for m in pattern.compiled_pattern.finditer(text):
                 matched_text = m.group(0)
 
-                # v1.0.8: context_keywords gate — if a pattern declares keywords,
+                # v1.0.9: context_keywords gate — if a pattern declares keywords,
                 # at least one must appear within ±_CONTEXT_WINDOW chars of the
                 # match. This suppresses false positives on broad patterns like
                 # germany_id, bank_account_us, france_id.
@@ -521,7 +524,7 @@ class RegexPIIDetector:
         }
 
 
-# Backward compatibility alias — PIIDetector was renamed to RegexPIIDetector in v1.0.8
+# Backward compatibility alias — PIIDetector was renamed to RegexPIIDetector in v1.0.9
 PIIDetector = RegexPIIDetector
 
 

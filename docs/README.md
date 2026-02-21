@@ -1,5 +1,5 @@
-# 📚 AKIOS v1.0.8 - Documentation
-**Document Version:** 1.0.8  
+# 📚 AKIOS v1.0.9 - Documentation
+**Document Version:** 1.0.9  
 **Date:** 2026-02-19  
 
 **Complete user guide for AKIOS - Secure AI Workflow Execution**
@@ -94,4 +94,4 @@ All templates produce **real AI output** from live LLM providers with full audit
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS v1.0.8 - Where AI meets unbreakable security*
+*AKIOS v1.0.9 - Where AI meets unbreakable security*

@@ -33,7 +33,7 @@ except ImportError:
 # Allowed agents
 ALLOWED_AGENTS = {'llm', 'http', 'filesystem', 'tool_executor'}
 
-# Agent-specific allowed actions (canonical — synced with AGENTS.md v1.0.8)
+# Agent-specific allowed actions (canonical — synced with AGENTS.md v1.0.9)
 ALLOWED_ACTIONS = {
     'llm': {'complete', 'chat'},
     'http': {'get', 'post', 'put', 'delete'},

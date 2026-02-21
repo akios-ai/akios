@@ -19,7 +19,7 @@ PII Detection and Redaction Module
 Provides PII detection and redaction functionality for AKIOS.
 PII redaction is mandatory for compliance and cannot be disabled.
 
-v1.0.8: Added PIIDetectorProtocol for pluggable backends.
+v1.0.9: Added PIIDetectorProtocol for pluggable backends.
 """
 
 from .protocols import PIIDetectorProtocol, create_pii_detector as create_pluggable_detector

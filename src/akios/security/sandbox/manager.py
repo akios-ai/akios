@@ -25,8 +25,11 @@ import subprocess
 import signal
 import threading
 import time
+import logging
 from typing import Optional, Dict, Any, List, Callable
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from ...config import get_settings
 from ...core.audit import append_audit_event
@@ -129,7 +132,7 @@ class SandboxManager:
             else:
                 # Show warning in native environments where cgroup creation should work
                 cgroup_name = f"{process_name}_{int(time.time())}"
-                print(f"Warning: Failed to create cgroup {self.cgroup_base_path / cgroup_name}: {e}", file=__import__('sys').stderr)
+                logger.warning("Failed to create cgroup %s: %s", self.cgroup_base_path / cgroup_name, e)
                 return None
 
     def _is_container_environment(self) -> bool:
@@ -164,7 +167,7 @@ class SandboxManager:
                 memory_max_file.write_text(f"{memory_bytes}\n")
 
         except (OSError, PermissionError, AttributeError) as e:
-            print(f"Warning: Failed to configure cgroup limits: {e}", file=__import__('sys').stderr)
+            logger.warning("Failed to configure cgroup limits: %s", e)
 
     def _move_process_to_cgroup(self, pid: int, cgroup_path: Path) -> bool:
         """
@@ -180,7 +183,7 @@ class SandboxManager:
             return True
 
         except (OSError, PermissionError) as e:
-            print(f"Warning: Failed to move process {pid} to cgroup: {e}", file=__import__('sys').stderr)
+            logger.warning("Failed to move process %d to cgroup: %s", pid, e)
             return False
 
     def _cleanup_cgroup(self, cgroup_path: Path) -> None:
@@ -213,7 +216,7 @@ class SandboxManager:
                 time.sleep(0.1)  # Brief delay before retry
                 cgroup_path.rmdir()
             except (OSError, PermissionError):
-                print(f"Warning: Failed to cleanup cgroup {cgroup_path}: {e}", file=__import__('sys').stderr)
+                logger.warning("Failed to cleanup cgroup %s: %s", cgroup_path, e)
 
     def create_sandboxed_process(self, command: List[str], **kwargs) -> subprocess.Popen:
         """
@@ -335,7 +338,7 @@ class SandboxManager:
                 # If seccomp setup fails, log but don't fail - fall back to policy checking
                 # Suppress warning in container environments where seccomp is not available
                 if not self._is_container_environment():
-                    print(f"Warning: Failed to setup syscall interception: {e}", file=__import__('sys').stderr)
+                    logger.warning("Failed to setup syscall interception: %s", e)
 
         except Exception:
             # If restrictions fail, exit immediately
@@ -468,14 +471,14 @@ class SandboxManager:
                         break
                     except Exception as e:
                         # Log monitoring error but continue
-                        print(f"Resource monitoring error for PID {process.pid}: {e}", file=__import__('sys').stderr)
+                        logger.warning("Resource monitoring error for PID %d: %s", process.pid, e)
                         break
 
             except Exception as e:
                 # Suppress monitoring warnings in container environments where process monitoring
                 # may not work reliably due to container isolation
                 if not self._is_container_environment():
-                    print(f"Failed to monitor process {process.pid}: {e}", file=__import__('sys').stderr)
+                    logger.warning("Failed to monitor process %d: %s", process.pid, e)
             finally:
                 with self.monitoring_lock:
                     self.monitoring_threads.pop(process.pid, None)
@@ -509,7 +512,7 @@ class SandboxManager:
                 process.wait(timeout=2.0)
 
         except Exception as e:
-            print(f"Error killing process {process.pid}: {e}", file=__import__('sys').stderr)
+            logger.error("Error killing process %d: %s", process.pid, e)
 
         # Log quota violation event
         append_audit_event({

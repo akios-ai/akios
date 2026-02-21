@@ -61,6 +61,9 @@ except Exception:
     )
     apply_pii_redaction = lambda x: "[PII_REDACTION_UNAVAILABLE]"
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class FilesystemAgent(BaseAgent):
     """
@@ -130,8 +133,7 @@ class FilesystemAgent(BaseAgent):
             except TimeoutError:
                 # SECURITY: If PII redaction times out, NEVER keep original content.
                 # Replace with marker to prevent data leakage.
-                import sys
-                print(f"Warning: PII redaction timed out for input — content masked for safety", file=sys.stderr)
+                logger.warning("PII redaction timed out for input — content masked for safety")
                 parameters['content'] = '[CONTENT_REDACTED_TIMEOUT]'
             
             if parameters['content'] != original_content:
@@ -188,8 +190,7 @@ class FilesystemAgent(BaseAgent):
             except TimeoutError:
                 # SECURITY: If PII redaction times out, NEVER keep original content.
                 # Replace with marker to prevent data leakage.
-                import sys
-                print(f"Warning: PII redaction timed out for output — content masked for safety", file=sys.stderr)
+                logger.warning("PII redaction timed out for output — content masked for safety")
                 result['content'] = '[CONTENT_REDACTED_TIMEOUT]'
             
             if result['content'] != original_content:

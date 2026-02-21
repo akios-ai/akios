@@ -21,7 +21,10 @@ Supports configurable redaction strategies.
 """
 
 import re
+import logging
 from typing import Dict, List, Optional, Any
+
+logger = logging.getLogger(__name__)
 
 from ...config import get_settings
 from .detector import PIIDetector, create_pii_detector
@@ -87,12 +90,12 @@ class PIIRedactor:
                 self._detector = create_pii_detector()
             except Exception as e:
                 # Fallback to basic detector if creation fails
-                print(f"Warning: Could not load PII detector: {e}", file=__import__('sys').stderr)
+                logger.warning("Could not load PII detector: %s", e)
                 from .detector import PIIDetector
                 try:
                     self._detector = PIIDetector()
                 except Exception as fallback_e:
-                    print(f"Warning: PII detector fallback failed: {fallback_e}", file=__import__('sys').stderr)
+                    logger.warning("PII detector fallback failed: %s", fallback_e)
                     # Create minimal dummy detector
                     self._detector = self._create_minimal_detector()
         return self._detector

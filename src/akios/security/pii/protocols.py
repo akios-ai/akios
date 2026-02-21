@@ -21,7 +21,7 @@ The default backend is RegexPIIDetector (rules.py + detector.py).
 Alternative backends (e.g. Presidio) can implement this protocol
 and be swapped in via config.yaml: pii_backend: "presidio"
 
-v1.0.8 — Pluggable PII Backend Interface
+v1.0.9 — Pluggable PII Backend Interface
 """
 
 from typing import Dict, List, Optional, Any, Protocol, runtime_checkable

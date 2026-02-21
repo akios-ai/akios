@@ -19,7 +19,7 @@ PII Output Filter for LLM Responses
 Applies PII redaction to LLM-generated content to prevent accidental data leakage.
 Ensures compliance with data protection requirements for AI-generated outputs.
 
-v1.0.8: Consolidated to use canonical PIIDetector/PIIRedactor instead of
+v1.0.9: Consolidated to use canonical PIIDetector/PIIRedactor instead of
 maintaining independent regex patterns. Eliminates divergent placeholders.
 """
 
@@ -31,7 +31,7 @@ class PIIOutputFilter:
     """
     Specialized PII filter for LLM-generated content.
 
-    v1.0.8: Now delegates ALL detection and redaction to the canonical
+    v1.0.9: Now delegates ALL detection and redaction to the canonical
     PIIRedactor (which uses RegexPIIDetector internally). This eliminates
     the divergent patterns and placeholder formats that existed before.
     """

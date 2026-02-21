@@ -21,8 +21,11 @@ Provides >95% accuracy PII detection patterns.
 """
 
 import re
+import logging
 from typing import Dict, List, Set, Pattern, Optional, Any
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 from ...config import get_settings
 
@@ -105,8 +108,7 @@ class ComplianceRules:
                 self._patterns = self._load_all_patterns()
             except Exception as e:
                 # Fallback to basic patterns if loading fails or resource constrained
-                import sys
-                print(f"Warning: Using basic PII patterns due to: {e}", file=sys.stderr)
+                logger.warning("Using basic PII patterns due to: %s", e)
                 self._patterns = self._load_fallback_patterns()
         return self._patterns
 
@@ -710,7 +712,7 @@ class ComplianceRules:
                 priority=85
             ),
 
-            # v1.0.8: Insurance patterns (issue #10)
+            # v1.0.9: Insurance patterns (issue #10)
             'insurance_policy': PIIPattern(
                 name='insurance_policy',
                 pattern=r'\b(?:HMO|PPO|EPO|POS|HDHP|BCBS|BC-BS|POL|POLICY)[-\s]?(?:[A-Z]{2}[-\s]?)?(?:\d{4}[-\s]?)?\d{4,12}\b',
