@@ -1,28 +1,40 @@
 [project]
 name = "akios"
-version = "1.0.10"
+version = "1.0.11"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
-    { name = "AKIOS Team", email = "hello@akios.ai" },
+    { name = "AKIOUD AI", email = "contact@akioud.ai" },
 ]
 license = {text = "GPL-3.0-only"}
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
+keywords = [
+    "ai",
+    "agents",
+    "security",
+    "runtime",
+    "pii",
+    "audit",
+    "compliance",
+    "sandbox",
+    "workflow",
+    "llm",
+]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
     "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries :: Application Frameworks",
     "Typing :: Typed",
 ]
@@ -51,7 +63,7 @@ dependencies = [
     "protobuf>=5.29.5",
 
     # Document processing (REQUIRED for multi-format file support)
-    "PyPDF2>=3.0.0",
+    "pypdf>=4.0.0",
     "pdfminer.six>=20231228",
     "python-docx>=1.1.0",
 
@@ -67,10 +79,11 @@ dependencies = [
 ]
 
 [project.urls]
-"Homepage" = "https://akios.ai"
-"Bug Tracker" = "https://github.com/akios-ai/akios/issues"
-"Source" = "https://github.com/akios-ai/akios"
-"Logo" = "https://raw.githubusercontent.com/akios-ai/akios/main/assets/logo.png"
+Homepage = "https://akios.ai"
+Repository = "https://github.com/akios-ai/akios"
+Documentation = "https://akios.ai/docs"
+Issues = "https://github.com/akios-ai/akios/issues"
+Changelog = "https://github.com/akios-ai/akios/blob/main/CHANGELOG.md"
 
 [project.scripts]
 akios = "akios.cli.main:main"

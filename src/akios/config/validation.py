@@ -551,16 +551,23 @@ def validate_environment():
 
     # seccomp-bpf check (basic)
     try:
-        result = subprocess.run(["grep", "CONFIG_SECCOMP_FILTER", "/boot/config-$(uname -r)"],
-                              capture_output=True, text=True)
-        if "y" not in result.stdout.lower():
-            warning_msg = "seccomp-bpf not enabled in kernel - syscall filtering will be limited"
-            if is_production:
-                errors.append(warning_msg + " (production security requirement)")
+        import platform
+        kernel_release = platform.release()
+        config_path = f"/boot/config-{kernel_release}"
+        if os.path.exists(config_path):
+            result = subprocess.run(["grep", "CONFIG_SECCOMP_FILTER", config_path],
+                                  capture_output=True, text=True)
+            if "y" not in result.stdout.lower():
+                warning_msg = "seccomp-bpf not enabled in kernel - syscall filtering will be limited"
+                if is_production:
+                    errors.append(warning_msg + " (production security requirement)")
+                else:
+                    warnings.append(warning_msg)
             else:
-                warnings.append(warning_msg)
+                logger.info("seccomp-bpf enabled in kernel")
         else:
-            logger.info("seccomp-bpf enabled in kernel")
+            # Config file not available (common on containers, macOS, some distros)
+            logger.debug(f"Kernel config not found at {config_path} - skipping seccomp check")
     except Exception:
         warning_msg = "Could not check seccomp-bpf kernel config - syscall filtering may be limited"
         if is_production:
