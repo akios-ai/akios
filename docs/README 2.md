@@ -1,6 +1,6 @@
-# 📚 AKIOS v1.0.10 - Documentation
-**Document Version:** 1.0.9  
-**Date:** 2026-02-19  
+# 📚 AKIOS v1.0.11 - Documentation
+**Document Version:** 1.0.11  
+**Date:** 2026-02-22  
 
 **Complete user guide for AKIOS - Secure AI Workflow Execution**
 
@@ -78,6 +78,17 @@ All templates produce **real AI output** from live LLM providers with full audit
 | **Fix problems** | [troubleshooting.md](troubleshooting.md) |
 | **Security details** | [security.md](security.md) |
 
+## 🌐 Ecosystem
+
+AKIOS is part of the [AKIOUD AI](https://github.com/akios-ai) ecosystem:
+
+| Project | License | Description |
+|---------|---------|-------------|
+| **[AKIOS](https://github.com/akios-ai/akios)** | GPL-3.0-only | Production runtime for secure AI agents — kernel sandbox, workflow engine, 4 agents, CLI, compliance reports |
+| **[EnforceCore](https://github.com/akios-ai/EnforceCore)** | Apache-2.0 | General-purpose enforcement library — policy engine, PII redaction, audit trails, framework integrations (LangChain, CrewAI, AutoGen) |
+
+EnforceCore is the enforcement foundation; AKIOS is the complete production runtime built on top of it.
+
 ## 📞 Support & Community
 
 - **GitHub Issues** - Bug reports and feature requests
@@ -94,4 +105,4 @@ All templates produce **real AI output** from live LLM providers with full audit
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS v1.0.10 - Where AI meets unbreakable security*
+*AKIOS v1.0.11 - Where AI meets unbreakable security*

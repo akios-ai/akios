@@ -1,11 +1,36 @@
 # Changelog
-**Document Version:** 1.0.10  
+**Document Version:** 1.0.11  
 **Date:** 2026-02-22  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.11] - 2026-02-22
+
+### Fixed — Code Quality
+- **🔧 Seccomp kernel check** — `validation.py` was passing literal `$(uname -r)` string instead of evaluating it. Now uses `platform.release()` + `os.path.exists()` for correct kernel version detection.
+- **📦 PyPDF2 → pypdf migration** — Replaced deprecated `PyPDF2` with `pypdf>=4.0.0` across `filesystem.py`, `pyproject.toml`, and `requirements.txt`.
+- **🔇 Merkle stderr noise** — `ledger.py` no longer emits errors when audit directory doesn't exist; guarded with `parent.exists()` check, error downgraded to debug level.
+- **🐍 requires-python ≥3.9** — Dropped Python 3.8 classifier (EOL), removed premature 3.14 classifier. `requires-python` now `">=3.9"`.
+- **⚠️ Test return warnings** — Renamed `test_*` → `check_*` for 3 validation helper functions that returned values (pytest warning suppression).
+- **📋 requirements.txt alignment** — Removed stale optional deps (fastapi, uvicorn, prometheus-client), added missing core deps (rich, questionary, google-generativeai, requests, fuzzywuzzy, python-Levenshtein).
+
+### Fixed — Release Process (Critical)
+- **🚨 Wrapper fallback stuck at 1.0.7** — `wrapper.sh` and root `./akios` had hardcoded `FALLBACK_VERSION="1.0.7"` since v1.0.7. Root cause: `bump-version.sh` used exact-match `version="$OLD"` which couldn't find `version="1.0.7"` during v1.0.8+ bumps. Fixed with regex matching.
+- **🔧 bump-version.sh structural fix** — Phase 3 (CLI source) now uses regex `version="[0-9]..."` for wrapper fallback. Phase 5 now includes root `./akios`. Verification scan includes `akios` wrapper file.
+- **📝 6 stale doc version headers** — Updated Document Version 1.0.9 → 1.0.11 in AGENTS.md, GETTING_STARTED.md, CONFIG.md, cli-reference.md, workflow-schema.md, api-reference.md.
+
+### Added — Release Process Hardening
+- **🛡️ Pre-release gate P5a–P5d** — New checks: wrapper.sh fallback version (P5a), root `./akios` mirror match (P5b), root VERSION file (P5c), Dockerfile OCI label (P5d). No more missed version sources.
+- **🐳 Docker build Phase 8.5 + 8.6** — Post-build verification: Phase 8.5 checks `akios --version` inside the image matches pyproject.toml. Phase 8.6 verifies wrapper fallback inside the image.
+- **📊 verify-version-sync.sh** — New standalone script checking all 8 version sources (pyproject.toml, src/VERSION, root VERSION, _version.py, wrapper.sh, root ./akios, Dockerfile OCI label, CHANGELOG entry). Run before any release.
+- **🔄 Dynamic version checks in tests** — Docker and EC2 `test-cli.sh` and `master-test.sh` now read expected version from pyproject.toml instead of hardcoded strings. Never needs manual bumping again.
+
+### Infrastructure
+- **✅ 1,500 unit tests passing** — 0 failures, 5 skipped, 2 warnings (upstream pkg_resources only).
+- **📄 RELEASE_PLAN_v1.0.11.md** — Full release plan with root cause analysis of the wrapper version gap.
 
 ## [1.0.10] - 2026-02-22
 

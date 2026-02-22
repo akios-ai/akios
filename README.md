@@ -348,7 +348,11 @@ AKIOS is **not responsible** for: cloud infrastructure charges, credential leaks
 
 </details>
 
-## 📄 License
+## � Related Projects
+
+**[EnforceCore](https://github.com/akios-ai/EnforceCore)** — The open-source enforcement library (Apache-2.0) for AI agents. EnforceCore provides general-purpose policy enforcement, PII redaction, and audit trails for any agent framework. AKIOS is the complete production runtime built on top of it, adding kernel-level sandboxing, healthcare PII patterns, workflow orchestration, and compliance reporting.
+
+## �📄 License
 
 AKIOS is licensed under [GPL-3.0-only](LICENSE).
 See [NOTICE](NOTICE), [LEGAL.md](LEGAL.md), and [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

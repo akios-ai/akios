@@ -29,7 +29,7 @@ from akios.config import get_settings  # For test patching
 
 # Document processing libraries
 try:
-    import PyPDF2
+    import pypdf
     HAS_PYPDF2 = True
 except ImportError:
     HAS_PYPDF2 = False
@@ -303,13 +303,13 @@ class FilesystemAgent(BaseAgent):
         if not HAS_PDFMINER and not HAS_PYPDF2:
             # Graceful fallback: return placeholder indicating PDF support not available
             return {
-                'content': f'[PDF FILE - Text extraction not available. Install pdfminer or PyPDF2 for PDF text extraction. File: {path}]',
+                'content': f'[PDF FILE - Text extraction not available. Install pdfminer or pypdf for PDF text extraction. File: {path}]',
                 'size': len('[PDF FILE - Text extraction not available]'),
                 'path': str(path),
                 'encoding': 'utf-8',
                 'file_type': 'pdf',
                 'extraction_status': 'library_not_available',
-                'supported_libraries': ['pdfminer', 'PyPDF2']
+                'supported_libraries': ['pdfminer', 'pypdf']
             }
 
         extraction_errors = []
@@ -330,11 +330,11 @@ class FilesystemAgent(BaseAgent):
             except Exception as e:
                 extraction_errors.append(f"pdfminer: {e}")
 
-        # Fallback to PyPDF2
+        # Fallback to pypdf
         if HAS_PYPDF2:
             try:
                 with open(path, 'rb') as file:
-                    pdf_reader = PyPDF2.PdfReader(file)
+                    pdf_reader = pypdf.PdfReader(file)
                     text_content = []
 
                     for page in pdf_reader.pages:
@@ -352,10 +352,10 @@ class FilesystemAgent(BaseAgent):
                             'encoding': 'utf-8',
                             'file_type': 'pdf',
                             'pages': len(pdf_reader.pages),
-                            'extraction_method': 'PyPDF2'
-                        }
+'extraction_method': 'pypdf'
+                    }
             except Exception as e:
-                extraction_errors.append(f"PyPDF2: {e}")
+                extraction_errors.append(f"pypdf: {e}")
 
         # If extraction failed but libraries are available, return informative placeholder
         # This ensures workflows don't fail just because PDF text extraction failed

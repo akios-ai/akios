@@ -1,9 +1,11 @@
 # AKIOS Roadmap
-**Document Version:** 1.0.9  
-**Date:** 2026-02-20  
+**Document Version:** 1.0.10  
+**Date:** 2026-02-22  
 **License:** GPL-3.0-only  
 
 This roadmap covers the open-source AKIOS project — the security-cage runtime for AI agents.
+
+> **Two-project model:** AKIOS (GPL-3.0) is the complete production runtime. [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is the general-purpose enforcement library. Starting from v1.2.0, AKIOS will use EnforceCore as its enforcement foundation while keeping its unique value: kernel sandbox, healthcare PII patterns, workflow engine, agents, CLI, and compliance reports.
 
 ---
 
@@ -69,10 +71,10 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Current: v1.0.9 — "Hardening" (Target: March 2026)
+## Shipped: v1.0.9 — "Hardening" (February 2026)
 
 **Theme:** Fix security vulnerabilities, split the monolith, add programmatic access.  
-**Status:** 🔧 In development
+**Status:** ✅ Shipped
 
 ### 🔴 P0 — Security (Critical)
 
@@ -93,7 +95,19 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## v1.0.10 — "Scale" (Target: Q3 2026)
+## Shipped: v1.0.10 — "Hardening" (February 2026)
+
+**Theme:** Security fixes, non-root Docker, safe condition evaluator.  
+**Status:** ✅ Shipped
+
+- ✅ **Non-root Docker container** — containers no longer run as root
+- ✅ **Safe condition evaluator** — AST-based evaluator replaces `eval()` + token blocklist
+- ✅ **Engine split** — monolith broken into focused modules
+- ✅ **Print → logging migration** — structured logging throughout
+
+---
+
+## v1.1.0 — "Scale" (Target: Q2 2026)
 
 **Theme:** Production readiness and community extensibility.
 
@@ -101,18 +115,48 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 - **Parallel step execution** — `parallel:` blocks with per-step sandboxing and atomic budget tracking
 - **Plugin system** — pip-installable community agent packages
 - **Database agents** — PostgreSQL, SQLite with query whitelisting
+- **REST API** — self-hosted FastAPI server (`akios serve`) with OpenAPI spec
 
 ---
 
-## v1.0.11+ — "Platform" (Future)
+## v1.2.0 — "Foundation" (Target: Q3 2026)
+
+**Theme:** Begin EnforceCore integration — adopt the shared enforcement foundation without losing AKIOS identity.
+
+> **Context:** [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is AKIOUD AI's open enforcement library. AKIOS uses it as a dependency while keeping its own unique value: kernel sandbox, healthcare PII, workflow engine, agents, CLI, and compliance reports.
+
+- **EnforceCore dependency** — add `enforcecore>=1.0.0` to dependencies
+- **PII bridge** — delegate PII detection to EnforceCore's `Redactor` engine; register AKIOS's 50+ healthcare patterns (NPI, DEA, MRN) via `PatternRegistry`
+- **Unicode hardening** — gain EnforceCore's homoglyph/encoding evasion detection for free
+- **Secret detection** — gain EnforceCore's 11-category API key/token scanner
+- **Content rules** — add shell injection / SQL injection / path traversal detection to Tool Executor agent
+
+**What stays AKIOS-only:** Kernel sandbox (seccomp-bpf + cgroups v2), healthcare PII patterns (GPL-3.0), workflow engine, 4 agents, CLI, compliance reports.
+
+---
+
+## v1.3.0 — "Unified Audit" (Target: Q4 2026)
+
+**Theme:** Unified audit trail backed by EnforceCore's pluggable auditor.
+
+- **Audit bridge** — delegate Merkle-chained audit to EnforceCore's `Auditor` engine
+- **Pluggable backends** — gain JSONL, callback, and future backends (S3, database)
+- **Resource guards** — layer EnforceCore's `CostTracker` + `KillSwitch` under AKIOS's kernel sandbox
+- **Lifecycle hooks** — adopt EnforceCore's hook system for agent extensibility
+- **Webhook events** — adopt EnforceCore's webhook dispatcher for monitoring
+
+---
+
+## v2.0.0 — "Platform" (Future)
 
 **Theme:** From CLI tool to security platform. Non-binding.
 
 - Fan-out / map-reduce execution patterns
-- Prometheus metrics + OpenTelemetry traces
+- Prometheus metrics + OpenTelemetry traces (via EnforceCore telemetry)
 - Community template marketplace
 - Streaming LLM output with per-token PII filtering
 - Multi-tenant isolation
+- EnforceCore adversarial eval suite integrated into AKIOS test pipeline
 
 ---
 
