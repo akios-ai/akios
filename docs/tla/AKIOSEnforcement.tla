@@ -1,7 +1,7 @@
 ---- MODULE AKIOSEnforcement ----
 \* =========================================================================
 \* AKIOS Enforcement Pipeline — TLA+ Formal Specification
-\* Version: 1.0.11
+\* Version: 1.0.13
 \* Date: 2026-02-19
 \*
 \* Model-checks safety invariants for the AKIOS security cage:

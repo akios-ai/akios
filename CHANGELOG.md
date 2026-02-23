@@ -1,11 +1,31 @@
 # Changelog
-**Document Version:** 1.0.12  
+**Document Version:** 1.0.13  
 **Date:** 2026-02-22  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.13] - 2026-02-22
+
+### Added — AWS Bedrock Provider
+- **☁️ AWS Bedrock LLM provider** — New `bedrock` provider enables running AKIOS workflows against AWS Bedrock models using IAM authentication (no API key required). Supports Anthropic Claude, Meta Llama, and Amazon Titan model families via the `invoke_model` API.
+- **🔧 Environment variable controls** — `AKIOS_BEDROCK_MODEL_ID` and `AKIOS_BEDROCK_REGION` environment variables for model and region override. Standard AWS credential chain (env vars, instance profile, SSO) supported.
+- **📦 Optional dependency** — `pip install akios[bedrock]` installs `boto3>=1.34.0`. Bedrock provider gracefully errors if boto3 is missing.
+- **🧪 25 new tests** — `test_bedrock_provider.py` covering IAM auth bypass, Anthropic/Meta/Titan response parsing, token extraction, error handling (AccessDenied, Throttling), and input validation.
+
+### Added — Release Process Improvements
+- **📝 Automated docs version update** — New `00b_update-docs-version.sh` script replaces stale version strings across all `docs/` and root `.md` files. Eliminates the recurring issue of forgotten documentation version bumps.
+- **📋 GOVERNANCE.md in bundle** — Added to `01_prepare-bundle.sh` copy list (was missing from public releases).
+
+### Changed
+- **🤖 LLM agent Bedrock support** — Provider factory, API key bypass (IAM auth), default model mapping, and environment variable resolution all extended for `bedrock` provider.
+- **🔒 Allowed providers** — `bedrock` added to default `allowed_providers` and Bedrock model IDs added to `allowed_models` in security settings.
+
+### Infrastructure
+- **✅ 1,519+ unit tests passing** — 0 regressions. 25 new Bedrock tests + full suite green.
+- **📄 30+ docs updated** — All stale v1.0.11 references fixed across documentation.
 
 ## [1.0.12] - 2026-02-22
 
@@ -14,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **🔢 Token input/output tracking** — `CostKillSwitch` now tracks `tokens_input` and `tokens_output` separately alongside `total_cost`. LLM providers already return `prompt_tokens`/`completion_tokens`; these are now surfaced through the engine to the final result.
 - **🛡️ PII redaction metadata** — Engine now aggregates `pii_redaction_count` and `pii_redacted_fields` across all workflow steps. Available in both `--json-output` and `output.json`.
 - **📋 Enriched engine return** — `engine.run()` result dict now includes: `tokens_input`, `tokens_output`, `total_cost`, `llm_model`, `pii_redaction_count`, `pii_redacted_fields`. Same data written to `output.json` for downstream tooling.
-- **🧪 12 new tests** — `test_structured_output_v1_0_12.py` covering token tracking, PII aggregation, enriched return dict, and `--json-output` flag parsing.
+- **🧪 12 new tests** — `test_structured_output_v1.0.12.py` covering token tracking, PII aggregation, enriched return dict, and `--json-output` flag parsing.
 
 ### Changed
 - **📈 `output.json` enriched** — Now includes `pii_redaction_count`, `pii_redacted_fields` under `security`, and `tokens_input`/`tokens_output`/`llm_model` under `cost`.

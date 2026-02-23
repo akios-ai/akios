@@ -88,7 +88,7 @@ class Settings(BaseSettings):
 
     # LLM provider controls
     allowed_providers: List[str] = Field(
-        ["openai", "anthropic", "grok", "mistral", "gemini"],
+        ["openai", "anthropic", "grok", "mistral", "gemini", "bedrock"],
         description="Allowed LLM providers for security"
     )
     allowed_models: List[str] = Field(
@@ -104,6 +104,17 @@ class Settings(BaseSettings):
             "mistral-small", "mistral-medium", "mistral-large",
             # Gemini
             "gemini-1.5-flash", "gemini-1.5-pro", "gemini-1.0-pro",
+            # AWS Bedrock
+            "anthropic.claude-3-5-sonnet-20241022-v2:0",
+            "anthropic.claude-3-5-haiku-20241022-v1:0",
+            "anthropic.claude-3-opus-20240229-v1:0",
+            "anthropic.claude-3-sonnet-20240229-v1:0",
+            "anthropic.claude-3-haiku-20240307-v1:0",
+            "meta.llama3-1-8b-instruct-v1:0",
+            "meta.llama3-1-70b-instruct-v1:0",
+            "meta.llama3-1-405b-instruct-v1:0",
+            "amazon.titan-text-express-v1",
+            "amazon.titan-text-lite-v1",
         ],
         description="Allowed LLM model identifiers (security restriction)"
     )

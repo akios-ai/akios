@@ -43,6 +43,12 @@ def __getattr__(name):
             return GeminiProvider
         except ImportError:
             raise ImportError("Gemini provider requires 'google-generativeai' library. Install with: pip install google-generativeai")
+    elif name == 'BedrockProvider':
+        try:
+            from .bedrock import BedrockProvider
+            return BedrockProvider
+        except ImportError:
+            raise ImportError("Bedrock provider requires 'boto3' library. Install with: pip install akios[bedrock]")
     else:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -53,5 +59,6 @@ __all__ = [
     'AnthropicProvider',
     'GrokProvider',
     'MistralProvider',
-    'GeminiProvider'
+    'GeminiProvider',
+    'BedrockProvider'
 ]
