@@ -1,11 +1,28 @@
 # Changelog
-**Document Version:** 1.0.14  
-**Date:** 2026-02-22  
+**Document Version:** 1.0.15  
+**Date:** 2026-02-23  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.15] - 2026-02-23
+
+### Fixed — SDK Integration Issues (7 P0 + 1 P1 Resolved)
+
+- **🔧 P0-1: Pydantic Settings crashes on unknown env vars** — Changed `extra="forbid"` to `extra="ignore"` in `Settings` model. Downstream consumers can now pass env vars like `AKIOS_LLM_PROVIDER`, `AKIOS_FORCE_PULL`, `AKIOS_BEDROCK_MODEL_ID`, `AKIOS_BEDROCK_REGION` without triggering `ValidationError`.
+- **🔧 P0-2: `--json-output` emits plain text on exception** — Exception handlers in `run_run_command()` now detect `--json-output` and emit structured JSON error blobs instead of plain text. SDK consumers always receive valid JSON regardless of success or failure.
+- **🔧 P0-3: JSON output missing `error` and `error_category` fields** — Added `error` (string or null) and `error_category` (string or null, from `ErrorCategory` enum) to the `--json-output` schema. SDK consumers can now distinguish error types (configuration, runtime, security, network, validation, resource).
+- **🔧 P0-4: Bedrock provider missing from cost calculation** — Added `bedrock` pricing dict with all 10 supported model IDs (Claude 3.5 Sonnet/Haiku/Opus, Llama 3.1 8B/70B/405B, Titan Express/Lite). Previously fell back to $0.002/1K tokens (8× overpriced for Haiku).
+- **🔧 P0-5: Dockerfile missing `/app/.akios` directory** — Added `/app/.akios` to the `mkdir -p` command in the Dockerfile. SDK consumers mounting tmpfs at `/app/.akios` no longer risk race conditions.
+- **🔧 P0-6: No `--json-output` contract tests** — Added `TestJsonOutputContract` class with 3 tests validating JSON schema for success, exception failure, and workflow error scenarios.
+- **🔧 P1-1: Bedrock `ThrottlingException` raises immediately** — Added retry with exponential backoff (3 attempts, 1s/2s/4s delays) for `ThrottlingException` in both `complete()` and `chat_complete()`. Concurrent SDK usage no longer crashes on transient throttling.
+
+### Infrastructure
+
+- **✅ 1,523 unit tests** — All passing, 0 failures, 7 skipped.
+- **📄 4 new tests** — 1 settings validation + 3 JSON output contract tests.
 
 ## [1.0.14] - 2026-02-22
 
@@ -139,7 +156,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.8] - 2026-02-19
 
 ### Added — PII Detection
-- **🔌 Pluggable PII backend** — New `PIIDetectorProtocol` (runtime-checkable Protocol) enables swappable detection engines. Factory function `create_pii_detector(backend=)` reads `pii_backend` from settings. Regex is default; Presidio reserved for future `akios-pro`.
+- **🔌 Pluggable PII backend** — New `PIIDetectorProtocol` (runtime-checkable Protocol) enables swappable detection engines. Factory function `create_pii_detector(backend=)` reads `pii_backend` from settings. Regex is default; Presidio available as optional backend.
 - **🏥 Insurance PII patterns** — 4 new patterns: `insurance_policy`, `insurance_group`, `insurance_claim`, `prior_authorization` with context keywords for disambiguation.
 - **🎯 context_keywords gate** — PII detection now checks ±100 characters around a match for contextual keywords. Patterns that lack nearby context are suppressed, significantly reducing false positives (e.g., bare 9-digit numbers no longer match as routing numbers).
 - **📊 PII accuracy test corpus** — Annotated test suite (`tests/unit/test_pii_accuracy.py`) with per-pattern precision/recall/F1 scoring. Patterns scoring below 0.80 F1 fail CI.
@@ -425,7 +442,7 @@ Planned directions (non-binding, community-driven):
 - More high-quality example templates
 - Basic observability (Prometheus/Jaeger integration)
 
-**Legal/certified features** (FranceConnect, eIDAS, hard HDS blocks, official PDFs) remain exclusive to AKIOS PRO.
+**Legal/certified features** (FranceConnect, eIDAS, hard HDS blocks, official PDFs) are planned for a future licensed edition.
 
 ## Types of Changes
 

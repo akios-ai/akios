@@ -58,7 +58,7 @@ class Settings(BaseSettings):
     pii_backend: str = Field(
         "regex",
         pattern="^(regex|presidio)$",
-        description="PII detection backend: 'regex' (built-in) or 'presidio' (requires akios-pro)"
+        description="PII detection backend: 'regex' (built-in) or 'presidio' (future)"
     )
 
     # Cost & loop protection
@@ -163,7 +163,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="AKIOS_",
         env_file=None,  # Disable .env file loading to avoid permission issues
-        extra="forbid",  # Forbid extra configuration to catch typos/nesting errors
+        extra="ignore",  # Ignore extra env vars (e.g. AKIOS_LLM_PROVIDER, AKIOS_FORCE_PULL)
     )
 
     @classmethod

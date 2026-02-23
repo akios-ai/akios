@@ -30,12 +30,17 @@ Install the optional dependency:
 
 import json
 import os
+import time
 import logging
 from typing import Dict, Any, List
 
 from .base import LLMProvider, ProviderError
 
 logger = logging.getLogger(__name__)
+
+# Retry configuration for throttled requests
+_MAX_RETRIES = 3
+_BASE_DELAY = 1.0  # seconds
 
 # Lazy boto3 import — only loaded when BedrockProvider is instantiated
 try:
@@ -272,53 +277,61 @@ class BedrockProvider(LLMProvider):
         messages = [{"role": "user", "content": prompt}]
         request_body = self._build_request_body(messages, max_tokens, temperature)
 
-        try:
-            response = self.client.invoke_model(
-                modelId=self.model,
-                contentType="application/json",
-                accept="application/json",
-                body=request_body,
-            )
-
-            response_body = json.loads(response["body"].read())
-            content, prompt_tokens, completion_tokens = self._parse_response(response_body)
-            total_tokens = prompt_tokens + completion_tokens
-
-            # Fall back to estimation if the model didn't return counts
-            if total_tokens == 0:
-                prompt_tokens = self.estimate_tokens(prompt, model_family="claude")
-                completion_tokens = self.estimate_tokens(content, model_family="claude")
-                total_tokens = prompt_tokens + completion_tokens
-                estimated = True
-            else:
-                estimated = False
-
-            return {
-                "text": content,
-                "tokens_used": total_tokens,
-                "finish_reason": self._get_stop_reason(response_body),
-                "model": self.model,
-                "usage": {
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens,
-                    "estimated": estimated,
-                },
-            }
-
-        except botocore.exceptions.ClientError as e:
-            error_code = e.response["Error"]["Code"]
-            error_msg = e.response["Error"]["Message"]
-            if error_code == "AccessDeniedException":
-                raise ProviderError(
-                    f"Bedrock access denied: {error_msg}. "
-                    "Ensure your IAM role has bedrock:InvokeModel permission."
+        last_error = None
+        for attempt in range(_MAX_RETRIES + 1):
+            try:
+                response = self.client.invoke_model(
+                    modelId=self.model,
+                    contentType="application/json",
+                    accept="application/json",
+                    body=request_body,
                 )
-            if error_code == "ThrottlingException":
-                raise ProviderError(f"Bedrock rate limit exceeded: {error_msg}")
-            raise ProviderError(f"Bedrock API error ({error_code}): {error_msg}")
-        except Exception as e:
-            raise ProviderError(f"Bedrock request failed: {e}")
+
+                response_body = json.loads(response["body"].read())
+                content, prompt_tokens, completion_tokens = self._parse_response(response_body)
+                total_tokens = prompt_tokens + completion_tokens
+
+                # Fall back to estimation if the model didn't return counts
+                if total_tokens == 0:
+                    prompt_tokens = self.estimate_tokens(prompt, model_family="claude")
+                    completion_tokens = self.estimate_tokens(content, model_family="claude")
+                    total_tokens = prompt_tokens + completion_tokens
+                    estimated = True
+                else:
+                    estimated = False
+
+                return {
+                    "text": content,
+                    "tokens_used": total_tokens,
+                    "finish_reason": self._get_stop_reason(response_body),
+                    "model": self.model,
+                    "usage": {
+                        "prompt_tokens": prompt_tokens,
+                        "completion_tokens": completion_tokens,
+                        "total_tokens": total_tokens,
+                        "estimated": estimated,
+                    },
+                }
+
+            except botocore.exceptions.ClientError as e:
+                error_code = e.response["Error"]["Code"]
+                error_msg = e.response["Error"]["Message"]
+                if error_code == "AccessDeniedException":
+                    raise ProviderError(
+                        f"Bedrock access denied: {error_msg}. "
+                        "Ensure your IAM role has bedrock:InvokeModel permission."
+                    )
+                if error_code == "ThrottlingException":
+                    last_error = e
+                    if attempt < _MAX_RETRIES:
+                        delay = _BASE_DELAY * (2 ** attempt)
+                        logger.warning(f"Bedrock throttled (attempt {attempt + 1}/{_MAX_RETRIES + 1}), retrying in {delay:.1f}s")
+                        time.sleep(delay)
+                        continue
+                    raise ProviderError(f"Bedrock rate limit exceeded after {_MAX_RETRIES + 1} attempts: {error_msg}")
+                raise ProviderError(f"Bedrock API error ({error_code}): {error_msg}")
+            except Exception as e:
+                raise ProviderError(f"Bedrock request failed: {e}")
 
     def chat_complete(
         self,
@@ -370,54 +383,65 @@ class BedrockProvider(LLMProvider):
             request_body = self._build_request_body(send_messages, max_tokens, temperature)
 
         try:
-            response = self.client.invoke_model(
-                modelId=self.model,
-                contentType="application/json",
-                accept="application/json",
-                body=request_body,
-            )
+            last_error = None
+            for attempt in range(_MAX_RETRIES + 1):
+                try:
+                    response = self.client.invoke_model(
+                        modelId=self.model,
+                        contentType="application/json",
+                        accept="application/json",
+                        body=request_body,
+                    )
 
-            response_body = json.loads(response["body"].read())
-            content, prompt_tokens, completion_tokens = self._parse_response(response_body)
-            total_tokens = prompt_tokens + completion_tokens
+                    response_body = json.loads(response["body"].read())
+                    content, prompt_tokens, completion_tokens = self._parse_response(response_body)
+                    total_tokens = prompt_tokens + completion_tokens
 
-            # Fall back to estimation if the model didn't return counts
-            if total_tokens == 0:
-                prompt_text = " ".join(msg.get("content", "") for msg in messages)
-                prompt_tokens = self.estimate_tokens(prompt_text, model_family="claude")
-                completion_tokens = self.estimate_tokens(content, model_family="claude")
-                total_tokens = prompt_tokens + completion_tokens
-                estimated = True
-            else:
-                estimated = False
+                    # Fall back to estimation if the model didn't return counts
+                    if total_tokens == 0:
+                        prompt_text = " ".join(msg.get("content", "") for msg in messages)
+                        prompt_tokens = self.estimate_tokens(prompt_text, model_family="claude")
+                        completion_tokens = self.estimate_tokens(content, model_family="claude")
+                        total_tokens = prompt_tokens + completion_tokens
+                        estimated = True
+                    else:
+                        estimated = False
 
-            return {
-                "response": content,
-                "tokens_used": total_tokens,
-                "finish_reason": self._get_stop_reason(response_body),
-                "model": self.model,
-                "usage": {
-                    "prompt_tokens": prompt_tokens,
-                    "completion_tokens": completion_tokens,
-                    "total_tokens": total_tokens,
-                    "estimated": estimated,
-                    "messages": messages,
-                },
-            }
+                    return {
+                        "response": content,
+                        "tokens_used": total_tokens,
+                        "finish_reason": self._get_stop_reason(response_body),
+                        "model": self.model,
+                        "usage": {
+                            "prompt_tokens": prompt_tokens,
+                            "completion_tokens": completion_tokens,
+                            "total_tokens": total_tokens,
+                            "estimated": estimated,
+                            "messages": messages,
+                        },
+                    }
 
-        except botocore.exceptions.ClientError as e:
-            error_code = e.response["Error"]["Code"]
-            error_msg = e.response["Error"]["Message"]
-            if error_code == "AccessDeniedException":
-                raise ProviderError(
-                    f"Bedrock access denied: {error_msg}. "
-                    "Ensure your IAM role has bedrock:InvokeModel permission."
-                )
-            if error_code == "ThrottlingException":
-                raise ProviderError(f"Bedrock rate limit exceeded: {error_msg}")
-            raise ProviderError(f"Bedrock chat API error ({error_code}): {error_msg}")
-        except Exception as e:
-            raise ProviderError(f"Bedrock chat request failed: {e}")
+                except botocore.exceptions.ClientError as e:
+                    error_code = e.response["Error"]["Code"]
+                    error_msg = e.response["Error"]["Message"]
+                    if error_code == "AccessDeniedException":
+                        raise ProviderError(
+                            f"Bedrock access denied: {error_msg}. "
+                            "Ensure your IAM role has bedrock:InvokeModel permission."
+                        )
+                    if error_code == "ThrottlingException":
+                        last_error = e
+                        if attempt < _MAX_RETRIES:
+                            delay = _BASE_DELAY * (2 ** attempt)
+                            logger.warning(f"Bedrock chat throttled (attempt {attempt + 1}/{_MAX_RETRIES + 1}), retrying in {delay:.1f}s")
+                            time.sleep(delay)
+                            continue
+                        raise ProviderError(f"Bedrock rate limit exceeded after {_MAX_RETRIES + 1} attempts: {error_msg}")
+                    raise ProviderError(f"Bedrock chat API error ({error_code}): {error_msg}")
+                except Exception as e:
+                    raise ProviderError(f"Bedrock chat request failed: {e}")
+        except ProviderError:
+            raise
 
     def get_supported_models(self) -> List[str]:
         """Get list of supported Bedrock models."""
