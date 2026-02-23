@@ -126,7 +126,7 @@ def create_pii_detector(backend: Optional[str] = None) -> PIIDetectorProtocol:
     elif backend == 'presidio':
         raise ValueError(
             "Presidio backend is not yet available. "
-            "Install akios-pro for Presidio support, or use pii_backend: 'regex'"
+            "Use pii_backend: 'regex' (Presidio support planned for a future release)"
         )
     else:
         raise ValueError(

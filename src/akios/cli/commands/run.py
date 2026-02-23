@@ -353,7 +353,17 @@ def run_run_command(args: argparse.Namespace) -> int:
                 'llm_model': result.get('llm_model'),
                 'pii_redaction_count': result.get('pii_redaction_count', 0),
                 'pii_redacted_fields': result.get('pii_redacted_fields', []),
+                'error': result.get('error'),
+                'error_category': result.get('error_category'),
             }
+            # Classify error if present but no category
+            if json_summary['error'] and not json_summary['error_category']:
+                try:
+                    from ...core.error.classifier import classify_error
+                    fp = classify_error(str(json_summary['error']))
+                    json_summary['error_category'] = fp.category.value
+                except Exception:
+                    json_summary['error_category'] = 'runtime'
             print(_json.dumps(json_summary, indent=2, default=str))
         elif args.json:
             output_result(result, json_mode=args.json)
@@ -411,9 +421,51 @@ def run_run_command(args: argparse.Namespace) -> int:
         return exit_code
 
     except CLIError as e:
+        if getattr(args, 'json_output', False):
+            return _emit_json_error(e, args)
         return handle_cli_error(e, json_mode=False)
     except Exception as e:
+        if getattr(args, 'json_output', False):
+            return _emit_json_error(e, args)
         return handle_cli_error(e, json_mode=False)
+
+
+def _emit_json_error(error: Exception, args: argparse.Namespace) -> int:
+    """Emit a structured JSON error to stdout for --json-output mode."""
+    import json as _json
+    try:
+        from akios._version import __version__ as _akios_ver
+    except ImportError:
+        _akios_ver = 'unknown'
+
+    error_message = str(error)
+    error_category = None
+    try:
+        from ...core.error.classifier import classify_error
+        fingerprint = classify_error(error_message, type(error).__name__)
+        error_category = fingerprint.category.value
+    except Exception:
+        error_category = "runtime"
+
+    exit_code = getattr(error, 'exit_code', 1) if isinstance(error, CLIError) else 1
+
+    json_summary = {
+        'akios_version': _akios_ver,
+        'status': 'failed',
+        'workflow_id': '',
+        'steps_executed': 0,
+        'execution_time_seconds': 0,
+        'tokens_input': 0,
+        'tokens_output': 0,
+        'total_cost': 0.0,
+        'llm_model': None,
+        'pii_redaction_count': 0,
+        'pii_redacted_fields': [],
+        'error': error_message,
+        'error_category': error_category,
+    }
+    print(_json.dumps(json_summary, indent=2, default=str))
+    return exit_code
 
 
 def execute_workflow_isolated(workflow_path: str, quiet: bool = False, verbose: bool = False, template_name: str = None, args: argparse.Namespace = None) -> dict:

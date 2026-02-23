@@ -958,6 +958,18 @@ class LLMAgent(BaseAgent):
                 "gemini-1.5-flash": 0.000225,  # $0.000225 per 1K tokens
                 "gemini-1.5-pro": 0.00375,     # $0.00375 per 1K tokens
                 "gemini-1.0-pro": 0.0015       # $0.0015 per 1K tokens
+            },
+            "bedrock": {
+                "anthropic.claude-3-5-sonnet-20241022-v2:0": 0.003,     # $0.003 per 1K tokens
+                "anthropic.claude-3-5-haiku-20241022-v1:0": 0.00025,    # $0.00025 per 1K tokens
+                "anthropic.claude-3-opus-20240229-v1:0": 0.015,         # $0.015 per 1K tokens
+                "anthropic.claude-3-sonnet-20240229-v1:0": 0.003,       # $0.003 per 1K tokens
+                "anthropic.claude-3-haiku-20240307-v1:0": 0.00025,      # $0.00025 per 1K tokens
+                "meta.llama3-1-8b-instruct-v1:0": 0.0003,              # $0.0003 per 1K tokens
+                "meta.llama3-1-70b-instruct-v1:0": 0.00265,            # $0.00265 per 1K tokens
+                "meta.llama3-1-405b-instruct-v1:0": 0.00532,           # $0.00532 per 1K tokens
+                "amazon.titan-text-express-v1": 0.0008,                 # $0.0008 per 1K tokens
+                "amazon.titan-text-lite-v1": 0.00015,                   # $0.00015 per 1K tokens
             }
         }
 
