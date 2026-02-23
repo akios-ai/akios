@@ -35,11 +35,17 @@ class CostKillSwitch:
     def __init__(self):
         self.settings = get_settings()
         self.total_cost = 0.0
+        self.tokens_input = 0
+        self.tokens_output = 0
+        self.llm_model = None
         self.start_time = time.time()
 
     def reset(self) -> None:
         """Reset the kill switch for a new execution"""
         self.total_cost = 0.0
+        self.tokens_input = 0
+        self.tokens_output = 0
+        self.llm_model = None
         self.start_time = time.time()
 
     def add_cost(self, cost: float) -> None:
@@ -50,6 +56,20 @@ class CostKillSwitch:
             cost: Cost to add (in USD)
         """
         self.total_cost += cost
+
+    def add_tokens(self, prompt_tokens: int = 0, completion_tokens: int = 0, model: str = None) -> None:
+        """
+        Track token usage by input/output.
+
+        Args:
+            prompt_tokens: Number of input (prompt) tokens
+            completion_tokens: Number of output (completion) tokens
+            model: LLM model identifier used for this call
+        """
+        self.tokens_input += prompt_tokens
+        self.tokens_output += completion_tokens
+        if model:
+            self.llm_model = model
 
     def should_kill(self) -> bool:
         """
@@ -64,13 +84,17 @@ class CostKillSwitch:
         return self.total_cost >= self.settings.budget_limit_per_run
 
     def get_status(self) -> Dict[str, Any]:
-        """Get current cost status"""
+        """Get current cost and token usage status"""
         return {
             'enabled': self.settings.cost_kill_enabled,
             'total_cost': self.total_cost,
             'budget_limit': self.settings.budget_limit_per_run,
             'remaining_budget': max(0, self.settings.budget_limit_per_run - self.total_cost),
-            'over_budget': self.total_cost > self.settings.budget_limit_per_run
+            'over_budget': self.total_cost > self.settings.budget_limit_per_run,
+            'tokens_input': self.tokens_input,
+            'tokens_output': self.tokens_output,
+            'tokens_total': self.tokens_input + self.tokens_output,
+            'llm_model': self.llm_model,
         }
 
 
@@ -171,6 +195,10 @@ class KillSwitchManager:
     def add_cost(self, cost: float) -> None:
         """Add cost to cost kill switch"""
         self.cost_kill.add_cost(cost)
+
+    def add_tokens(self, prompt_tokens: int = 0, completion_tokens: int = 0, model: str = None) -> None:
+        """Track token usage through cost kill switch"""
+        self.cost_kill.add_tokens(prompt_tokens, completion_tokens, model)
 
     def increment_step(self) -> None:
         """Increment step counter for loop detection"""

@@ -1,11 +1,27 @@
 # Changelog
-**Document Version:** 1.0.11  
+**Document Version:** 1.0.12  
 **Date:** 2026-02-22  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.12] - 2026-02-22
+
+### Added — Structured Output & Observability
+- **📊 `--json-output` CLI flag** — New `akios run --json-output` emits a structured JSON summary to stdout with workflow status, token usage, cost, and PII redaction metadata. Designed for CI/CD pipelines, automation scripts, and programmatic consumption. Distinct from `--json` (which only suppresses Rich UI formatting).
+- **🔢 Token input/output tracking** — `CostKillSwitch` now tracks `tokens_input` and `tokens_output` separately alongside `total_cost`. LLM providers already return `prompt_tokens`/`completion_tokens`; these are now surfaced through the engine to the final result.
+- **🛡️ PII redaction metadata** — Engine now aggregates `pii_redaction_count` and `pii_redacted_fields` across all workflow steps. Available in both `--json-output` and `output.json`.
+- **📋 Enriched engine return** — `engine.run()` result dict now includes: `tokens_input`, `tokens_output`, `total_cost`, `llm_model`, `pii_redaction_count`, `pii_redacted_fields`. Same data written to `output.json` for downstream tooling.
+- **🧪 12 new tests** — `test_structured_output_v1_0_12.py` covering token tracking, PII aggregation, enriched return dict, and `--json-output` flag parsing.
+
+### Changed
+- **📈 `output.json` enriched** — Now includes `pii_redaction_count`, `pii_redacted_fields` under `security`, and `tokens_input`/`tokens_output`/`llm_model` under `cost`.
+- **🤖 LLM agent result enriched** — Agent `execute()` now returns `prompt_tokens`, `completion_tokens`, and `llm_model` alongside existing `tokens_used` and `cost_incurred`. Mock mode returns realistic token breakdowns.
+
+### Infrastructure
+- **✅ 1,513+ unit tests passing** — 0 regressions from observability changes.
 
 ## [1.0.11] - 2026-02-22
 

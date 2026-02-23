@@ -1,5 +1,5 @@
 # AKIOS Roadmap
-**Document Version:** 1.0.10  
+**Document Version:** 1.0.11  
 **Date:** 2026-02-22  
 **License:** GPL-3.0-only  
 
@@ -104,6 +104,22 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 - ✅ **Safe condition evaluator** — AST-based evaluator replaces `eval()` + token blocklist
 - ✅ **Engine split** — monolith broken into focused modules
 - ✅ **Print → logging migration** — structured logging throughout
+
+---
+
+## Shipped: v1.0.11 — "Cleanup & Hardening" (February 2026)
+
+**Theme:** Release process hardening, code quality fixes, dependency cleanup.  
+**Status:** ✅ Shipped
+
+- ✅ **Wrapper fallback fix** — `detect_version()` in `./akios` and `wrapper.sh` was stuck at `1.0.7` since v1.0.8; now reads dynamically from `VERSION` file
+- ✅ **Dynamic version checks** — Docker and EC2 test scripts read version from `pyproject.toml` instead of hardcoded strings
+- ✅ **Pre-release gate hardening** — added P5a–P5d checks: wrapper version sync, `_version.py` sync, `__init__.py` sync, `akios.yaml` sync
+- ✅ **`verify-version-sync.sh`** — new script validates all version sources match before release
+- ✅ **PyPDF2 → pypdf migration** — replaced deprecated `PyPDF2` with actively maintained `pypdf`
+- ✅ **Python 3.9+ requirement** — dropped Python 3.8 support (EOL)
+- ✅ **PyPI metadata alignment** — author, keywords, classifiers, and project URLs match EnforceCore standards
+- ✅ **17 code/metadata/doc fixes** — stale version refs, missing imports, test improvements
 
 ---
 

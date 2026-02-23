@@ -1,10 +1,10 @@
 # AKIOS Security Policy
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+**Document Version:** 1.0.11  
+**Date:** 2026-02-22  
 
 ## 🔒 Security Overview
 
-AKIOS v1.0 is a **minimal, open-source security cage** for AI agents.  
+AKIOS v1.0.11 is a **minimal, open-source security cage** for AI agents.  
 We take security very seriously — the entire product is built around hard containment, real-time protection, and provable audit.
 
 This policy explains how we handle vulnerabilities in the open runtime.
@@ -37,12 +37,15 @@ Send private reports to: **security@akioud.ai**
 4. **Coordinated Disclosure**: We release fix + advisory together
 5. **Credit**: We publicly thank responsible reporters (Hall of Fame)
 
-## 🛡️ What We Protect In v1.0
+## 🛡️ What We Protect In v1.0.11
 - Security sandboxing (kernel-hard on native Linux, strong policy-based in Docker)
 - Syscall interception & resource quotas
 - Real-time PII redaction (including healthcare: NPI, DEA, Medical Record Numbers)
 - Enforced cost & infinite loop kill-switches
 - Merkle tamper-evident audit ledger
+- **Non-root Docker container** — containers run as UID 1001 by default
+- **AST-safe condition evaluator** — no `eval()` anywhere in the codebase
+- **REST API** — self-hosted FastAPI server (`akios serve`) with OpenAPI spec
 - **Cage down data destruction** — complete session data wipe (audit, outputs, inputs)
 - **HTTPS domain whitelist** — selective network access for HTTP agent
 - **`--exec` rejection** — shell-injection trap blocks arbitrary command execution
