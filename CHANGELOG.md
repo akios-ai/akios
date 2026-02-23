@@ -1,11 +1,43 @@
 # Changelog
-**Document Version:** 1.0.13  
+**Document Version:** 1.0.14  
 **Date:** 2026-02-22  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.14] - 2026-02-22
+
+### Fixed — End-User Testing Issues (13 Issues Resolved)
+
+- **🔧 ISSUE-01+07 (P0): Template degradation on `pip install`** — Replaced `pkg_resources` (missing on Ubuntu 24.04 venv) with `importlib.resources.files()` for template bundling. All 4 workflow templates now install correctly via pip on all platforms.
+- **🔧 ISSUE-02 (P0): Template switching prompt blocks Docker** — Restructured `handle_template_run()` to auto-approve template switching in non-interactive mode (`not sys.stdin.isatty()`). Docker and CI/CD pipelines no longer hang on confirmation prompts.
+- **🔧 ISSUE-03 (P0): Misleading seccomp guidance in venv** — `_seccomp_available()` now detects venv environments and shows targeted guidance: "recreate venv with: `python3 -m venv --system-site-packages venv`" instead of generic kernel messages.
+- **🔧 ISSUE-04 (P1): `cage down` destroys user input data** — Removed `data/input/` from `_wipe_cage_data()` targets. User input files are now preserved during cage down. Only audit logs and workflow outputs are wiped.
+- **🔧 ISSUE-05 (P1): Bedrock env vars missing from Docker wrapper** — Added 6 AWS/Bedrock environment variables to `wrapper.sh` docker run command: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_DEFAULT_REGION`, `AKIOS_BEDROCK_MODEL_ID`, `AKIOS_BEDROCK_REGION`.
+- **🔧 ISSUE-06 (P1): `protect scan` rejects inline text** — Added `--text` flag and auto-detection for inline PII text (vs file paths). JSON output key changed from `"file"` to `"source"` for clarity.
+- **🔧 ISSUE-08 (P2): Duplicate wrapper scripts** — Deleted stale root `./akios` wrapper. Canonical wrapper is now `src/akios/cli/data/wrapper.sh` only.
+- **🔧 ISSUE-09+13 (P2): `akios init` missing `.env` and `workflows/`** — Uncommented `.env` creation code and added `workflows/` to `dirs_to_create` in init command.
+- **🔧 ISSUE-10 (P2): Init message shows wrong command prefix** — Init welcome message now uses dynamic `get_command_prefix()` detection instead of hardcoded `akios` command.
+- **🔧 ISSUE-11 (P2): Wrapper fallback hardcoded to version** — Changed wrapper `FALLBACK_VERSION` from `"1.0.13"` to `"latest"` to avoid manual bumps on every release.
+
+### Fixed — Additional Issues Discovered
+
+- **🧪 ISSUE-15: Test breakage from cage behavior change** — Updated `test_cage_secure_wipe.py` to reflect input data preservation: removed `input_files`/`input_bytes` assertions, added preservation check, changed overwrite test to use `data/output/`.
+- **📄 ISSUE-16/17/18: Docs inconsistent with cage behavior** — Updated SECURITY.md, docs/security.md, and GETTING_STARTED.md to reflect that `cage down` preserves `data/input/`. Data lifecycle diagrams corrected.
+- **🔧 ISSUE-19: Bedrock env vars missing from `.env` template** — Added `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_DEFAULT_REGION`, `AKIOS_BEDROCK_MODEL_ID`, `AKIOS_BEDROCK_REGION` to both `.env` and `.env.example` templates in `akios init`.
+
+### Changed
+
+- **📦 `pkg_resources` → `importlib.resources`** — Template system now uses Python 3.9+ stdlib `importlib.resources.files()` instead of deprecated `pkg_resources`. Eliminates the `setuptools` runtime dependency.
+- **🛡️ Cage down behavior** — `data/input/` is now explicitly preserved during `cage down`. Only `audit/` and `data/output/` are securely wiped. Wipe summary shows "Input data preserved" confirmation.
+- **🐳 Docker wrapper** — Fallback version strategy changed from hardcoded version string to `"latest"` tag. AWS/Bedrock environment variables now forwarded into container.
+
+### Infrastructure
+
+- **📄 30+ docs updated** — All document version headers bumped to 1.0.14.
+- **🧪 Tests updated** — Cage wipe tests aligned with new input preservation behavior.
 
 ## [1.0.13] - 2026-02-22
 

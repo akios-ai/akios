@@ -586,10 +586,24 @@ def _syscall_filtering_available() -> bool:
             return False
         return True
     except ImportError:
-        print_warning(
-            "⚠️ seccomp module not installed",
-            ["Install python3-seccomp for kernel-hard security", "Policy-based security active"]
-        )
+        # Detect if we're in a venv without system-site-packages
+        import sys
+        in_venv = (hasattr(sys, 'real_prefix') or
+                   (hasattr(sys, 'base_prefix') and sys.base_prefix != sys.prefix))
+        if in_venv:
+            print_warning(
+                "⚠️ seccomp module not visible inside this virtual environment",
+                [
+                    "If python3-seccomp is installed system-wide, recreate venv with:",
+                    "  python3 -m venv --system-site-packages venv",
+                    "Policy-based security active (PII redaction, audit, command limits)"
+                ]
+            )
+        else:
+            print_warning(
+                "⚠️ seccomp module not installed",
+                ["Install python3-seccomp for kernel-hard security", "Policy-based security active"]
+            )
         return False
 
 def _pii_redaction_available() -> bool:

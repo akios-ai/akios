@@ -1,10 +1,10 @@
-# AKIOS v1.0.13 CLI Reference
-**Document Version:** 1.0.13  
+# AKIOS v1.0.14 CLI Reference
+**Document Version:** 1.0.14  
 **Date:** 2026-02-22  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.0.13 supports three deployment methods:
+AKIOS v1.0.14 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.13 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.14 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.13 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.14 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -327,7 +327,7 @@ akios run workflow.yml --json-output
 **`--json-output` response format:**
 ```json
 {
-  "akios_version": "1.0.13",
+  "akios_version": "1.0.14",
   "status": "completed",
   "workflow_id": "abc-123",
   "steps_executed": 3,
@@ -594,7 +594,7 @@ The output includes:
 Example output:
 ```json
 {
-  "akios_version": "1.0.13",
+  "akios_version": "1.0.14",
   "workflow_name": "Hello World Workflow",
   "status": "completed",
   "steps_executed": 3,

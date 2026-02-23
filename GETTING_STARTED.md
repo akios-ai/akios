@@ -1,5 +1,5 @@
-# 🚀 AKIOS v1.0.13 - Get Started in 3 Minutes
-**Document Version:** 1.0.13  
+# 🚀 AKIOS v1.0.14 - Get Started in 3 Minutes
+**Document Version:** 1.0.14  
 **Date:** 2026-02-22  
 
 **Secure AI workflows made simple.**
@@ -30,7 +30,7 @@ pipx install akios
 pip install akios
 
 # Or install a specific version:
-pip install akios==1.0.13
+pip install akios==1.0.14
 
 # Verify installation
 akios --version
@@ -43,14 +43,14 @@ akios init my-project
 **Containerized deployment works everywhere - no Python/dependencies needed**
 ```bash
 # Pull the Docker image
-docker pull akiosai/akios:v1.0.13
+docker pull akiosai/akios:v1.0.14
 
 # Initialize a new project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.13 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.14 init my-project
 
 # Run workflows
 cd my-project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.13 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.14 run templates/hello-workflow.yml
 ```
 
 **OR use the wrapper script for easier commands:**
@@ -133,9 +133,8 @@ akios cage up --no-pii --no-audit --no-budget
 **⚠️ WARNING:** `cage down` permanently destroys:
 - `audit/` — All audit logs and Merkle proofs
 - `data/output/` — All workflow outputs
-- `data/input/` — All input files
 
-**After cage down, ZERO data remains.**
+**Input data (`data/input/`) is preserved.**
 
 ### 4. HTTPS Domain Whitelist (Optional)
 
@@ -221,8 +220,11 @@ akios audit stats
 # Rotate audit log (archive + fresh start)
 akios audit rotate
 
-# Scan text for PII
-akios protect scan "Patient John Smith, NPI 1234567893"
+# Scan a file for PII
+akios protect scan data/input/document_example.txt
+
+# Scan inline text for PII (auto-detected or use --text flag)
+akios protect scan --text "Patient John Smith, NPI 1234567893"
 
 # Preview the exact prompt sent to the LLM
 akios protect show-prompt workflow.yml
@@ -259,4 +261,4 @@ akios clean
 
 ---
 
-*AKIOS v1.0.13 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.0.14 - Where AI meets unbreakable security* 🛡️🤖

@@ -1,10 +1,10 @@
 # AKIOS Security Policy
-**Document Version:** 1.0.13  
+**Document Version:** 1.0.14  
 **Date:** 2026-02-22  
 
 ## 🔒 Security Overview
 
-AKIOS v1.0.13 is a **minimal, open-source security cage** for AI agents.  
+AKIOS v1.0.14 is a **minimal, open-source security cage** for AI agents.  
 We take security very seriously — the entire product is built around hard containment, real-time protection, and provable audit.
 
 This policy explains how we handle vulnerabilities in the open runtime.
@@ -37,7 +37,7 @@ Send private reports to: **security@akioud.ai**
 4. **Coordinated Disclosure**: We release fix + advisory together
 5. **Credit**: We publicly thank responsible reporters (Hall of Fame)
 
-## 🛡️ What We Protect In v1.0.13
+## 🛡️ What We Protect In v1.0.14
 - Security sandboxing (kernel-hard on native Linux, strong policy-based in Docker)
 - Syscall interception & resource quotas
 - Real-time PII redaction (including healthcare: NPI, DEA, Medical Record Numbers)
@@ -46,7 +46,7 @@ Send private reports to: **security@akioud.ai**
 - **Non-root Docker container** — containers run as UID 1001 by default
 - **AST-safe condition evaluator** — no `eval()` anywhere in the codebase
 - **REST API** — self-hosted FastAPI server (`akios serve`) with OpenAPI spec
-- **Cage down data destruction** — complete session data wipe (audit, outputs, inputs)
+- **Cage down data destruction** — session data wipe (audit logs, workflow outputs)
 - **HTTPS domain whitelist** — selective network access for HTTP agent
 - **`--exec` rejection** — shell-injection trap blocks arbitrary command execution
 - **`akios http`** — secure HTTP requests with domain whitelisting & PII redaction
@@ -54,7 +54,7 @@ Send private reports to: **security@akioud.ai**
 
 **Security Cage Lifecycle:**
 - `cage up` → activate protections → workflows execute → data generated
-- `cage down` → **all data destroyed** (audit/, data/output/, data/input/) → zero residue
+- `cage down` → **session data destroyed** (audit/, data/output/) → input data preserved
 
 **Secure Data Erasure (cage down):**
 - Each file is overwritten with cryptographically random bytes, fsynced to disk, overwritten with zeros, fsynced again, then deleted (`unlink`)

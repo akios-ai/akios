@@ -1,5 +1,5 @@
 # AKIOS Roadmap
-**Document Version:** 1.0.13  
+**Document Version:** 1.0.14  
 **Date:** 2026-02-22  
 **License:** GPL-3.0-only  
 

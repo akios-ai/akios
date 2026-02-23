@@ -41,9 +41,9 @@ detect_version() {
         fi
     fi
     
-    # Final fallback: hardcoded stable version
+    # Final fallback: use 'latest' tag so wrapper doesn't require manual version bumps
     if [[ -z "$version" ]]; then
-        version="1.0.13"
+        version="latest"
     fi
     
     echo "$version"
@@ -175,6 +175,12 @@ exec docker run --rm \
     -e GROK_API_KEY="${GROK_API_KEY:-}" \
     -e MISTRAL_API_KEY="${MISTRAL_API_KEY:-}" \
     -e GEMINI_API_KEY="${GEMINI_API_KEY:-}" \
+    -e AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}" \
+    -e AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}" \
+    -e AWS_SESSION_TOKEN="${AWS_SESSION_TOKEN:-}" \
+    -e AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-}" \
+    -e AKIOS_BEDROCK_MODEL_ID="${AKIOS_BEDROCK_MODEL_ID:-}" \
+    -e AKIOS_BEDROCK_REGION="${AKIOS_BEDROCK_REGION:-}" \
     -e AKIOS_LLM_PROVIDER="${AKIOS_LLM_PROVIDER:-}" \
     -e AKIOS_LLM_MODEL="${AKIOS_LLM_MODEL:-}" \
     ${NO_COLOR:+-e NO_COLOR="$NO_COLOR"} \

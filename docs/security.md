@@ -1,10 +1,10 @@
 # Security Features
-**Document Version:** 1.0.13  
+**Document Version:** 1.0.14  
 **Date:** 2026-02-22  
 
 ## Security Overview
 
-AKIOS v1.0.13 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
+AKIOS v1.0.14 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
 
 ## Supported Versions
 
@@ -198,12 +198,13 @@ The cage enforces a strict data lifecycle:
 ```
 cage up → protections activate → workflows execute → data generated
                                                            ↓
-cage down → audit/ destroyed → data/output/ destroyed → data/input/ destroyed
+cage down → audit/ destroyed → data/output/ destroyed → data/input/ PRESERVED
                                                            ↓
-                                                    ZERO DATA RESIDUE
+                                                Session artifacts removed
+                                                User input data retained
 ```
 
-This guarantees no sensitive artifacts survive a cage session. Every session starts clean and ends clean.
+This guarantees no session artifacts (audit logs, workflow outputs) survive a cage teardown. User input data (`data/input/`) is preserved to prevent accidental data loss.
 
 ---
 

@@ -173,8 +173,11 @@ def run_init_command(args: argparse.Namespace) -> int:
             if project_dir and project_dir != ".":
                 steps.append(f"[{cyan}]cd {project_dir}[/{cyan}]         [dim]Enter project directory[/dim]")
             
-            steps.append(f"[{cyan}]{SETUP_COMMAND}[/{cyan}]    [dim]Configure API provider[/dim]")
-            steps.append(f"[{cyan}]{HELLO_WORKFLOW_COMMAND}[/{cyan}]  [dim]Run first workflow[/dim]")
+            # Use dynamic prefix detection (Docker vs pip) for accurate instructions
+            from ...core.ui.commands import get_command_prefix, suggest_command as _suggest
+            cmd_prefix = get_command_prefix()
+            steps.append(f"[{cyan}]{_suggest('setup')}[/{cyan}]    [dim]Configure API provider[/dim]")
+            steps.append(f"[{cyan}]{_suggest('run templates/hello-workflow.yml')}[/{cyan}]  [dim]Run first workflow[/dim]")
             
             steps_text = "\n  • ".join(steps)
             
@@ -183,7 +186,7 @@ def run_init_command(args: argparse.Namespace) -> int:
 [bold {cyan}]Quick Start[/bold {cyan}]
   • {steps_text}
 
-[dim]Run '{SETUP_COMMAND}' to get started.[/dim]"""
+[dim]Run '{_suggest('setup')}' to get started.[/dim]"""
 
             output_with_mode(
                 title="AKIOS Initialized",
@@ -240,7 +243,7 @@ def create_project_structure(project_name: str = None, force: bool = False, json
     skipped_files = []
 
     # Create directories
-    dirs_to_create = ["templates", "data/input", "data/output", "audit"]
+    dirs_to_create = ["templates", "workflows", "data/input", "data/output", "audit"]
     for dir_path in dirs_to_create:
         dir_obj = base_path / dir_path
         dir_obj.mkdir(parents=True, exist_ok=True)
@@ -318,37 +321,39 @@ exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v{__version__} "$@"
     # Create example workflows (copy from source templates)
     import shutil
 
-    # Copy templates from package data
+    # Copy templates from package data using importlib.resources (Python 3.9+)
     try:
-        import akios
-        import pkg_resources
+        from importlib.resources import files as _pkg_files
 
-        # Get templates from package data
+        templates_pkg = _pkg_files('akios.templates')
+        template_files = []
+
+        # List template files from package
         try:
-            template_files = pkg_resources.resource_listdir('akios', 'templates')
+            for item in templates_pkg.iterdir():
+                if item.name.endswith(('.yml', '.yaml', '.md')) and item.is_file():
+                    template_files.append(item)
         except Exception:
             template_files = []
 
         if template_files:
-            # Copy templates from package data
-            for filename in template_files:
-                if filename.endswith(('.yml', '.yaml', '.md')):
-                    dest_file = base_path / "templates" / filename
-                    if not dest_file.exists() or force:
-                        try:
-                            content = pkg_resources.resource_string('akios', f'templates/{filename}')
-                            dest_file.parent.mkdir(parents=True, exist_ok=True)
-                            with open(dest_file, 'wb') as f:
-                                f.write(content)
-                            created_files.append(str(dest_file))
-                        except Exception as e:
-                            output_with_mode(
-                                message=f"Could not copy template {filename}: {e}",
-                                details=[f"Will create basic template instead for {filename}"],
-                                json_mode=json_mode,
-                                quiet_mode=False,
-                                output_type="warning"
-                            )
+            for item in template_files:
+                dest_file = base_path / "templates" / item.name
+                if not dest_file.exists() or force:
+                    try:
+                        content = item.read_bytes()
+                        dest_file.parent.mkdir(parents=True, exist_ok=True)
+                        with open(dest_file, 'wb') as f:
+                            f.write(content)
+                        created_files.append(str(dest_file))
+                    except Exception as e:
+                        output_with_mode(
+                            message=f"Could not copy template {item.name}: {e}",
+                            details=[f"Will create basic template instead for {item.name}"],
+                            json_mode=json_mode,
+                            quiet_mode=False,
+                            output_type="warning"
+                        )
         else:
             # Fallback: create basic templates inline
             create_basic_templates(base_path, created_files, force)
@@ -370,12 +375,12 @@ exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v{__version__} "$@"
         gitignore_path.write_text(gitignore_content)
         created_files.append(str(gitignore_path))
 
-    # Create sample .env file - SKIPPED for fresh init to allow setup wizard to run correctly
-    # akios_env_path = base_path / ".env"
-    # if not akios_env_path.exists():
-    #     akios_env_content = create_akios_env()
-    #     akios_env_path.write_text(akios_env_content)
-    #     created_files.append(str(akios_env_path))
+    # Create .env file with starter content (API keys commented out)
+    akios_env_path = base_path / ".env"
+    if not akios_env_path.exists():
+        akios_env_content = create_akios_env()
+        akios_env_path.write_text(akios_env_content)
+        created_files.append(str(akios_env_path))
 
     # Create .env.example template
     env_example_path = base_path / ".env.example"
@@ -644,9 +649,22 @@ def create_akios_env() -> str:
 # Grok/xAI: https://console.x.ai/
 # GROK_API_KEY=xai-your-grok-key-here
 
+# Mistral AI: https://console.mistral.ai/
+# MISTRAL_API_KEY=your-mistral-key-here
+
+# Gemini/Google: https://makersuite.google.com/app/apikey
+# GEMINI_API_KEY=your-gemini-key-here
+
+# AWS Bedrock: https://aws.amazon.com/bedrock/ (uses IAM — no API key needed on EC2/ECS)
+# AWS_ACCESS_KEY_ID=your-access-key
+# AWS_SECRET_ACCESS_KEY=your-secret-key
+# AWS_DEFAULT_REGION=us-east-1
+# AKIOS_BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+# AKIOS_BEDROCK_REGION=us-east-1
+
 # === LLM SETTINGS ===
 # Default LLM provider and model
-# AKIOS_LLM_PROVIDER=openai  # Options: openai, anthropic, grok, mistral, gemini
+# AKIOS_LLM_PROVIDER=openai  # Options: openai, anthropic, grok, mistral, gemini, bedrock
 # AKIOS_LLM_MODEL=gpt-4o-mini  # Or claude-3.5-sonnet, grok-4.1-fast
 
 # === DEVELOPMENT ===
@@ -687,8 +705,15 @@ def create_env_example() -> str:
 # Gemini/Google: https://makersuite.google.com/app/apikey
 # GEMINI_API_KEY=your-gemini-key-here
 
+# AWS Bedrock: https://aws.amazon.com/bedrock/ (uses IAM — no API key needed on EC2/ECS)
+# AWS_ACCESS_KEY_ID=your-access-key
+# AWS_SECRET_ACCESS_KEY=your-secret-key
+# AWS_DEFAULT_REGION=us-east-1
+# AKIOS_BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
+# AKIOS_BEDROCK_REGION=us-east-1
+
 # === AKIOS SETTINGS ===
-# Default LLM provider and model (Options: openai, anthropic, grok, mistral, gemini)
+# Default LLM provider and model (Options: openai, anthropic, grok, mistral, gemini, bedrock)
 # Provider is auto-detected from your API key — these are optional overrides.
 # AKIOS_LLM_PROVIDER=grok
 # AKIOS_LLM_MODEL=grok-3
