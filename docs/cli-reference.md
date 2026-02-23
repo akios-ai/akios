@@ -1,10 +1,10 @@
-# AKIOS v1.0.12 CLI Reference
-**Document Version:** 1.0.12  
+# AKIOS v1.0.13 CLI Reference
+**Document Version:** 1.0.13  
 **Date:** 2026-02-22  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.0.11 supports three deployment methods:
+AKIOS v1.0.13 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.11 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.13 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.11 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.13 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -144,7 +144,7 @@ akios setup --mock-mode
 ```
 
 **Features:**
-- **Provider Selection**: Choose from 5 AI providers (OpenAI, Anthropic, Grok, Mistral, Gemini)
+- **Provider Selection**: Choose from 6 AI providers (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock)
 - **Model Selection**: Pick specific models (gpt-4o, claude-3-sonnet, grok-3, etc.)
 - **API Key Validation**: Real-time format checking and test API calls
 - **Advanced Settings**: Configure budget limits and token controls
@@ -164,7 +164,7 @@ akios setup --mock-mode
 
 **Automation Options:**
 - `--defaults`: Uses recommended defaults for instant setup
-- `--provider {openai,anthropic,grok,mistral,google}`: Pre-selects AI provider
+- `--provider {openai,anthropic,grok,mistral,google,bedrock}`: Pre-selects AI provider
 - `--mock-mode`: Enables mock mode without API keys
 - `--non-interactive`: Skips setup wizard entirely
 
@@ -181,10 +181,11 @@ AKIOS validates LLM provider and model compatibility at startup to prevent API f
 | **Grok** | `grok-3` |
 | **Mistral** | `mistral-small`, `mistral-medium`, `mistral-large` |
 | **Gemini** | `gemini-1.0-pro`, `gemini-1.5-pro`, `gemini-1.5-flash` |
+| **AWS Bedrock** | `anthropic.claude-3-5-haiku-20241022-v1:0`, `anthropic.claude-3-5-sonnet-20241022-v2:0`, `meta.llama3-1-8b-instruct-v1:0`, `amazon.titan-text-express-v1` |
 
 ### Validation Rules
 
-- **Provider Check**: Must be one of the 5 supported providers
+- **Provider Check**: Must be one of the 6 supported providers
 - **Model Check**: Model must be compatible with selected provider
 - **Case Insensitive**: Model names are matched case-insensitively (e.g., `GPT-4` works)
 - **Early Failure**: Invalid combinations are caught during configuration loading, not during workflow execution
@@ -201,6 +202,9 @@ AKIOS_LLM_PROVIDER=anthropic AKIOS_LLM_MODEL=claude-3-sonnet-20240229 ./akios st
 
 # xAI Grok
 AKIOS_LLM_PROVIDER=grok AKIOS_LLM_MODEL=grok-3 ./akios status
+
+# AWS Bedrock (uses IAM credentials, no API key needed)
+AKIOS_LLM_PROVIDER=bedrock AKIOS_BEDROCK_MODEL_ID=anthropic.claude-3-5-haiku-20241022-v1:0 ./akios status
 ```
 
 **Invalid combinations (will fail with clear error):**
@@ -323,7 +327,7 @@ akios run workflow.yml --json-output
 **`--json-output` response format:**
 ```json
 {
-  "akios_version": "1.0.12",
+  "akios_version": "1.0.13",
   "status": "completed",
   "workflow_id": "abc-123",
   "steps_executed": 3,
@@ -590,7 +594,7 @@ The output includes:
 Example output:
 ```json
 {
-  "akios_version": "1.0.11",
+  "akios_version": "1.0.13",
   "workflow_name": "Hello World Workflow",
   "status": "completed",
   "steps_executed": 3,

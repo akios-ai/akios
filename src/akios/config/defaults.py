@@ -48,7 +48,7 @@ DEFAULT_SETTINGS = Settings(
     audit_export_format="json",
 
     # LLM provider controls
-    allowed_providers=["openai", "anthropic", "grok", "mistral", "gemini"],
+    allowed_providers=["openai", "anthropic", "grok", "mistral", "gemini", "bedrock"],
 
     # General - safe defaults
     environment="development",

@@ -1,5 +1,5 @@
-# AKIOS v1.0.12 – Core Agents Reference
-**Document Version:** 1.0.12  
+# AKIOS v1.0.13 – Core Agents Reference
+**Document Version:** 1.0.13  
 **Date:** 2026-02-22  
 
 **The 4 core agents that power AKIOS workflows with military-grade security.**
@@ -220,7 +220,7 @@ Make HTTP DELETE request.
 **Secure language model API calls with token tracking and cost kill-switches.**
 
 ### Purpose
-Makes calls to language model APIs (OpenAI, Anthropic, Grok, Mistral, Gemini) while tracking token usage, enforcing cost limits, and ensuring data protection.
+Makes calls to language model APIs (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock) while tracking token usage, enforcing cost limits, and ensuring data protection.
 
 ### Actions
 
@@ -256,6 +256,7 @@ Have a conversation with context.
 - `prompt` (string): Text prompt for completion
 - `messages` (array): Chat messages for conversation
 - `model` (string, optional): Model to use (default: "gpt-3.5-turbo")
+- `provider` (string, optional): LLM provider — `openai`, `anthropic`, `grok`, `mistral`, `gemini`, or `bedrock` (v1.0.13+)
 - `max_tokens` (int, optional): Maximum tokens to generate (default: 1000)
 - `temperature` (float, optional): Randomness (0.0-2.0, default: 0.7)
 - `top_p` (float, optional): Nucleus sampling (default: 1.0)
@@ -272,8 +273,8 @@ Have a conversation with context.
 - `cost` (float): Estimated cost in USD
 - `model` (string): Model used
 - `finish_reason` (string): Why generation stopped
-- `pii_redactions_applied` (int): Number of PII instances redacted in output (v1.0.12+)
-- `pii_patterns_found` (array): PII types detected in output, e.g. `["email", "ssn"]` (v1.0.12+)
+- `pii_redactions_applied` (int): Number of PII instances redacted in output (v1.0.13+)
+- `pii_patterns_found` (array): PII types detected in output, e.g. `["email", "ssn"]` (v1.0.13+)
 
 ### Security Controls
 
@@ -281,6 +282,7 @@ Have a conversation with context.
 - **Token limits**: Hard caps on token usage (default: 1000)
 - **PII redaction**: All prompts and responses automatically redacted
 - **API key protection**: Keys never logged or exposed
+- **IAM authentication**: AWS Bedrock uses IAM credentials — no API key needed (v1.0.13+)
 - **Rate limiting**: Built-in API rate limit handling
 
 ### Cost Controls

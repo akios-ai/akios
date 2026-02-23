@@ -1,5 +1,5 @@
 # AKIOS Roadmap
-**Document Version:** 1.0.11  
+**Document Version:** 1.0.13  
 **Date:** 2026-02-22  
 **License:** GPL-3.0-only  
 
@@ -107,7 +107,7 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Shipped: v1.0.11 — "Cleanup & Hardening" (February 2026)
+## Shipped: v1.0.13 — "Cleanup & Hardening" (February 2026)
 
 **Theme:** Release process hardening, code quality fixes, dependency cleanup.  
 **Status:** ✅ Shipped

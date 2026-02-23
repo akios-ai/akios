@@ -43,7 +43,7 @@ detect_version() {
     
     # Final fallback: hardcoded stable version
     if [[ -z "$version" ]]; then
-        version="1.0.12"
+        version="1.0.13"
     fi
     
     echo "$version"

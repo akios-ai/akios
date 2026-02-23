@@ -104,8 +104,15 @@ class LLMAgent(BaseAgent):
         # Get API key for the provider (auto-detect if not provided)
         self.api_key = api_key or self._get_api_key_for_provider(self.provider_name)
 
+        # Bedrock uses IAM credentials (AWS_ACCESS_KEY_ID/SECRET), not a
+        # traditional API key.  boto3 resolves credentials from the standard
+        # chain (env vars, instance profile, SSO config), so we allow an
+        # empty api_key here and let the Bedrock provider handle auth.
+        if self.provider_name == "bedrock":
+            self.api_key = self.api_key or ""
+
         # Validate we have an API key
-        if not self.api_key:
+        if not self.api_key and self.provider_name != "bedrock":
             required_var = self._get_required_env_var(self.provider_name)
             provider_name, api_url = self._get_provider_info(self.provider_name)
             raise AgentError(
@@ -142,7 +149,8 @@ class LLMAgent(BaseAgent):
             "anthropic": "claude-3.5-haiku",
             "grok": "grok-3",
             "mistral": "mistral-small",
-            "gemini": "gemini-1.5-flash"
+            "gemini": "gemini-1.5-flash",
+            "bedrock": "anthropic.claude-3-5-haiku-20241022-v1:0"
         }
         return defaults.get(provider, "gpt-4o-mini")
 
@@ -156,7 +164,8 @@ class LLMAgent(BaseAgent):
             "anthropic": ["ANTHROPIC_API_KEY"],
             "grok": ["GROK_API_KEY"],
             "mistral": ["MISTRAL_API_KEY"],
-            "gemini": ["GEMINI_API_KEY", "GOOGLE_API_KEY"]
+            "gemini": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
+            "bedrock": ["AWS_ACCESS_KEY_ID"]
         }
 
         env_vars = key_mapping.get(provider, [])
@@ -174,7 +183,8 @@ class LLMAgent(BaseAgent):
             "anthropic": "ANTHROPIC_API_KEY",
             "grok": "GROK_API_KEY",
             "mistral": "MISTRAL_API_KEY",
-            "gemini": "GEMINI_API_KEY"
+            "gemini": "GEMINI_API_KEY",
+            "bedrock": "AWS_ACCESS_KEY_ID"
         }
         return mapping.get(provider, f"{provider.upper()}_API_KEY")
 
@@ -185,7 +195,8 @@ class LLMAgent(BaseAgent):
             "anthropic": ("Anthropic", "https://console.anthropic.com/"),
             "grok": ("Grok/xAI", "https://console.x.ai/"),
             "mistral": ("Mistral AI", "https://console.mistral.ai/"),
-            "gemini": ("Google Gemini", "https://makersuite.google.com/app/apikey")
+            "gemini": ("Google Gemini", "https://makersuite.google.com/app/apikey"),
+            "bedrock": ("AWS Bedrock", "https://docs.aws.amazon.com/bedrock/")
         }
         return info.get(provider, (provider.title(), f"https://{provider}.com"))
 
@@ -210,6 +221,12 @@ class LLMAgent(BaseAgent):
                     return GeminiProvider(api_key, model)
                 except ImportError:
                     raise AgentError("Gemini provider requires 'google-generativeai' library. Install with: pip install google-generativeai")
+            elif provider_name == "bedrock":
+                try:
+                    from akios.core.runtime.llm_providers.bedrock import BedrockProvider
+                    return BedrockProvider(api_key, model)
+                except ImportError:
+                    raise AgentError("Bedrock provider requires 'boto3' library. Install with: pip install akios[bedrock]")
             else:
                 raise AgentError(f"Unsupported provider: {provider_name}")
         except ImportError as e:

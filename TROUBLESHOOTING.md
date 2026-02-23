@@ -1,8 +1,8 @@
-# AKIOS v1.0.11 – Troubleshooting Guide
-**Document Version:** 1.0.11  
+# AKIOS v1.0.13 – Troubleshooting Guide
+**Document Version:** 1.0.13  
 **Date:** 2026-02-22  
 
-**Common issues, error codes, and solutions for AKIOS v1.0.11.**
+**Common issues, error codes, and solutions for AKIOS v1.0.13.**
 
 This guide covers the most frequent issues users encounter with AKIOS. If you can't find your issue here, check the [GitHub Issues](https://github.com/akios-ai/akios/issues) or start a [GitHub Discussion](https://github.com/akios-ai/akios/discussions).
 

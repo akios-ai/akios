@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.0.12"
+version = "1.0.13"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOUD AI", email = "contact@akioud.ai" },
@@ -104,6 +104,11 @@ seccomp = [
 extended = [
     "backoff>=2.2.0",
     "aiohttp>=3.9.0",
+]
+
+# AWS Bedrock LLM provider
+bedrock = [
+    "boto3>=1.34.0",
 ]
 
 # PII protection is implemented using rule-based detection
