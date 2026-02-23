@@ -134,27 +134,28 @@ def handle_template_run(template_path: str, force: bool = False) -> str:
     workflow_exists = workflow_path.exists()
 
     if workflow_exists:
-        # Safety confirmation when switching templates (overwrites customizations)
+        # When user explicitly specifies a template path, their intent is clear.
+        # Auto-approve the switch in non-interactive mode (Docker, CI/CD, piped stdin).
+        # Only prompt when stdin is an interactive TTY AND --force not used.
         if not force:
-            output_with_mode(
-                message=f"Switching to {template_name}",
-                details=[
-                    "This will overwrite your current workflow.yml",
-                    "Previous workflow outputs will be cleared for clean slate",
-                    "Audit logs remain intact (filter by workflow_id for history)"
-                ],
-                json_mode=False,
-                quiet_mode=False,
-                output_type="warning"
-            )
-
-        if not force:
-            try:
-                # Auto-approve if stdin is not interactive (e.g., piped, Docker without TTY)
-                if not sys.stdin.isatty():
-                    if debug_messages:
-                        print("   Non-interactive mode detected - auto-approving template switch...")
-                else:
+            if not sys.stdin.isatty():
+                # Non-interactive (Docker without -it, piped, CI/CD): auto-approve
+                if debug_messages:
+                    print("   Non-interactive mode detected - auto-approving template switch...")
+            else:
+                # Interactive terminal: show warning and confirm
+                output_with_mode(
+                    message=f"Switching to {template_name}",
+                    details=[
+                        "This will overwrite your current workflow.yml",
+                        "Previous workflow outputs will be cleared for clean slate",
+                        "Audit logs remain intact (filter by workflow_id for history)"
+                    ],
+                    json_mode=False,
+                    quiet_mode=False,
+                    output_type="warning"
+                )
+                try:
                     response = input("Continue? (y/N): ").strip().lower()
                     if response not in ['y', 'yes']:
                         output_with_mode(
@@ -163,16 +164,15 @@ def handle_template_run(template_path: str, force: bool = False) -> str:
                             quiet_mode=False,
                             output_type="info"
                         )
-                        # Return the existing workflow path to continue with current template
                         return "workflow.yml"
-            except (EOFError, KeyboardInterrupt):
-                output_with_mode(
-                    message="Template switch cancelled",
-                    json_mode=False,
-                    quiet_mode=False,
-                    output_type="warning"
-                )
-                return "workflow.yml"
+                except (EOFError, KeyboardInterrupt):
+                    output_with_mode(
+                        message="Template switch cancelled",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
+                    return "workflow.yml"
         else:
             if debug_messages:
                 print("   --force flag used - proceeding automatically...")

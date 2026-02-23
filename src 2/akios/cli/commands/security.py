@@ -391,7 +391,9 @@ def _wipe_cage_data(passes: int = 1, fast: bool = False) -> dict:
     Removes:
     - audit/          Merkle-chained audit logs
     - data/output/    All workflow execution outputs
-    - data/input/     All user-provided input files
+    
+    Preserves:
+    - data/input/     User-provided input files (preserved to avoid data loss)
     
     Returns:
         Summary dict with counts and sizes
@@ -399,13 +401,11 @@ def _wipe_cage_data(passes: int = 1, fast: bool = False) -> dict:
     summary = {
         'audit_files': 0, 'audit_bytes': 0,
         'output_files': 0, 'output_bytes': 0,
-        'input_files': 0, 'input_bytes': 0,
     }
     
     dirs_to_wipe = [
         ('audit', 'audit_files', 'audit_bytes'),
         ('data/output', 'output_files', 'output_bytes'),
-        ('data/input', 'input_files', 'input_bytes'),
     ]
     
     for dir_path, files_key, bytes_key in dirs_to_wipe:
@@ -439,14 +439,14 @@ def _format_wipe_summary(summary: dict, color: str) -> str:
             return f"{b / 1024:.1f} KB"
         return f"{b / (1024 * 1024):.2f} MB"
     
-    total_files = summary['audit_files'] + summary['output_files'] + summary['input_files']
-    total_bytes = summary['audit_bytes'] + summary['output_bytes'] + summary['input_bytes']
+    total_files = summary['audit_files'] + summary['output_files']
+    total_bytes = summary['audit_bytes'] + summary['output_bytes']
     
     lines = []
     lines.append(f"  [{color}]Audit logs:[/]  {summary['audit_files']} files ({_size(summary['audit_bytes'])})")
     lines.append(f"  [{color}]Outputs:[/]     {summary['output_files']} files ({_size(summary['output_bytes'])})")
-    lines.append(f"  [{color}]Inputs:[/]      {summary['input_files']} files ({_size(summary['input_bytes'])})")
     lines.append(f"  [bold {color}]Total:[/]       {total_files} files ({_size(total_bytes)}) destroyed")
+    lines.append(f"  [dim]Input data preserved (data/input/)[/dim]")
     return '\n'.join(lines)
 
 

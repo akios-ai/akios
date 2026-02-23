@@ -73,11 +73,16 @@ def register_protect_command(subparsers: argparse._SubParsersAction) -> None:
     # protect scan
     scan_parser = subparsers_protect.add_parser(
         "scan",
-        help="Scan a file for PII detections"
+        help="Scan a file or text for PII detections"
     )
     scan_parser.add_argument(
         "file",
-        help="File to scan for PII"
+        help="File path to scan for PII, or inline text (auto-detected)"
+    )
+    scan_parser.add_argument(
+        "--text",
+        action="store_true",
+        help="Treat argument as inline text instead of a file path"
     )
     scan_parser.add_argument(
         "--json",
@@ -230,17 +235,28 @@ def run_protect_preview(args: argparse.Namespace) -> int:
 
 
 def run_protect_scan(args: argparse.Namespace) -> int:
-    """Execute protect scan: scan a single file for PII."""
+    """Execute protect scan: scan a single file or inline text for PII."""
     check_project_context()
     
     file_path = Path(args.file)
-    if not file_path.exists():
-        raise CLIError(f"File not found: {file_path}")
+    is_text_mode = getattr(args, 'text', False)
     
-    try:
-        content = file_path.read_text(encoding="utf-8", errors="replace")
-    except Exception as e:
-        raise CLIError(f"Failed to read file: {str(e)}")
+    # Auto-detect: if --text flag is set OR the argument doesn't look like a file path, treat as text
+    if is_text_mode or (not file_path.exists() and (
+        ' ' in args.file or ',' in args.file or
+        any(c.isdigit() for c in args.file) and len(args.file) > 20
+    )):
+        # Inline text mode
+        content = args.file
+        source_label = "inline text"
+    else:
+        if not file_path.exists():
+            raise CLIError(f"File not found: {file_path}")
+        try:
+            content = file_path.read_text(encoding="utf-8", errors="replace")
+        except Exception as e:
+            raise CLIError(f"Failed to read file: {str(e)}")
+        source_label = str(file_path)
     
     # Detect PII using the product PII engine — always detect regardless of cage state
     detections = _detect_pii(content)
@@ -253,7 +269,7 @@ def run_protect_scan(args: argparse.Namespace) -> int:
     if getattr(args, 'json', False):
         import json
         output = {
-            "file": str(file_path),
+            "source": source_label,
             "pii_found": total_found,
             "detections": {k: v for k, v in detections.items()},
             "redacted_preview": redacted_text[:500] if redacted_text else None,
@@ -264,7 +280,7 @@ def run_protect_scan(args: argparse.Namespace) -> int:
     success_color = get_theme_color('success')
     error_color = get_theme_color('error')
     
-    print_info(f"Scanning [bold]{file_path}[/]...")
+    print_info(f"Scanning [bold]{source_label}[/]...")
     
     if detections:
         import re as _re
