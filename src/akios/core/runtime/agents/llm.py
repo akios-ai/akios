@@ -396,6 +396,9 @@ class LLMAgent(BaseAgent):
 
         # Track usage
         tokens_used = result.get('tokens_used', 0)
+        usage = result.get('usage', {})
+        prompt_tokens = usage.get('prompt_tokens', 0)
+        completion_tokens = usage.get('completion_tokens', 0)
         self.session_tokens += tokens_used
         cost_incurred = self._calculate_cost(tokens_used)
         self.session_cost += cost_incurred
@@ -420,6 +423,11 @@ class LLMAgent(BaseAgent):
 
         # Add cost data to result for template access (rounded for clean display)
         result['cost_incurred'] = round(cost_incurred, 6)
+
+        # Add token breakdown for engine-level aggregation
+        result['prompt_tokens'] = prompt_tokens
+        result['completion_tokens'] = completion_tokens
+        result['llm_model'] = self.model
 
         # Add processing timestamp for template access
         result['processing_timestamp'] = datetime.now(timezone.utc).isoformat()
@@ -658,6 +666,7 @@ class LLMAgent(BaseAgent):
             # Generate mock response based on prompt content
             mock_response = self._generate_mock_response(prompt, max_tokens)
             tokens_used = min(len(mock_response.split()) * 2, max_tokens)
+            prompt_token_est = max(1, len(prompt.split()))
             cost_incurred = self._calculate_cost(tokens_used)
 
             return {
@@ -666,7 +675,12 @@ class LLMAgent(BaseAgent):
                 'model': 'mock-model',
                 'cost_incurred': round(cost_incurred, 6),
                 'processing_timestamp': datetime.now(timezone.utc).isoformat(),
-                'finish_reason': 'completed'
+                'finish_reason': 'completed',
+                'usage': {
+                    'prompt_tokens': prompt_token_est,
+                    'completion_tokens': tokens_used - prompt_token_est,
+                    'total_tokens': tokens_used,
+                }
             }
 
         # Real LLM API call
@@ -714,7 +728,12 @@ class LLMAgent(BaseAgent):
                 'model': result.get('model', self.model),
                 'finish_reason': result.get('finish_reason', 'unknown'),
                 'cost_incurred': round(cost_incurred, 6),
-                'processing_timestamp': datetime.now(timezone.utc).isoformat()
+                'processing_timestamp': datetime.now(timezone.utc).isoformat(),
+                'usage': result.get('usage', {
+                    'prompt_tokens': 0,
+                    'completion_tokens': tokens_used,
+                    'total_tokens': tokens_used,
+                }),
             }
 
         except Exception as e:
@@ -754,6 +773,7 @@ class LLMAgent(BaseAgent):
 
             mock_response = self._generate_mock_response(last_message, max_tokens)
             tokens_used = min(len(mock_response.split()) * 2, max_tokens)
+            prompt_token_est = max(1, sum(len(m.get('content', '').split()) for m in messages))
             cost_incurred = self._calculate_cost(tokens_used)
 
             return {
@@ -762,7 +782,12 @@ class LLMAgent(BaseAgent):
                 'model': 'mock-model',
                 'cost_incurred': round(cost_incurred, 6),
                 'processing_timestamp': datetime.now(timezone.utc).isoformat(),
-                'finish_reason': 'completed'
+                'finish_reason': 'completed',
+                'usage': {
+                    'prompt_tokens': prompt_token_est,
+                    'completion_tokens': tokens_used - prompt_token_est,
+                    'total_tokens': tokens_used,
+                }
             }
 
         # Real chat completion

@@ -1,8 +1,8 @@
-# AKIOS v1.0 – Third-Party Licenses
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+# AKIOS v1.0.11 – Third-Party Licenses
+**Document Version:** 1.0.11  
+**Date:** 2026-02-22  
 
-This document lists **all third-party software components** used in AKIOS v1.0 Open Runtime and their licenses.
+This document lists **all third-party software components** used in AKIOS v1.0.11 Open Runtime and their licenses.
 
 AKIOS uses a comprehensive set of dependencies for core functionality, security, LLM integration, document processing, API services, and development tools. All dependencies are compatible with GPL-3.0-only licensing.
 
@@ -12,7 +12,6 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 |---------------------|-----------------|----------------------|----------------------------------------------|-----------------------------------------------------|
 | **pydantic**        | >=2.0.0         | MIT                  | Type-safe data validation and settings       | https://github.com/pydantic/pydantic               |
 | **pydantic-settings**| >=2.0.0         | MIT                  | Configuration management with pydantic       | https://github.com/pydantic/pydantic-settings      |
-| **click**           | >=8.0.0         | BSD-3-Clause         | Command-line interface framework             | https://github.com/pallets/click                   |
 | **pyyaml**          | >=6.0           | MIT                  | YAML parsing and serialization               | https://github.com/yaml/pyyaml                     |
 | **jsonschema**      | >=4.21.0        | MIT                  | JSON schema validation                       | https://github.com/python-jsonschema/jsonschema   |
 | **httpx**           | >=0.25.0        | BSD                  | HTTP client for API integrations             | https://github.com/encode/httpx                    |
@@ -25,16 +24,16 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 | **tiktoken**        | >=0.5.0         | MIT                  | Token counting for LLM providers             | https://github.com/openai/tiktoken                 |
 | **protobuf**        | >=5.29.5        | BSD-3-Clause         | Protocol buffer serialization                | https://github.com/protocolbuffers/protobuf       |
 | **rich**            | >=13.7.0        | MIT                  | Rich text and terminal formatting            | https://github.com/Textualize/rich                 |
-| **PyPDF2**          | >=3.0.0         | BSD                  | PDF document processing                      | https://github.com/py-pdf/pypdf                    |
+| **pypdf**           | >=4.0.0         | BSD                  | PDF document processing                      | https://github.com/py-pdf/pypdf                    |
 | **pdfminer.six**    | >=20231228      | MIT                  | PDF text extraction                          | https://github.com/pdfminer/pdfminer.six          |
 | **python-docx**     | >=1.1.0         | MIT                  | Microsoft Word document processing           | https://github.com/python-openxml/python-docx     |
+| **fastapi**         | >=0.104.0       | MIT                  | REST API framework (`akios serve`)           | https://github.com/tiangolo/fastapi                |
+| **uvicorn**         | >=0.24.0        | BSD                  | ASGI server for FastAPI                      | https://github.com/encode/uvicorn                  |
 
 ## Optional Runtime Dependencies
 
 | Dependency          | Version         | License              | Purpose                                      | Website / Repo                                      | Group |
 |---------------------|-----------------|----------------------|----------------------------------------------|-----------------------------------------------------|-------|
-| **fastapi**         | >=0.104.0       | MIT                  | REST API framework                           | https://github.com/tiangolo/fastapi                | api |
-| **uvicorn**         | >=0.24.0        | BSD                  | ASGI server for FastAPI                      | https://github.com/encode/uvicorn                  | api |
 | **prometheus-client**| >=0.17.0        | Apache-2.0           | Prometheus metrics collection                | https://github.com/prometheus/client_python        | monitoring |
 | **seccomp**         | >=1.0.0         | LGPL-2.1-or-later    | Linux syscall filtering                      | https://github.com/seccomp/libseccomp              | seccomp |
 | **backoff**         | >=2.2.0         | MIT                  | Retry logic with exponential backoff         | https://github.com/litl/backoff                    | extended |
@@ -75,8 +74,8 @@ AKIOS uses a comprehensive set of dependencies for core functionality, security,
 All dependencies are **compatible with GPL-3.0-only**:
 - **MIT**: Fully compatible (pydantic, pyyaml, anthropic, tiktoken, rich, fastapi, pdfminer.six, python-docx, questionary, pytest, black, isort, mypy, ruff, pre-commit, flake8, sphinx-rtd-theme, tox, setuptools, wheel, build)
 - **Apache-2.0**: Compatible (openai, cryptography, requests, google-generativeai, prometheus-client, aiohttp, types-PyYAML, types-requests)
-- **BSD-3-Clause**: Compatible (click, protobuf)
-- **BSD**: Compatible (httpx, psutil, uvicorn, PyPDF2)
+- **BSD-3-Clause**: Compatible (protobuf)
+- **BSD**: Compatible (httpx, psutil, uvicorn, pypdf)
 - **BSD-2-Clause**: Compatible (sphinx)
 - **GPL-2.0 + Exception**: Compatible (PyInstaller - build tool with exception allowing proprietary programs)
 - **GPL-2.0 / GPL-2.0-or-later**: Compatible (fuzzywuzzy, python-Levenshtein - GPL-2.0 is compatible with GPL-3.0-only)
@@ -116,5 +115,5 @@ Full license texts and complete dependency list available in THIRD_PARTY_LICENSE
 
 ## Summary
 
-AKIOS v1.0 uses **40+ third-party dependencies** providing comprehensive functionality for secure AI agent execution, including LLM integration, document processing, API services, security, and development tools. All dependencies are well-maintained, GPL-3.0-compatible, and selected for their security, performance, and reliability.
+AKIOS v1.0.11 uses **40+ third-party dependencies** providing comprehensive functionality for secure AI agent execution, including LLM integration, document processing, API services, security, and development tools. All dependencies are well-maintained, GPL-3.0-compatible, and selected for their security, performance, and reliability.
 

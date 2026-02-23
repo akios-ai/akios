@@ -1,6 +1,6 @@
 # AKIOS v1.0.11 – Troubleshooting Guide
-**Document Version:** 1.0.10  
-**Date:** 2026-02-21  
+**Document Version:** 1.0.11  
+**Date:** 2026-02-22  
 
 **Common issues, error codes, and solutions for AKIOS v1.0.11.**
 
@@ -11,7 +11,7 @@ This guide covers the most frequent issues users encounter with AKIOS. If you ca
 ### 1. Check Environment
 ```bash
 # Verify Python version
-python3 --version  # Should show 3.8+
+python3 --version  # Should show 3.9+
 
 # Check Linux kernel
 uname -r  # Should show 3.17+ (seccomp-bpf support)
@@ -403,7 +403,7 @@ Most configuration issues can be resolved using the setup wizard.
 **Solutions:**
 1. **Check Python version:**
    ```bash
-   python3 --version  # Must be 3.8+
+   python3 --version  # Must be 3.9+
    ```
 
 2. **Upgrade pip:**

@@ -854,6 +854,19 @@ class RuntimeEngine:
         """Finalize successful workflow execution"""
         execution_time = time.time() - start_time
 
+        # Aggregate PII redaction stats across all steps
+        pii_redaction_count = 0
+        pii_redacted_fields = []
+        for r in results:
+            if not isinstance(r, dict):
+                continue
+            step_result = r.get('result', {})
+            if isinstance(step_result, dict):
+                pii_redaction_count += step_result.get('pii_redactions_applied', 0)
+                for field in step_result.get('pii_patterns_found', []):
+                    if field not in pii_redacted_fields:
+                        pii_redacted_fields.append(field)
+
         # Emit audit event only if audit is enabled (respects --no-audit ablation flag)
         if getattr(self.settings, 'audit_enabled', True):
             _get_append_audit_event()({
@@ -880,12 +893,20 @@ class RuntimeEngine:
             except Exception as e:
                 pass
 
+        cost_status = self.cost_kill.get_status()
+
         result = {
             'status': 'completed',
             'workflow_id': self.current_workflow_id,
             'steps_executed': len(results),
             'execution_time': execution_time,
-            'results': results
+            'results': results,
+            'tokens_input': cost_status.get('tokens_input', 0),
+            'tokens_output': cost_status.get('tokens_output', 0),
+            'total_cost': cost_status.get('total_cost', 0.0),
+            'llm_model': cost_status.get('llm_model'),
+            'pii_redaction_count': pii_redaction_count,
+            'pii_redacted_fields': pii_redacted_fields,
         }
 
         # Write output.json — deployable artifact with LLM results + metadata.
@@ -908,10 +929,12 @@ class RuntimeEngine:
                     'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                     'security': {
                         'pii_redaction': getattr(self.settings, 'pii_redaction_enabled', True),
+                        'pii_redaction_count': pii_redaction_count,
+                        'pii_redacted_fields': pii_redacted_fields,
                         'audit_enabled': getattr(self.settings, 'audit_enabled', True),
                         'sandbox_enabled': getattr(self.settings, 'sandbox_enabled', True),
                     },
-                    'cost': self.cost_kill.get_status(),
+                    'cost': cost_status,
                     'results': [
                         {
                             'step': i + 1,

@@ -97,6 +97,14 @@ def execute_step(
         if isinstance(result, dict) and 'cost_incurred' in result:
             engine.cost_kill.add_cost(result['cost_incurred'])
 
+        # Track token usage (input/output breakdown)
+        if isinstance(result, dict) and ('prompt_tokens' in result or 'completion_tokens' in result):
+            engine.cost_kill.add_tokens(
+                prompt_tokens=result.get('prompt_tokens', 0),
+                completion_tokens=result.get('completion_tokens', 0),
+                model=result.get('llm_model'),
+            )
+
         # Audit
         step_time = time.time() - step_start
         if getattr(engine.settings, 'audit_enabled', True):

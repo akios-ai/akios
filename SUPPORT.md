@@ -1,6 +1,6 @@
 # AKIOS Support & Community
-**Document Version:** 1.0  
-**Date:** 2026-01-25  
+**Document Version:** 1.0.11  
+**Date:** 2026-02-22  
 
 **Get help with AKIOS - Your secure AI workflow platform**
 

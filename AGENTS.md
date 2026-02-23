@@ -1,5 +1,5 @@
-# AKIOS v1.0.11 – Core Agents Reference
-**Document Version:** 1.0.11  
+# AKIOS v1.0.12 – Core Agents Reference
+**Document Version:** 1.0.12  
 **Date:** 2026-02-22  
 
 **The 4 core agents that power AKIOS workflows with military-grade security.**
@@ -272,6 +272,8 @@ Have a conversation with context.
 - `cost` (float): Estimated cost in USD
 - `model` (string): Model used
 - `finish_reason` (string): Why generation stopped
+- `pii_redactions_applied` (int): Number of PII instances redacted in output (v1.0.12+)
+- `pii_patterns_found` (array): PII types detected in output, e.g. `["email", "ssn"]` (v1.0.12+)
 
 ### Security Controls
 

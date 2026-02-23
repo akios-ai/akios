@@ -59,6 +59,12 @@ def register_run_command(subparsers: argparse._SubParsersAction) -> None:
     )
 
     parser.add_argument(
+        "--json-output",
+        action="store_true",
+        help="Emit structured JSON summary to stdout (machine-readable, for CI/CD and automation)"
+    )
+
+    parser.add_argument(
         "--quiet",
         action="store_true",
         help="Suppress progress output"
@@ -315,7 +321,9 @@ def run_run_command(args: argparse.Namespace) -> int:
         signal.signal(signal.SIGTERM, signal_handler)
 
         # Execute workflow with comprehensive isolation
-        result = execute_workflow_isolated(workflow_path, quiet=args.quiet, verbose=getattr(args, 'verbose', False), template_name=template_name, args=args)
+        # --json-output implies quiet mode to keep stdout clean for JSON
+        effective_quiet = args.quiet or getattr(args, 'json_output', False)
+        result = execute_workflow_isolated(workflow_path, quiet=effective_quiet, verbose=getattr(args, 'verbose', False), template_name=template_name, args=args)
 
         # Determine exit code based on result
         if result["status"] == "completed":
@@ -326,7 +334,28 @@ def run_run_command(args: argparse.Namespace) -> int:
             exit_code = 1
 
         # Output result
-        if args.json:
+        if getattr(args, 'json_output', False):
+            # --json-output: structured JSON summary to stdout for CI/CD
+            import json as _json
+            try:
+                from akios._version import __version__ as _akios_ver
+            except ImportError:
+                _akios_ver = 'unknown'
+            json_summary = {
+                'akios_version': _akios_ver,
+                'status': result.get('status', 'unknown'),
+                'workflow_id': result.get('workflow_id', ''),
+                'steps_executed': result.get('steps_executed', 0),
+                'execution_time_seconds': round(result.get('execution_time', 0), 3),
+                'tokens_input': result.get('tokens_input', 0),
+                'tokens_output': result.get('tokens_output', 0),
+                'total_cost': result.get('total_cost', 0.0),
+                'llm_model': result.get('llm_model'),
+                'pii_redaction_count': result.get('pii_redaction_count', 0),
+                'pii_redacted_fields': result.get('pii_redacted_fields', []),
+            }
+            print(_json.dumps(json_summary, indent=2, default=str))
+        elif args.json:
             output_result(result, json_mode=args.json)
         elif not args.quiet:
             if result["status"] == "completed":

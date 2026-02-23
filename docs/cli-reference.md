@@ -1,6 +1,6 @@
-# AKIOS v1.0.11 CLI Reference
-**Document Version:** 1.0.11  
-**Date:** 2026-02-19  
+# AKIOS v1.0.12 CLI Reference
+**Document Version:** 1.0.12  
+**Date:** 2026-02-22  
 
 ## 🚀 Three Ways to Run AKIOS
 
@@ -306,15 +306,36 @@ akios run workflow.yml --real-api
 
 # Run with force flag (skip confirmation prompts)
 akios run workflow.yml --force
+
+# Emit structured JSON summary to stdout (for CI/CD pipelines)
+akios run workflow.yml --json-output
 ```
 
 **Options:**
+- `--json-output`: Emit structured JSON summary to stdout with status, token usage, cost, and PII metadata. Suppresses Rich UI output. Designed for CI/CD and automation.
 - `--verbose`: Enable detailed execution logging
 - `--quiet`: Suppress informational banners and non-error output
 - `--real-api`: Enable real API mode with interactive API key setup (sets AKIOS_MOCK_LLM=0, network_access_allowed=true, prompts for missing keys)
 - `--force`: Skip confirmation prompts for template switches
 - `--debug`: Enable debug logging for troubleshooting
 - `--exec`: **Security trap** — hidden flag that rejects with error "Direct shell execution is not permitted inside the security cage". Exists to block shell-injection attempts.
+
+**`--json-output` response format:**
+```json
+{
+  "akios_version": "1.0.12",
+  "status": "completed",
+  "workflow_id": "abc-123",
+  "steps_executed": 3,
+  "execution_time_seconds": 2.451,
+  "tokens_input": 150,
+  "tokens_output": 320,
+  "total_cost": 0.00045,
+  "llm_model": "gpt-4o-mini",
+  "pii_redaction_count": 4,
+  "pii_redacted_fields": ["email", "phone", "ssn"]
+}
+```
 
 ### `akios audit export` - Export Audit Reports
 
