@@ -182,9 +182,9 @@ def create_app() -> FastAPI:
         try:
             from akios.core.audit.ledger import get_ledger
             ledger = get_ledger()
-            is_valid = ledger.verify_chain()
-            total = ledger.event_count
-            errors: List[str] = [] if is_valid else ["Chain verification failed"]
+            is_valid = ledger.verify_integrity()
+            total = ledger.size()
+            errors: List[str] = [] if is_valid else ["Integrity verification failed"]
             return AuditVerifyResponse(valid=is_valid, total_events=total, errors=errors)
         except Exception as exc:
             return AuditVerifyResponse(valid=False, total_events=0, errors=[str(exc)])

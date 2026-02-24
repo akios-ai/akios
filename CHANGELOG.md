@@ -1,11 +1,49 @@
 # Changelog
-**Document Version:** 1.0.15  
+**Document Version:** 1.0.16  
 **Date:** 2026-02-23  
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.0.16] - 2026-02-23
+
+### Fixed — Beta Tester Bug Reports (10 Bugs Fixed + 1 Deferred)
+
+Addresses 11 confirmed bugs from external beta tester audit. 4 additional reports were investigated and rejected with evidence (see `internal/docs/BETA_TESTER_RESPONSE_v1.0.16.md`).
+
+#### REST API Fixes
+
+- **🔧 BUG-01 (P0): `/api/v1/audit/verify` endpoint crashes** — Fixed `AttributeError` in audit verify endpoint. Changed `ledger.verify_chain()` → `ledger.verify_integrity()` and `ledger.event_count` → `ledger.size()` to match actual `AuditLedger` API.
+- **🔧 BUG-09 (P1): `/api/v1/workflow/run` response missing fields** — Added `total_steps` and `output_directory` fields to engine result dict. REST API `WorkflowResult` schema now returns complete workflow execution metadata.
+
+#### CLI Fixes
+
+- **🔧 BUG-02 (P0): `akios setup --mock-mode` still prompts for input** — Automated setup (`--mock-mode`, `--provider`, `--defaults`) now implies `force=True` internally, bypassing the `.env` overwrite confirmation prompt. Fully non-interactive as documented.
+- **🔧 BUG-04+05 (P1): `akios http` rejects uppercase methods and missing HEAD/OPTIONS** — Added `type=str.lower` for case-insensitive method matching. Added `head` and `options` to allowed HTTP methods (was 5, now 7).
+- **🔧 BUG-07 (P1): `--json-output` leaks plain text from template switching** — Template switching messages ("Switching to...", "Creating workflow.yml...") now suppressed when `--json-output` is active. All output paths respect the JSON-only contract.
+- **🔧 BUG-08 (P1): `AKIOS_JSON_MODE` env var has no effect** — `is_json_mode()` now checks both CLI args and `os.environ.get('AKIOS_JSON_MODE')`. Environment variable control restored for SDK/CI consumers.
+- **🔧 BUG-10 (P2): Testing subcommand names inconsistent with docs** — Renamed `notes` → `show-notes`, `clear` → `clear-notes`, `log` → `log-issue` with original names as aliases for backward compatibility.
+- **🔧 BUG-11 (P2): `akios timeline` searches for `*.json` instead of `*.jsonl`** — Fixed 3 glob patterns in timeline command from `*.json` to `*.jsonl` to match actual audit log format.
+
+#### Documentation Fixes
+
+- **📄 BUG-13 (P2): Detection system docs reference non-existent commands** — Removed `akios setup --show-environment` and `akios config show-environment` from docs (commands never existed).
+- **📄 BUG-14 (P2): Detection system docs show wrong field names** — Fixed `EnvironmentInfo` fields, `ContainerType` enum values, and programmatic access code example to match actual source code.
+
+#### Deferred
+
+- **⏩ BUG-06 (P2): `akios doctor` duplicates `status --security`** — Confirmed as design issue. Deferred to v1.1.0 for proper command responsibility redesign (doctor → diagnostics, status → runtime state).
+
+### Changed
+
+- **📦 Version bump** — All version references updated to 1.0.16 across 30+ files.
+- **📝 AGENTS.md** — Document version updated to 1.0.16.
+
+### Infrastructure
+
+- **📄 Beta tester response document** — Created `internal/docs/BETA_TESTER_RESPONSE_v1.0.16.md` with full analysis of all 15 reported bugs (11 confirmed, 4 rejected with evidence).
 
 ## [1.0.15] - 2026-02-23
 

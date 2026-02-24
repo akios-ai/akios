@@ -72,13 +72,18 @@ def is_json_mode(args_json: bool = False) -> bool:
     """
     Determine if JSON output mode should be used.
 
+    Checks the --json flag from argparse AND the AKIOS_JSON_MODE
+    environment variable (set in main.py for automation-friendly output).
+
     Args:
         args_json: The --json flag value from argparse
 
     Returns:
         True if JSON mode is active
     """
-    return args_json is True
+    if args_json is True:
+        return True
+    return os.environ.get('AKIOS_JSON_MODE', '').lower() in ('1', 'true', 'yes')
 
 
 def is_quiet_mode(args_quiet: bool = False) -> bool:

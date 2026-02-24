@@ -170,7 +170,8 @@ def register_testing_command(subparsers: argparse._SubParsersAction) -> None:
 
     # Notes subcommand
     notes_parser = testing_subparsers.add_parser(
-        "notes",
+        "show-notes",
+        aliases=["notes"],
         help="Display environment notes and testing context"
     )
     notes_parser.add_argument(
@@ -202,14 +203,16 @@ def register_testing_command(subparsers: argparse._SubParsersAction) -> None:
 
     # Clear subcommand
     clear_parser = testing_subparsers.add_parser(
-        "clear",
+        "clear-notes",
+        aliases=["clear"],
         help="Clear all logged environment notes"
     )
     clear_parser.set_defaults(func=clear_notes)
 
     # Log subcommand
     log_parser = testing_subparsers.add_parser(
-        "log",
+        "log-issue",
+        aliases=["log"],
         help="Manually log a testing issue"
     )
     log_parser.add_argument(

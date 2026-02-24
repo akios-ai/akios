@@ -170,20 +170,20 @@ def _find_timeline_file(run_name: str) -> Optional[Path]:
     
     # Handle 'latest'
     if run_name.lower() == 'latest':
-        # Find most recent audit file
-        audit_files = sorted(audit_dir.glob('*.json'))
+        # Find most recent audit file (audit stores as .jsonl — JSON Lines format)
+        audit_files = sorted(audit_dir.glob('*.jsonl'))
         if audit_files:
             return audit_files[-1]
         return None
     
     # Handle specific run name
     # Try exact match first
-    candidate = audit_dir / f"{run_name}.json"
+    candidate = audit_dir / f"{run_name}.jsonl"
     if candidate.exists():
         return candidate
     
     # Try partial match
-    for f in audit_dir.glob(f"*{run_name}*.json"):
+    for f in audit_dir.glob(f"*{run_name}*.jsonl"):
         return f
     
     return None
@@ -213,7 +213,7 @@ def _list_timelines(json_mode: bool = False) -> int:
             )
         return 0
     
-    audit_files = sorted(audit_dir.glob('*.json'))
+    audit_files = sorted(audit_dir.glob('*.jsonl'))
     
     if json_mode:
         timelines = []
