@@ -111,13 +111,14 @@ def is_template_path(workflow_path: str) -> bool:
     return workflow_path.startswith("templates/")
 
 
-def handle_template_run(template_path: str, force: bool = False) -> str:
+def handle_template_run(template_path: str, force: bool = False, json_output: bool = False) -> str:
     """
     Handle template execution by creating workflow.yml from template.
 
     Args:
         template_path: Path to template file (e.g., 'templates/hello-workflow.yml')
         force: Skip confirmation prompts for automation
+        json_output: Suppress all Rich/print output for clean JSON stdout
 
     Returns:
         Path to workflow file to execute ('workflow.yml')
@@ -144,17 +145,18 @@ def handle_template_run(template_path: str, force: bool = False) -> str:
                     print("   Non-interactive mode detected - auto-approving template switch...")
             else:
                 # Interactive terminal: show warning and confirm
-                output_with_mode(
-                    message=f"Switching to {template_name}",
-                    details=[
-                        "This will overwrite your current workflow.yml",
-                        "Previous workflow outputs will be cleared for clean slate",
-                        "Audit logs remain intact (filter by workflow_id for history)"
-                    ],
-                    json_mode=False,
-                    quiet_mode=False,
-                    output_type="warning"
-                )
+                if not json_output:
+                    output_with_mode(
+                        message=f"Switching to {template_name}",
+                        details=[
+                            "This will overwrite your current workflow.yml",
+                            "Previous workflow outputs will be cleared for clean slate",
+                            "Audit logs remain intact (filter by workflow_id for history)"
+                        ],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning"
+                    )
                 try:
                     response = input("Continue? (y/N): ").strip().lower()
                     if response not in ['y', 'yes']:
@@ -178,25 +180,27 @@ def handle_template_run(template_path: str, force: bool = False) -> str:
                 print("   --force flag used - proceeding automatically...")
 
         # Clear previous outputs for clean slate (but never touch audit)
-        clear_project_outputs(quiet=force)
+        clear_project_outputs(quiet=force or json_output)
 
-        output_with_mode(
-            message=f"Switched to {template_name}",
-            details=[
-                f"Edit workflow.yml to customize the {template_name} template",
-                "Previous outputs cleared - fresh start with new template"
-            ],
-            json_mode=False,
-            quiet_mode=force,
-            output_type="success"
-        )
+        if not json_output:
+            output_with_mode(
+                message=f"Switched to {template_name}",
+                details=[
+                    f"Edit workflow.yml to customize the {template_name} template",
+                    "Previous outputs cleared - fresh start with new template"
+                ],
+                json_mode=False,
+                quiet_mode=force,
+                output_type="success"
+            )
     else:
-        output_with_mode(
-            message=f"Creating workflow.yml from {template_name} template...",
-            json_mode=False,
-            quiet_mode=False,
-            output_type="info"
-        )
+        if not json_output:
+            output_with_mode(
+                message=f"Creating workflow.yml from {template_name} template...",
+                json_mode=False,
+                quiet_mode=False,
+                output_type="info"
+            )
 
     # Copy template to workflow.yml (in project root)
     template_full_path = Path(template_path)
@@ -304,7 +308,7 @@ def run_run_command(args: argparse.Namespace) -> int:
         if is_template_path(args.workflow):
             # Isolate template execution to prevent state contamination
             _isolate_template_execution()
-            workflow_path = handle_template_run(args.workflow, force=getattr(args, 'force', False))
+            workflow_path = handle_template_run(args.workflow, force=getattr(args, 'force', False), json_output=getattr(args, 'json_output', False))
             # Extract template name for tracking (remove 'templates/' prefix and '.yml' suffix)
             template_name = args.workflow.replace('templates/', '').replace('.yml', '')
 

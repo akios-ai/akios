@@ -47,8 +47,9 @@ def register_http_command(subparsers: argparse._SubParsersAction) -> None:
 
     parser.add_argument(
         "method",
-        choices=["get", "post", "put", "delete", "patch"],
-        help="HTTP method"
+        choices=["get", "post", "put", "delete", "patch", "head", "options"],
+        type=str.lower,
+        help="HTTP method (case-insensitive)"
     )
 
     parser.add_argument(

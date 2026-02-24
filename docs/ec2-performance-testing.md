@@ -1,8 +1,8 @@
 # EC2 Performance Testing Guide – Complete Setup & Validation
 
-**Document Version:** 1.0.15  
+**Document Version:** 1.0.16  
 **Date:** 2026-02-23  
-**Scope:** AKIOS v1.0.15 native Linux performance & security validation on AWS EC2
+**Scope:** AKIOS v1.0.16 native Linux performance & security validation on AWS EC2
 
 ---
 
@@ -154,7 +154,7 @@ Performance may vary by region due to:
 
 ### Performance Scaling Model
 
-**Based on AKIOS v1.0.15 validation on t4g.micro (ARM64, 1 GB RAM):**
+**Based on AKIOS v1.0.16 validation on t4g.micro (ARM64, 1 GB RAM):**
 
 ```
 Security Pipeline:  0.47 ms (full pipeline: PII + policy + audit + budget)
@@ -244,7 +244,7 @@ sudo apt install -y python3-pip python3-venv
 pip install akios
 
 # Verify installation
-akios --version  # Should show "AKIOS 1.0.15"
+akios --version  # Should show "AKIOS 1.0.16"
 ```
 
 ### Step 4: Configure AKIOS

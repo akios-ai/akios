@@ -1,8 +1,8 @@
-# AKIOS v1.0.15 – Deployment Scope & Boundaries  
-**Document Version:** 1.0.15  
+# AKIOS v1.0.16 – Deployment Scope & Boundaries  
+**Document Version:** 1.0.16  
 **Date:** 2026-02-22  
 
-**Status: FINAL – Locked for v1.0.15 Release (February 2026)**
+**Status: FINAL – Locked for v1.0.16 Release (February 2026)**
 
 This document **completely replaces and overrides** all previous deployment philosophy, methods, Docker Compose setups, systemd services, Nginx configs, monitoring integrations, security hardening scripts, backup strategies, scaling patterns, and troubleshooting guides from the old architecture.
 

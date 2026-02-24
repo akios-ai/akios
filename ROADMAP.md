@@ -1,11 +1,13 @@
 # AKIOS Roadmap
-**Document Version:** 1.0.14  
-**Date:** 2026-02-22  
+**Document Version:** 1.0.16  
+**Date:** 2026-02-24  
 **License:** GPL-3.0-only  
 
 This roadmap covers the open-source AKIOS project — the security-cage runtime for AI agents.
 
 > **Two-project model:** AKIOS (GPL-3.0) is the complete production runtime. [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is the general-purpose enforcement library. Starting from v1.2.0, AKIOS will use EnforceCore as its enforcement foundation while keeping its unique value: kernel sandbox, healthcare PII patterns, workflow engine, agents, CLI, and compliance reports.
+
+> **Versioning note:** Releases v1.0.5 through v1.0.15 added significant new features (REST API, AWS Bedrock provider, `--json-output`, Rich UI, conditional execution, etc.) that per strict Semantic Versioning should have incremented the minor version. We are correcting this going forward: **v1.0.16 is the final patch release** in the v1.0.x series (bug fixes only), after which new features will ship under **v1.1.0+** with proper semver compliance.
 
 ---
 
@@ -44,12 +46,12 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Shipped: v1.0.9 — "Science + Orchestration" (February 2026)
+## Shipped: v1.0.8 — "Science + Orchestration" (February 2026)
 
 **Theme:** Research-grade evaluation AND workflow improvements.  
 **Status:** ✅ Shipped
 
-- ✅ **Pluggable PII backend** — `PIIDetectorProtocol` interface; regex (default) + Presidio (stub, deferred to akios-pro)
+- ✅ **Pluggable PII backend** — `PIIDetectorProtocol` interface; regex (default) + Presidio (stub)
 - ✅ **PII accuracy evaluation** — annotated test corpus with precision/recall/F1 by category
 - ✅ **Insurance PII patterns** — policy, group, claim, prior-authorization detection
 - ✅ **context_keywords gate** — suppress false-positive PII matches without surrounding context
@@ -57,17 +59,9 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 - ✅ **TLA+ formal specification** — 130-line model-checked safety invariants for the enforcement pipeline
 - ✅ **Conditional execution** — `condition` field on workflow steps
 - ✅ **Error recovery** — `on_error` field (skip / fail / retry)
-- ✅ **Engine refactoring (partial)** — unified output key-probing, `_emit_audit()` helper, `_extract_output_value()`
-- ✅ **ALLOWED_MODELS to config** — model set in Pydantic settings with `json_schema()` export
 - ✅ **Weighted compliance scoring** — security 50%, audit 30%, cost 20%
 - ✅ **Action name unification** — canonical actions synced with AGENTS.md; old names accepted as aliases
 - ✅ **Config JSON Schema** — auto-generated from Pydantic settings for IDE auto-completion
-- ✅ **Dead code & tech debt** — `gc.collect()` removal, probe-file race fix, dynamic version in output.json
-
-### Known Issues Carried Forward
-- ⚠️ Condition evaluator uses `eval()` with bypassable token blocklist — fixed in v1.0.9
-- ⚠️ Engine grew to 1,643 lines instead of shrinking — split in v1.0.9
-- ⚠️ Dockerfile runs as root (non-root user commented out) — fixed in v1.0.9
 
 ---
 
@@ -76,62 +70,115 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 **Theme:** Fix security vulnerabilities, split the monolith, add programmatic access.  
 **Status:** ✅ Shipped
 
-### 🔴 P0 — Security (Critical)
-
-- **Non-root Docker container** — uncomment and fix the `akios` user in Dockerfile; containers must not run as root
-- **Safe condition evaluator** — replace `eval()` + substring token blocklist with AST-based safe evaluator; eliminate code injection risk
-
-### 🟡 P1 — Architecture
-
-- **Engine split** — break `engine.py` (1,643 lines) into `StepExecutor`, `TemplateRenderer`, `OutputExtractor`, `ConditionEvaluator`; no file > 400 lines
-- **REST API** — self-hosted FastAPI server (`akios serve`) with 6 endpoints: `/status`, `/audit/events`, `/audit/verify`, `/workflows`, `/workflows/{id}/run`, `/compliance/report`. OpenAPI auto-generated
-- **Print → logging migration** — replace ~380 `print()` calls with structured `logging` module; keep stderr prints for CLI UX only
-
-### 🟢 P2 — Quality
-
-- **SQLite state persistence** — replace in-memory state for workflow resume and historical run queries
-- **Retry with backoff** — configurable retry count + exponential backoff for `on_error: retry`
-- **PII accuracy corpus expansion** — grow from ~3 samples/pattern to 20+ for real confidence metrics
-
----
-
-## Shipped: v1.0.10 — "Hardening" (February 2026)
-
-**Theme:** Security fixes, non-root Docker, safe condition evaluator.  
-**Status:** ✅ Shipped
-
 - ✅ **Non-root Docker container** — containers no longer run as root
 - ✅ **Safe condition evaluator** — AST-based evaluator replaces `eval()` + token blocklist
-- ✅ **Engine split** — monolith broken into focused modules
+- ✅ **Engine split** — monolith broken into 7 focused modules (no file >400 lines)
+- ✅ **REST API (`akios serve`)** — self-hosted FastAPI server with 6 endpoints, OpenAPI auto-generated
 - ✅ **Print → logging migration** — structured logging throughout
+- ✅ **Retry with exponential backoff** — configurable `max_retries`, `base_delay`, `backoff_factor`
 
 ---
 
-## Shipped: v1.0.13 — "Cleanup & Hardening" (February 2026)
+## Shipped: v1.0.10 through v1.0.11 — Security & Quality (February 2026)
 
-**Theme:** Release process hardening, code quality fixes, dependency cleanup.  
 **Status:** ✅ Shipped
 
-- ✅ **Wrapper fallback fix** — `detect_version()` in `./akios` and `wrapper.sh` was stuck at `1.0.7` since v1.0.8; now reads dynamically from `VERSION` file
-- ✅ **Dynamic version checks** — Docker and EC2 test scripts read version from `pyproject.toml` instead of hardcoded strings
-- ✅ **Pre-release gate hardening** — added P5a–P5d checks: wrapper version sync, `_version.py` sync, `__init__.py` sync, `akios.yaml` sync
-- ✅ **`verify-version-sync.sh`** — new script validates all version sources match before release
-- ✅ **PyPDF2 → pypdf migration** — replaced deprecated `PyPDF2` with actively maintained `pypdf`
-- ✅ **Python 3.9+ requirement** — dropped Python 3.8 support (EOL)
-- ✅ **PyPI metadata alignment** — author, keywords, classifiers, and project URLs match EnforceCore standards
-- ✅ **17 code/metadata/doc fixes** — stale version refs, missing imports, test improvements
+- ✅ **v1.0.10** — `os.system` removal, bare `except` fixes, `apply_all_quotas` enforcement, engine dead stub cleanup, 55 new tests (1,495 total)
+- ✅ **v1.0.11** — Release automation with SHA-256 manifests, `pytest.ini` for Python 3.14 compatibility, code quality fixes
+
+---
+
+## Shipped: v1.0.12 — "Structured Output" (February 2026)
+
+**Status:** ✅ Shipped
+
+- ✅ **`--json-output` flag** — machine-readable structured JSON output for SDK/CI consumers
+- ✅ **Token tracking** — per-call and per-session token usage statistics
+- ✅ **PII metadata** — `pii_redactions_applied` and `pii_patterns_found` in LLM responses
+
+---
+
+## Shipped: v1.0.13 — "AWS Bedrock" (February 2026)
+
+**Status:** ✅ Shipped
+
+- ✅ **AWS Bedrock provider** — IAM-authenticated LLM calls (Claude, Llama, Titan models)
+- ✅ **Wrapper version fix** — `detect_version()` reads dynamically from `VERSION` file
+- ✅ **Pre-release gate hardening** — P5a–P5d version sync checks
+- ✅ **PyPDF2 → pypdf migration** — replaced deprecated dependency
+- ✅ **Python 3.9+ requirement** — dropped Python 3.8 (EOL)
+
+---
+
+## Shipped: v1.0.14 — "End-User Testing" (February 2026)
+
+**Status:** ✅ Shipped
+
+- ✅ 13 end-user testing issues fixed (template bundling, Docker prompt bypass, etc.)
+
+---
+
+## Shipped: v1.0.15 — "SDK Integration" (February 2026)
+
+**Status:** ✅ Shipped
+
+- ✅ 7 P0 + 1 P1 SDK integration fixes (Pydantic extra vars, JSON error schema, Bedrock pricing/throttling)
+
+---
+
+## Next: v1.0.16 — "Beta Tester Fixes" (Target: March 2026)
+
+**Theme:** Fix 11 verified bugs from independent beta testing. Bug fixes only — no new features.  
+**Status:** 🔧 Planned
+
+> These bugs were reported by an independent first-time tester on Ubuntu 24.04 / GitHub Codespaces and verified against source code. 4 additional reported bugs were investigated and rejected as false positives.
+
+### 🔴 P0 — Critical (2)
+
+- **REST API audit/verify broken** — `/api/v1/audit/verify` calls nonexistent `verify_chain()` and `merkle_root` on `AuditLedger`. Must use `verify_integrity()` and actual ledger API.
+- **`setup --mock-mode` still prompts** — `force` flag not propagated to `run_first_time_setup()`, causing `input()` prompts in non-interactive/CI environments.
+
+### 🟡 P1 — High (8)
+
+- **HTTP agent rejects uppercase methods** — `akios http GET` fails; argparse `choices` are lowercase-only with no normalization.
+- **HTTP agent missing HEAD/OPTIONS** — Only 5 methods registered (GET, POST, PUT, DELETE, PATCH); HEAD and OPTIONS missing.
+- **`--json-output` leaks Rich to stdout** — Template switch messages and info prints leak to stdout before the `--json-output` flag is checked.
+- **`AKIOS_JSON_MODE` env var is dead** — Set in `main.py` but never propagated to any command. Only triggers on config validation errors.
+- **REST API workflow run incomplete** — Response missing `total_steps` and `output_directory`; engine return dict doesn't include them.
+- **Testing subcommand names don't match docs** — Docs say `show-notes`/`clear-notes`/`log-issue`; actual subcommands are `notes`/`clear`/`log`.
+- **Timeline doesn't work** — Searches for `*.json` files but audit stores `*.jsonl`.
+- **`--show-environment` doesn't exist** — Neither the CLI flag nor a `config` subcommand is registered; documented in detection-system.md but never implemented.
+
+### 🟢 P2 — Medium (1)
+
+- **`EnvironmentInfo` API mismatches docs** — 6+ attribute/type mismatches between `detection.py` and `detection-system.md` (e.g., `is_ci` vs `ci_type`, `has_unicode_support` vs `unicode_capable`).
+
+### Documentation Fixes (alongside code fixes)
+
+- Sync `docs/cli-reference.md` testing subcommand names with actual implementation
+- Sync `docs/detection-system.md` with actual `EnvironmentInfo` attributes
+- Remove or implement `--show-environment` from docs
+- Fix REST API endpoint documentation for `/audit/verify`
+
+### ❌ Rejected Bugs (Not Included)
+
+| Bug | Claim | Reason for Rejection |
+|-----|-------|---------------------|
+| BUG-03 | `init` shows Docker-style `./akios` after pip install | Dynamic `get_command_prefix()` works correctly; already fixed in v1.0.14 |
+| BUG-12 | Duplicate events in audit logs | Audit emission path is clean; `_emit_audit()` helper has no double-emission |
+| BUG-15 | `init` silently overwrites from parent directory | Same `force` guard applies to both local and parent config detection |
 
 ---
 
 ## v1.1.0 — "Scale" (Target: Q2 2026)
 
-**Theme:** Production readiness and community extensibility.
+**Theme:** Production readiness and community extensibility. First proper semver minor release.
 
 - **Webhook agent** — new agent for workflow event notifications (Slack, Discord, Teams)
 - **Parallel step execution** — `parallel:` blocks with per-step sandboxing and atomic budget tracking
 - **Plugin system** — pip-installable community agent packages
 - **Database agents** — PostgreSQL, SQLite with query whitelisting
-- **REST API** — self-hosted FastAPI server (`akios serve`) with OpenAPI spec
+- **`doctor` command redesign** — differentiate from `status --security` (currently a pure duplicate)
 
 ---
 

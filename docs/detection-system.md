@@ -1,6 +1,6 @@
 # AKIOS Environment Detection System
-**Document Version:** 1.0.15  
-**Date:** 2026-02-23  
+**Document Version:** 1.0.16  
+**Date:** 2026-02-24  
 
 **Automatic detection of your runtime environment and intelligent defaults.**
 
@@ -84,19 +84,19 @@ Color Support
 
 ## Configuration Output
 
-You can see what AKIOS detected:
+You can inspect what AKIOS detected programmatically:
 
-```bash
-# Show detected environment
-akios setup --show-environment
+```python
+from akios.config.detection import detect_environment
 
-# Example output:
-# Container Type: docker_rootless
-# Is TTY: True
-# Color Capable: True
-# Unicode Support: True
-# Preferred Color Mode: colors
-# Preferred Symbol Mode: ascii
+env = detect_environment()
+print(f"Container Type: {env.container_type.value}")
+print(f"Is TTY: {env.is_tty}")
+print(f"Is CI: {env.is_ci}")
+print(f"Color Capable: {env.color_capable}")
+print(f"Unicode Support: {env.has_unicode_support}")
+print(f"Run as Root: {env.run_as_root}")
+print(f"Details: {env.details}")
 ```
 
 ## Detection Results
@@ -104,14 +104,14 @@ akios setup --show-environment
 The detection system populates `EnvironmentInfo` with:
 
 ```python
-class EnvironmentInfo:
+class EnvironmentInfo(NamedTuple):
     container_type: ContainerType  # What environment we're in
     is_tty: bool                   # Is connected to terminal?
+    is_ci: bool                    # Running in CI/CD?
     color_capable: bool            # Can display colors?
-    unicode_capable: bool          # Can display Unicode?
-    ci_type: Optional[str]         # Which CI system (if any)?
-    preferred_color_mode: str      # Recommended color mode
-    preferred_symbol_mode: str     # Recommended symbol mode
+    has_unicode_support: bool      # Can display Unicode?
+    run_as_root: bool              # Running as root user?
+    details: Dict[str, str]        # Additional details (namespace, pod name, etc.)
 ```
 
 ## Container Type Values
@@ -126,11 +126,10 @@ class ContainerType(Enum):
     KUBERNETES_PODMAN = "kubernetes_podman"  # K8s with Podman
     PODMAN = "podman"                # Standard Podman
     PODMAN_ROOTLESS = "podman_rootless"     # Rootless Podman
-    CI_GITHUB_ACTIONS = "ci_github_actions"
-    CI_GITLAB = "ci_gitlab"
-    CI_JENKINS = "ci_jenkins"
-    CI_GENERIC = "ci_generic"
-    UNKNOWN = "unknown"
+    CI_GITHUB = "ci_github"          # GitHub Actions
+    CI_GITLAB = "ci_gitlab"          # GitLab CI
+    CI_JENKINS = "ci_jenkins"        # Jenkins
+    CI_OTHER = "ci_other"            # Other CI/CD
 ```
 
 ## Environment-Specific Defaults
@@ -194,8 +193,10 @@ from akios.config.detection import (
 env = detect_environment()
 print(f"Running in: {env.container_type.value}")
 print(f"TTY mode: {env.is_tty}")
+print(f"Is CI: {env.is_ci}")
 print(f"Colors: {env.color_capable}")
-print(f"Unicode: {env.unicode_capable}")
+print(f"Unicode: {env.has_unicode_support}")
+print(f"Root: {env.run_as_root}")
 
 # Check specific environment
 if is_kubernetes():
@@ -215,10 +216,7 @@ unicode_ok = has_unicode_support()
 ### CLI Access
 
 ```bash
-# View environment detection results
-akios config show-environment
-
-# Override detected defaults
+# Override detected defaults with environment variables
 export NO_COLOR=1          # Force disable colors
 export CLICOLOR_FORCE=1    # Force enable colors (overrides NO_COLOR)
 export FORCE_COLOR=1       # Alternative: force enable colors

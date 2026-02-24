@@ -367,6 +367,9 @@ class SetupWizard:
         Returns:
             True if successful
         """
+        # Automated setup always implies force to avoid input() prompts
+        # (BUG-02 fix: --mock-mode must be fully non-interactive)
+        effective_force = True
         output_with_mode(
             message="Running automated setup...",
             json_mode=False,
@@ -405,8 +408,8 @@ class SetupWizard:
         self.current_provider = selected_provider
         self.current_model = model
 
-        # Validate and save
-        if not self._validate_and_save(selected_provider, api_key, model, advanced_config, force=force):
+        # Validate and save (use effective_force to guarantee non-interactive)
+        if not self._validate_and_save(selected_provider, api_key, model, advanced_config, force=effective_force):
              return False
              
         # Success
