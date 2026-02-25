@@ -1,10 +1,10 @@
 # Security Features
-**Document Version:** 1.1.1  
+**Document Version:** 1.1.2  
 **Date:** 2026-02-22  
 
 ## Security Overview
 
-AKIOS v1.1.1 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
+AKIOS v1.1.2 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
 
 ## Supported Versions
 

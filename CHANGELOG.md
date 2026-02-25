@@ -1,11 +1,20 @@
 # Changelog
-**Document Version:** 1.1.1
+**Document Version:** 1.1.2
 **Date:** 2026-02-25
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.2] - 2026-02-25
+
+### Fixed — Bedrock Reliability & Token Reporting
+
+- **fix: Token reporting returns 0 for Bedrock runs** — Step executor now checks nested `usage` dict and `tokens_used` as fallbacks when top-level `prompt_tokens`/`completion_tokens` keys are missing. Tokens flow correctly: Bedrock provider → LLM agent → step executor → cost tracker → JSON output.
+- **fix: ~50% intermittent failures with Bedrock** — Added handling for AWS credential exceptions (NoCredentialsError, PartialCredentialsError, TokenRetrievalError) and connection errors (EndpointConnectionError) with clear error messages and retry. Previously these hit the generic `except Exception` and produced silent exit code 1.
+- **fix: JSON error output on broken pipe** — `_emit_json_error()` now catches BrokenPipeError and falls back to stderr. Docker consumers always get structured error output even when stdout pipe closes.
+- **fix: Wrong json_mode parameter in error handlers** — Exception handlers in `run.py` now correctly pass `json_mode=True` when `--json-output` is active (was hardcoded `False`).
 
 ## [1.1.1] - 2026-02-25
 

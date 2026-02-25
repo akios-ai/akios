@@ -1,9 +1,9 @@
 # Contributing to AKIOS
-**Document Version:** 1.1.1
+**Document Version:** 1.1.2
 **Date:** 2026-02-25
 
 Thank you for your interest in AKIOS!  
-AKIOS is a **deliberately minimal, security-first containment layer** for AI agents in its early stage (v1.1.1).
+AKIOS is a **deliberately minimal, security-first containment layer** for AI agents in its early stage (v1.1.2).
 
 Our current priority is **stability, auditability, and extreme simplicity**.
 Because of this, contribution rules are intentionally strict at this stage.
@@ -17,7 +17,7 @@ By participating, you agree to abide by its terms.
 
 We require a DCO sign-off on every commit. Add `Signed-off-by: Your Name <email>` to each commit (use `git commit -s` to automate). By signing off, you certify the DCO in `DCO.md`.
 
-## Current Contribution Stance (February 2026 – v1.1.1)
+## Current Contribution Stance (February 2026 – v1.1.2)
 
 **We are currently not accepting unsolicited pull requests**, with **very few exceptions**:
 

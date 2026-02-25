@@ -2,7 +2,7 @@
 **Document Version:** 1.6  
 **Date:** 2026-02-22  
 
-**Master AKIOS v1.1.1 - From Beginner to Advanced User**
+**Master AKIOS v1.1.2 - From Beginner to Advanced User**
 
 *Complete tutorial: 15-30 minutes*
 
@@ -91,7 +91,7 @@ akios run templates/hello-workflow.yml
 ```
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.16).
-> For specific versions: `pip install akios==1.1.1`.
+> For specific versions: `pip install akios==1.1.2`.
 
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
 
@@ -119,7 +119,7 @@ akios run templates/hello-workflow.yml
 ```
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.16).
-> For specific versions: `pip install akios==1.1.1`.
+> For specific versions: `pip install akios==1.1.2`.
 > **🛡️ Security Note:** On Linux, `pip install akios` includes the seccomp module for kernel-hard security. Run with `sudo` for full protection.
 
 **Benefits:** Full kernel-hard security (with sudo), Python ecosystem integration.
@@ -144,11 +144,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 **Emergency fallback when the wrapper script download fails:**
 ```bash
 # Use Docker directly (works even if curl/network fails)
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.1.1 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.1.2 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.1.1 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.1.2 "$@"' > akios
 chmod +x akios
 ./akios run templates/hello-workflow.yml
 ```
@@ -686,7 +686,7 @@ AKIOS_BUDGET_LIMIT_PER_RUN=5.0
 
 ### Security Cage
 
-AKIOS v1.1.1 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
+AKIOS v1.1.2 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
 
 **Activate the cage:**
 ```bash
@@ -1031,6 +1031,6 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 
 ---
 
-*AKIOS v1.1.1 - Where AI meets unbreakable security*
+*AKIOS v1.1.2 - Where AI meets unbreakable security*
 
 **Need help?** Run `akios doctor`, check the audit logs, or create a GitHub issue.

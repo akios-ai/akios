@@ -425,13 +425,15 @@ def run_run_command(args: argparse.Namespace) -> int:
         return exit_code
 
     except CLIError as e:
-        if getattr(args, 'json_output', False):
+        json_mode = getattr(args, 'json_output', False)
+        if json_mode:
             return _emit_json_error(e, args)
-        return handle_cli_error(e, json_mode=False)
+        return handle_cli_error(e, json_mode=json_mode)
     except Exception as e:
-        if getattr(args, 'json_output', False):
+        json_mode = getattr(args, 'json_output', False)
+        if json_mode:
             return _emit_json_error(e, args)
-        return handle_cli_error(e, json_mode=False)
+        return handle_cli_error(e, json_mode=json_mode)
 
 
 def _emit_json_error(error: Exception, args: argparse.Namespace) -> int:
@@ -468,7 +470,16 @@ def _emit_json_error(error: Exception, args: argparse.Namespace) -> int:
         'error': error_message,
         'error_category': error_category,
     }
-    print(_json.dumps(json_summary, indent=2, default=str))
+    try:
+        print(_json.dumps(json_summary, indent=2, default=str), flush=True)
+    except (BrokenPipeError, OSError):
+        # Fallback: write to stderr if stdout is broken (Docker pipe closed)
+        import sys
+        try:
+            sys.stderr.write(_json.dumps(json_summary, default=str) + "\n")
+            sys.stderr.flush()
+        except Exception:
+            pass  # Last resort: nothing we can do
     return exit_code
 
 
