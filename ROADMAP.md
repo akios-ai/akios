@@ -1,5 +1,5 @@
 # AKIOS Roadmap
-**Document Version:** 1.0.16  
+**Document Version:** 1.1.0  
 **Date:** 2026-02-24  
 **License:** GPL-3.0-only  
 
@@ -170,15 +170,16 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## v1.1.0 — "Scale" (Target: Q2 2026)
+## Shipped: v1.1.0 — "Scale" (February 2026)
 
 **Theme:** Production readiness and community extensibility. First proper semver minor release.
+**Status:** ✅ Shipped
 
-- **Webhook agent** — new agent for workflow event notifications (Slack, Discord, Teams)
-- **Parallel step execution** — `parallel:` blocks with per-step sandboxing and atomic budget tracking
-- **Plugin system** — pip-installable community agent packages
-- **Database agents** — PostgreSQL, SQLite with query whitelisting
-- **`doctor` command redesign** — differentiate from `status --security` (currently a pure duplicate)
+- ✅ **Webhook agent** — new agent for workflow event notifications (Slack, Discord, Teams)
+- ✅ **Parallel step execution** — `parallel:` blocks with ThreadPoolExecutor and thread-safe context
+- ✅ **Plugin system** — pip-installable community agent packages via entry points
+- ✅ **Database agents** — PostgreSQL, SQLite with query whitelisting and DDL blocking
+- ✅ **`doctor` command redesign** — 9 diagnostic checks with actionable fix suggestions
 
 ---
 

@@ -1,5 +1,5 @@
 # Best Practices Guide
-**Document Version:** 1.0.16  
+**Document Version:** 1.1.0  
 **Date:** 2026-02-23  
 
 **Optimize AKIOS workflows for performance, security, and maintainability**

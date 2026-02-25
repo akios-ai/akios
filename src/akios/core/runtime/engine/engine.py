@@ -23,7 +23,7 @@ import os
 import sys
 import time
 import logging
-from typing import Dict, Any, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable
 
 logger = logging.getLogger(__name__)
 
@@ -489,18 +489,21 @@ class RuntimeEngine:
         """
         RUNTIME ENFORCEMENT: Validate workflow structure and block forbidden features.
 
-        This provides an additional layer of validation at runtime beyond parsing,
-        ensuring sequential-only promise is enforced even if parsing is bypassed.
+        v1.1.0: ParallelBlock objects are now allowed (native parallel execution).
+        Loop constructs remain forbidden.
         """
-        # Check for forbidden parallel/loop constructs
-        parallel_indicators = ['parallel', 'parallel_steps', 'loop', 'for_each', 'map', 'reduce']
+        loop_indicators = ['loop', 'for_each', 'map', 'reduce']
 
         for step in workflow.steps:
-            # Check step parameters for forbidden constructs
+            # ParallelBlock objects are valid — parsed by the workflow parser
+            if getattr(step, 'is_parallel', False):
+                continue
+
+            # Check step parameters for forbidden loop constructs
             def check_forbidden(obj: Any) -> bool:
                 if isinstance(obj, dict):
                     for key, value in obj.items():
-                        if key.lower() in parallel_indicators:
+                        if key.lower() in loop_indicators:
                             return True
                         if isinstance(value, (dict, list)):
                             if check_forbidden(value):
@@ -514,8 +517,8 @@ class RuntimeEngine:
 
             if check_forbidden(step.parameters) or check_forbidden(step.config):
                 raise RuntimeError(
-                    f"Workflow contains forbidden parallel/loop constructs (sequential only). "
-                    f"Step {step.step_id} contains parallel execution patterns."
+                    f"Workflow contains forbidden loop constructs. "
+                    f"Step {step.step_id} contains loop execution patterns."
                 )
 
     def _validate_output_directory_state(self) -> None:
@@ -587,7 +590,12 @@ class RuntimeEngine:
             "filesystem.read": "Reading data",
             "http.get": "Fetching data",
             "http.post": "Submitting data",
-            "tool_executor.run": "Running command"
+            "tool_executor.run": "Running command",
+            "webhook.notify": "Sending notification",
+            "webhook.send": "Sending webhook",
+            "database.query": "Querying database",
+            "database.execute": "Database operation",
+            "database.count": "Counting records",
         }
         
         # Execute with Live Dashboard if available
@@ -599,6 +607,13 @@ class RuntimeEngine:
                 for i, step in enumerate(workflow.steps):
                     # ENFORCEMENT: Check kill switches BEFORE executing each step
                     self._check_execution_limits(end_time)
+
+                    # Handle parallel blocks (v1.1.0)
+                    if getattr(step, 'is_parallel', False):
+                        parallel_results = self._execute_parallel_block(step, workflow, end_time)
+                        results.extend(parallel_results)
+                        self._check_execution_limits(end_time)
+                        continue
 
                     # Evaluate condition — skip step if condition is false
                     if getattr(step, 'condition', None):
@@ -656,6 +671,13 @@ class RuntimeEngine:
                 # ENFORCEMENT: Check kill switches BEFORE executing each step
                 self._check_execution_limits(end_time)
 
+                # Handle parallel blocks (v1.1.0)
+                if getattr(step, 'is_parallel', False):
+                    parallel_results = self._execute_parallel_block(step, workflow, end_time)
+                    results.extend(parallel_results)
+                    self._check_execution_limits(end_time)
+                    continue
+
                 # Evaluate condition — skip step if condition is false
                 if getattr(step, 'condition', None):
                     if not self._evaluate_condition(step.condition, step.step_id):
@@ -668,14 +690,14 @@ class RuntimeEngine:
                             'execution_time': 0.0,
                         })
                         continue
-                
+
                 # Show enhanced progress indicator
                 step_start = time.time()
                 agent_action = f"{step.agent}.{step.action}"
                 friendly_desc = friendly_descriptions.get(agent_action, agent_action)
                 print(f"⚡ Executing step {i}/{total_steps}: {friendly_desc}", file=sys.stderr)
                 sys.stderr.flush()
-                
+
                 step_result = self._execute_step(step, workflow)
                 results.append(step_result)
                 
@@ -706,6 +728,59 @@ class RuntimeEngine:
                 # ENFORCEMENT: Check kill switches AFTER each step execution
                 self._check_execution_limits(end_time)
         
+        return results
+
+    def _execute_parallel_block(self, block, workflow, end_time: float) -> List[Dict[str, Any]]:
+        """
+        Execute a ParallelBlock — run all contained steps concurrently (v1.1.0).
+
+        Uses ThreadPoolExecutor with a max degree of 4 workers.
+        Thread-safe: execution context writes use a lock.
+        """
+        import concurrent.futures
+        import threading
+
+        max_workers = min(len(block.steps), 4)
+        results = []
+        context_lock = threading.Lock()
+
+        print(f"⚡ Executing parallel block ({len(block.steps)} steps concurrently)", file=sys.stderr)
+        sys.stderr.flush()
+
+        block_start = time.time()
+
+        def run_step(step):
+            step_result = self._execute_step(step, workflow)
+            # Thread-safe write to execution context
+            with context_lock:
+                self.execution_context[f"step_{step.step_id}_result"] = step_result.get('result')
+            return step_result
+
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            future_to_step = {
+                executor.submit(run_step, step): step
+                for step in block.steps
+            }
+            for future in concurrent.futures.as_completed(future_to_step):
+                step = future_to_step[future]
+                try:
+                    step_result = future.result()
+                    results.append(step_result)
+                except Exception as exc:
+                    results.append({
+                        'step_id': step.step_id,
+                        'agent': step.agent,
+                        'action': step.action,
+                        'status': 'error',
+                        'error': str(exc),
+                        'execution_time': time.time() - block_start,
+                    })
+
+        block_duration = time.time() - block_start
+        passed = sum(1 for r in results if r.get('status') == 'success')
+        print(f"✅ Parallel block completed in {block_duration:.2f}s ({passed}/{len(results)} succeeded)", file=sys.stderr)
+        sys.stderr.flush()
+
         return results
 
     def _determine_step_status_icon(self, step_result: Dict[str, Any], step) -> str:

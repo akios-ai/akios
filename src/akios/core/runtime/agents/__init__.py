@@ -14,10 +14,13 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Agents module - Registry for 4 core agents in AKIOS
+Agents module - Registry for AKIOS agents
 
-Only LLM, HTTP, Filesystem, and Tool Executor agents are supported.
+Core agents: LLM, HTTP, Filesystem, Tool Executor
+v1.1.0 agents: Webhook, Database
+v1.1.0: Plugin system — pip-installable agent packages via entry points
 """
+import logging
 from typing import List, Dict, Any
 
 from .base import BaseAgent, AgentError
@@ -25,14 +28,58 @@ from .llm import LLMAgent
 from .http import HTTPAgent
 from .filesystem import FilesystemAgent
 from .tool_executor import ToolExecutorAgent
+from .webhook import WebhookAgent
+from .database import DatabaseAgent
 
-# Agent registry
+_logger = logging.getLogger(__name__)
+
+# Agent registry — core agents
 AGENT_CLASSES = {
     'llm': LLMAgent,
     'http': HTTPAgent,
     'filesystem': FilesystemAgent,
-    'tool_executor': ToolExecutorAgent
+    'tool_executor': ToolExecutorAgent,
+    'webhook': WebhookAgent,
+    'database': DatabaseAgent,
 }
+
+# Plugin agent registry (populated by discover_plugins)
+PLUGIN_AGENTS = {}
+
+
+def discover_plugins() -> Dict[str, type]:
+    """
+    Discover pip-installed agent plugins via entry points (v1.1.0).
+
+    Plugin packages declare entry points in pyproject.toml:
+        [project.entry-points."akios.agents"]
+        redis = "akios_agent_redis:RedisAgent"
+
+    Only classes that extend BaseAgent are registered.
+    """
+    discovered = {}
+    try:
+        from importlib.metadata import entry_points
+        eps = entry_points(group='akios.agents')
+        for ep in eps:
+            try:
+                agent_cls = ep.load()
+                if isinstance(agent_cls, type) and issubclass(agent_cls, BaseAgent) and agent_cls is not BaseAgent:
+                    AGENT_CLASSES[ep.name] = agent_cls
+                    PLUGIN_AGENTS[ep.name] = agent_cls
+                    discovered[ep.name] = agent_cls
+                    _logger.info("Plugin agent registered: %s (%s)", ep.name, agent_cls.__name__)
+                else:
+                    _logger.warning("Plugin %s rejected: not a BaseAgent subclass", ep.name)
+            except Exception as e:
+                _logger.warning("Failed to load plugin %s: %s", ep.name, e)
+    except Exception:
+        pass  # importlib.metadata not available — no plugins
+    return discovered
+
+
+# Auto-discover plugins at import time
+discover_plugins()
 
 
 def get_agent_class(agent_type: str):
@@ -170,6 +217,22 @@ def get_agent_capabilities(agent_type: str) -> Dict[str, Any]:
             'idempotent': False,  # Commands may have side effects
             'retryable': False  # Commands shouldn't be retried
         })
+    elif agent_type == 'webhook':
+        capabilities.update({
+            'supported_actions': ['notify', 'send'],
+            'requires_config': True,
+            'config_parameters': ['webhook_url', 'platform', 'timeout'],
+            'idempotent': False,
+            'retryable': True
+        })
+    elif agent_type == 'database':
+        capabilities.update({
+            'supported_actions': ['query', 'execute', 'count'],
+            'requires_config': True,
+            'config_parameters': ['database_url', 'allow_write', 'timeout', 'max_rows'],
+            'idempotent': True,
+            'retryable': False
+        })
 
     return capabilities
 
@@ -181,6 +244,10 @@ __all__ = [
     "HTTPAgent",
     "FilesystemAgent",
     "ToolExecutorAgent",
+    "WebhookAgent",
+    "DatabaseAgent",
+    "PLUGIN_AGENTS",
+    "discover_plugins",
     "get_agent_class",
     "create_agent",
     "get_supported_agents",

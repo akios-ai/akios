@@ -97,6 +97,10 @@ class WorkflowStep:
         self.condition = condition  # e.g. "step_1_output.status == 'success'"
         self.on_error = on_error    # "skip" | "fail" | "retry"
 
+    @property
+    def is_parallel(self) -> bool:
+        return False
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert step to dictionary"""
         d = {
@@ -114,6 +118,33 @@ class WorkflowStep:
 
     def __repr__(self) -> str:
         return f"WorkflowStep({self.step_id}: {self.agent}.{self.action})"
+
+
+class ParallelBlock:
+    """Represents a group of steps to execute in parallel (v1.1.0)."""
+
+    def __init__(self, steps: List['WorkflowStep']):
+        self.steps = steps
+        # Use the first step's ID as the block identifier
+        self.step_id = steps[0].step_id if steps else 0
+
+    @property
+    def is_parallel(self) -> bool:
+        return True
+
+    @property
+    def agent(self) -> str:
+        return "parallel"
+
+    @property
+    def action(self) -> str:
+        return f"{len(self.steps)} steps"
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"parallel": [s.to_dict() for s in self.steps]}
+
+    def __repr__(self) -> str:
+        return f"ParallelBlock({len(self.steps)} steps: {[s.step_id for s in self.steps]})"
 
 
 class Workflow:
@@ -254,10 +285,29 @@ def _parse_workflow_data(workflow_data: Dict[str, Any]) -> Workflow:
 
     workflow = Workflow(name=name, description=description)
 
-    # Parse steps
+    # Parse steps (supports both sequential steps and parallel blocks)
     steps_data = workflow_data.get('steps', [])
 
     for step_data in steps_data:
+        # Check for parallel block
+        if 'parallel' in step_data and isinstance(step_data['parallel'], list):
+            parallel_steps = []
+            for ps_data in step_data['parallel']:
+                ps = WorkflowStep(
+                    step_id=ps_data.get('step', len(workflow.steps) + len(parallel_steps) + 1),
+                    agent=ps_data.get('agent', ''),
+                    action=ps_data.get('action', ''),
+                    parameters=ps_data.get('parameters', {}),
+                    config=ps_data.get('config', {}),
+                    condition=ps_data.get('condition', None),
+                    on_error=ps_data.get('on_error', None),
+                )
+                parallel_steps.append(ps)
+            if parallel_steps:
+                workflow.add_step(ParallelBlock(parallel_steps))
+            continue
+
+        # Regular sequential step
         step_id = step_data.get('step', len(workflow.steps) + 1)
         agent = step_data.get('agent', '')
         action = step_data.get('action', '')

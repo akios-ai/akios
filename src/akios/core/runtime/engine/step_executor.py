@@ -161,6 +161,8 @@ def execute_with_agent_retry(
         'http': {'max_attempts': 3, 'retryable': True},
         'filesystem': {'max_attempts': 1, 'retryable': False},
         'tool_executor': {'max_attempts': 1, 'retryable': False},
+        'webhook': {'max_attempts': 3, 'retryable': True},
+        'database': {'max_attempts': 1, 'retryable': False},
     }
 
     policy = retry_policies.get(agent_type, {'max_attempts': 1, 'retryable': False})
@@ -199,7 +201,7 @@ def determine_step_status_icon(step_result: Dict[str, Any], step) -> str:
             return "❌"
         return "✅"
 
-    if step.agent == 'http':
+    if step.agent in ('http', 'webhook'):
         status_code = step_result.get('status_code')
         if status_code and 200 <= status_code < 300:
             return "✅"
@@ -319,6 +321,25 @@ def validate_agent_config(agent_type: str, config: Dict[str, Any], settings: Any
         max_output = config.get("max_output_size", 1024 * 1024)
         if max_output > 10 * 1024 * 1024:
             raise SecurityViolationError(f"Tool max_output_size {max_output} exceeds maximum 10MB")
+
+    elif agent_type == "webhook":
+        timeout = config.get("timeout", 10)
+        if timeout > 30:
+            raise SecurityViolationError(f"Webhook timeout {timeout}s exceeds maximum 30s")
+        platform = config.get("platform", "generic")
+        valid_platforms = ["slack", "discord", "teams", "generic"]
+        if platform.lower() not in valid_platforms:
+            raise SecurityViolationError(
+                f"Webhook platform '{platform}' not recognized. Must be one of: {', '.join(valid_platforms)}"
+            )
+
+    elif agent_type == "database":
+        timeout = config.get("timeout", 30)
+        if timeout > 60:
+            raise SecurityViolationError(f"Database timeout {timeout}s exceeds maximum 60s")
+        max_rows = config.get("max_rows", 1000)
+        if max_rows > 10000:
+            raise SecurityViolationError(f"Database max_rows {max_rows} exceeds maximum 10000")
 
 
 # ── Internal helpers ────────────────────────────────────────────────

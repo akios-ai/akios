@@ -1,11 +1,59 @@
 # Changelog
-**Document Version:** 1.0.16  
-**Date:** 2026-02-23  
+**Document Version:** 1.1.0
+**Date:** 2026-02-25
 
 All notable changes to AKIOS will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),  
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.0] - 2026-02-25
+
+### Added — v1.1.0 "Scale" (First proper semver minor release)
+
+#### Webhook Agent (new)
+- **New agent type: `webhook`** — Send notifications to Slack, Discord, Microsoft Teams, or generic HTTP POST endpoints.
+- Actions: `notify`, `send`
+- Platform-specific payload builders (Slack blocks, Teams cards, Discord messages)
+- Security: PII redaction on messages, HTTPS enforcement, rate limiting (10/min)
+- Mock mode support for testing
+
+#### Database Agent (new)
+- **New agent type: `database`** — Query PostgreSQL and SQLite with security enforcement.
+- Actions: `query`, `execute`, `count`
+- Security: parameterized queries only (no raw SQL), DDL always blocked, read-only by default
+- PII redaction on query results, audit logging of all queries
+- Configurable max rows (10,000) and timeout (60s)
+
+#### Parallel Step Execution
+- **`parallel:` blocks** in workflow YAML for concurrent step execution.
+- ThreadPoolExecutor with max 4 workers
+- Thread-safe execution context and cost tracking
+- Kill switches evaluated between parallel groups
+- No nested parallel blocks (v1.1.0 limitation)
+
+#### Plugin System
+- **pip-installable agent packages** via `akios.agents` entry points.
+- Auto-discovery at import time via `importlib.metadata.entry_points()`
+- Type-checked: only BaseAgent subclasses registered
+- Schema relaxed to accept plugin agent types
+
+#### Doctor Command Redesign (BUG-06 from v1.0.16)
+- **`akios doctor` rewritten** as proper diagnostic tool (no longer duplicates `status --security`)
+- 9 diagnostic checks: Python version, dependencies, config, API keys, sandbox, disk space, PII engine, audit system
+- Each check shows PASS/WARN/FAIL with actionable fix suggestions
+- JSON output via `--json` flag
+- Exempt from platform security check (runs on all platforms)
+
+### Changed
+- Agent registry expanded from 4 to 6 core agents
+- Workflow schema v1.2.0: supports parallel blocks, webhook/database agents, plugin agents
+- Loop constructs still blocked; parallel blocks now use native `parallel:` syntax
+- `bump-version.sh` now covers all 12 root docs (was 5) + auto-verifies with `verify-version-sync.sh`
+
+### Infrastructure
+- Release planning docs: `internal/docs/dev/releases/v1.1.0-PLAN.md`, `v1.2.0-PLAN.md`
+- Release process hardening: post_release_gate.sh path + Docker fixes, wrapper.sh vlatest fix
 
 ## [1.0.16] - 2026-02-23
 
