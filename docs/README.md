@@ -1,6 +1,6 @@
 # 📚 AKIOS v1.0.16 - Documentation
-**Document Version:** 1.0.13  
-**Date:** 2026-02-22  
+**Document Version:** 1.0.16
+**Date:** 2026-02-25
 
 **Complete user guide for AKIOS - Secure AI Workflow Execution**
 

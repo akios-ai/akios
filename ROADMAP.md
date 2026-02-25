@@ -126,10 +126,10 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Next: v1.0.16 — "Beta Tester Fixes" (Target: March 2026)
+## Shipped: v1.0.16 — "Beta Tester Fixes" (February 2026)
 
-**Theme:** Fix 11 verified bugs from independent beta testing. Bug fixes only — no new features.  
-**Status:** 🔧 Planned
+**Theme:** Fix 11 verified bugs from independent beta testing. Bug fixes only — no new features.
+**Status:** ✅ Shipped
 
 > These bugs were reported by an independent first-time tester on Ubuntu 24.04 / GitHub Codespaces and verified against source code. 4 additional reported bugs were investigated and rejected as false positives.
 
