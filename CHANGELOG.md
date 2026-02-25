@@ -1,11 +1,18 @@
 # Changelog
-**Document Version:** 1.1.0
+**Document Version:** 1.1.1
 **Date:** 2026-02-25
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.1] - 2026-02-25
+
+### Fixed — Bedrock Provider Hardening
+
+- **fix: Add Bedrock to PROVIDER_MODELS validation** — Workflows using `provider: bedrock` no longer crash with "Unknown LLM provider" during config validation. All 10 Bedrock model IDs (Claude 3.5, Llama 3.1, Titan) now validated.
+- **fix: Include boto3 in official Docker image** — `boto3>=1.34.0` now installed by default in the Docker image. SDK consumers no longer need a custom Dockerfile to use AWS Bedrock.
 
 ## [1.1.0] - 2026-02-25
 

@@ -62,6 +62,18 @@ PROVIDER_MODELS = {
         'gemini-1.5-pro',
         'gemini-1.0-pro'
     ],
+    'bedrock': [
+        'anthropic.claude-3-5-sonnet-20241022-v2:0',
+        'anthropic.claude-3-5-haiku-20241022-v1:0',
+        'anthropic.claude-3-opus-20240229-v1:0',
+        'anthropic.claude-3-sonnet-20240229-v1:0',
+        'anthropic.claude-3-haiku-20240307-v1:0',
+        'meta.llama3-1-8b-instruct-v1:0',
+        'meta.llama3-1-70b-instruct-v1:0',
+        'meta.llama3-1-405b-instruct-v1:0',
+        'amazon.titan-text-express-v1',
+        'amazon.titan-text-lite-v1',
+    ],
     'mock': [
         'mock-model'
     ]
