@@ -311,7 +311,7 @@ def main() -> int:
 
         # Validate security requirements at startup
         # Skip for commands that don't need kernel-level security
-        if args.command not in ('serve',):
+        if args.command not in ('serve', 'doctor'):
             _validate_startup_security()
 
         # Validate environment configuration

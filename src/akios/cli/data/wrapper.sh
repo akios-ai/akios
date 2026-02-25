@@ -83,8 +83,12 @@ if [[ "$MODE" == "1" ]]; then
     DEBUG_MSG="LOCAL_DEV_MODE=1: Using development image (akios:latest)"
 else
     # Production mode: use stable release with dynamic version
-    DOCKER_IMAGE="akiosai/akios:v${AKIOS_VERSION}"
-    DEBUG_MSG="Using production image (akiosai/akios:v${AKIOS_VERSION})"
+    if [[ "$AKIOS_VERSION" == "latest" ]]; then
+        DOCKER_IMAGE="akiosai/akios:latest"
+    else
+        DOCKER_IMAGE="akiosai/akios:v${AKIOS_VERSION}"
+    fi
+    DEBUG_MSG="Using production image ($DOCKER_IMAGE)"
 fi
 
 if [[ "${AKIOS_DEBUG_ENABLED:-0}" == "1" ]]; then

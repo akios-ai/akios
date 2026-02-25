@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.0.16"
+version = "1.1.0"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOUD AI", email = "contact@akioud.ai" },

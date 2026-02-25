@@ -1,5 +1,5 @@
 # AKIOS Accessibility Guide
-**Document Version:** 1.0.16  
+**Document Version:** 1.1.0  
 **Date:** 2026-02-23  
 
 **Making AKIOS work for everyone – symbol modes, colorblind support, and Unicode.**
