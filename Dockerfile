@@ -59,7 +59,7 @@ ARG BUILD_TIMESTAMP
 # OCI Labels for container metadata and GPL-3.0-only compliance
 LABEL org.opencontainers.image.title="AKIOS - Secure AI Workflow Engine"
 LABEL org.opencontainers.image.description="GPL-3.0-only licensed AI agent execution engine with military-grade security"
-LABEL org.opencontainers.image.version="1.1.0"
+LABEL org.opencontainers.image.version="1.1.1"
 LABEL org.opencontainers.image.source="https://github.com/akios-ai/akios"
 LABEL org.opencontainers.image.licenses="GPL-3.0-only"
 LABEL org.opencontainers.image.vendor="AKIOUD AI, SAS"
@@ -107,7 +107,7 @@ This Docker image contains GPL-3.0-only licensed software.\n\
 GPL-3.0-only requires that corresponding source code be available.\n\
 \n\
 Source Location: https://github.com/akios-ai/akios/releases/tag/v1.0.16\n\
-Build Instructions: See https://github.com/akios-ai/akios/blob/v1.1.0/GETTING_STARTED.md\n\
+Build Instructions: See https://github.com/akios-ai/akios/blob/v1.1.1/GETTING_STARTED.md\n\
 License Text: See /usr/share/akios/legal/LICENSE\n\
 \n\
 Source Availability Commitment: 3 years minimum (until 2029-02-11)\n\
@@ -123,8 +123,8 @@ RUN chmod 644 /usr/share/akios/legal/*
 # Copy the built wheel from builder stage
 COPY --from=builder /build/dist/ .
 
-# Install the wheel package (clean, minimal)
-RUN python3 -m pip install --no-cache-dir --break-system-packages *.whl && \
+# Install the wheel package + boto3 for AWS Bedrock support
+RUN python3 -m pip install --no-cache-dir --break-system-packages *.whl "boto3>=1.34.0" && \
     rm *.whl && \
     find /usr/local/lib/python3.12 -name "*.pyc" -delete 2>/dev/null || true && \
     find /usr/local/lib/python3.12 -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true && \
