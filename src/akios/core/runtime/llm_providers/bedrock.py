@@ -331,7 +331,29 @@ class BedrockProvider(LLMProvider):
                     raise ProviderError(f"Bedrock rate limit exceeded after {_MAX_RETRIES + 1} attempts: {error_msg}")
                 raise ProviderError(f"Bedrock API error ({error_code}): {error_msg}")
             except Exception as e:
-                raise ProviderError(f"Bedrock request failed: {e}")
+                err_type = type(e).__name__
+                # Credential/auth errors — clear message, no retry
+                if err_type in ('NoCredentialsError', 'PartialCredentialsError'):
+                    raise ProviderError(
+                        f"AWS credentials not found or incomplete: {e}. "
+                        "Set AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY, or configure an IAM role."
+                    )
+                if err_type == 'TokenRetrievalError':
+                    raise ProviderError(
+                        f"AWS STS token expired or retrieval failed: {e}. "
+                        "Refresh your session credentials or use long-term IAM credentials."
+                    )
+                # Connection errors — retry with backoff
+                if err_type in ('EndpointConnectionError', 'ConnectionError', 'ConnectTimeoutError'):
+                    last_error = e
+                    if attempt < _MAX_RETRIES:
+                        delay = _BASE_DELAY * (2 ** attempt)
+                        logger.warning(f"Bedrock connection error (attempt {attempt + 1}/{_MAX_RETRIES + 1}), retrying in {delay:.1f}s: {e}")
+                        time.sleep(delay)
+                        continue
+                    raise ProviderError(f"Bedrock connection failed after {_MAX_RETRIES + 1} attempts: {e}")
+                # All other errors
+                raise ProviderError(f"Bedrock request failed: {err_type}: {e}")
 
     def chat_complete(
         self,
@@ -439,7 +461,26 @@ class BedrockProvider(LLMProvider):
                         raise ProviderError(f"Bedrock rate limit exceeded after {_MAX_RETRIES + 1} attempts: {error_msg}")
                     raise ProviderError(f"Bedrock chat API error ({error_code}): {error_msg}")
                 except Exception as e:
-                    raise ProviderError(f"Bedrock chat request failed: {e}")
+                    err_type = type(e).__name__
+                    if err_type in ('NoCredentialsError', 'PartialCredentialsError'):
+                        raise ProviderError(
+                            f"AWS credentials not found or incomplete: {e}. "
+                            "Set AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY, or configure an IAM role."
+                        )
+                    if err_type == 'TokenRetrievalError':
+                        raise ProviderError(
+                            f"AWS STS token expired or retrieval failed: {e}. "
+                            "Refresh your session credentials or use long-term IAM credentials."
+                        )
+                    if err_type in ('EndpointConnectionError', 'ConnectionError', 'ConnectTimeoutError'):
+                        last_error = e
+                        if attempt < _MAX_RETRIES:
+                            delay = _BASE_DELAY * (2 ** attempt)
+                            logger.warning(f"Bedrock chat connection error (attempt {attempt + 1}/{_MAX_RETRIES + 1}), retrying in {delay:.1f}s: {e}")
+                            time.sleep(delay)
+                            continue
+                        raise ProviderError(f"Bedrock connection failed after {_MAX_RETRIES + 1} attempts: {e}")
+                    raise ProviderError(f"Bedrock chat request failed: {err_type}: {e}")
         except ProviderError:
             raise
 

@@ -98,12 +98,32 @@ def execute_step(
             engine.cost_kill.add_cost(result['cost_incurred'])
 
         # Track token usage (input/output breakdown)
-        if isinstance(result, dict) and ('prompt_tokens' in result or 'completion_tokens' in result):
-            engine.cost_kill.add_tokens(
-                prompt_tokens=result.get('prompt_tokens', 0),
-                completion_tokens=result.get('completion_tokens', 0),
-                model=result.get('llm_model'),
-            )
+        # Check top-level keys first, then fallback to nested usage dict
+        if isinstance(result, dict):
+            prompt_tok = result.get('prompt_tokens', 0)
+            completion_tok = result.get('completion_tokens', 0)
+
+            # Fallback: check nested usage dict (some providers return tokens here)
+            if prompt_tok == 0 and completion_tok == 0:
+                usage = result.get('usage', {})
+                if isinstance(usage, dict):
+                    prompt_tok = usage.get('prompt_tokens', 0)
+                    completion_tok = usage.get('completion_tokens', 0)
+
+            # Fallback: use tokens_used as total if individual counts missing
+            if prompt_tok == 0 and completion_tok == 0:
+                tokens_used = result.get('tokens_used', 0)
+                if tokens_used > 0:
+                    # Estimate 30/70 split when only total is available
+                    prompt_tok = int(tokens_used * 0.3)
+                    completion_tok = tokens_used - prompt_tok
+
+            if prompt_tok > 0 or completion_tok > 0:
+                engine.cost_kill.add_tokens(
+                    prompt_tokens=prompt_tok,
+                    completion_tokens=completion_tok,
+                    model=result.get('llm_model'),
+                )
 
         # Audit
         step_time = time.time() - step_start
