@@ -1,5 +1,5 @@
-# AKIOS v1.1.2 – Configuration Reference
-**Document Version:** 1.1.2  
+# AKIOS v1.2.0 – Configuration Reference
+**Document Version:** 1.2.0  
 **Date:** 2026-02-22  
 
 **Complete configuration guide for the AKIOS security cage.**

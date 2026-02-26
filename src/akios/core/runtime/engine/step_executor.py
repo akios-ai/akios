@@ -341,6 +341,15 @@ def validate_agent_config(agent_type: str, config: Dict[str, Any], settings: Any
         max_output = config.get("max_output_size", 1024 * 1024)
         if max_output > 10 * 1024 * 1024:
             raise SecurityViolationError(f"Tool max_output_size {max_output} exceeds maximum 10MB")
+        # Content rule check via EnforceCore (v1.2.0+, only if enabled)
+        if getattr(settings, 'use_enforcecore', False) and getattr(settings, 'enforcecore_content_rules', True):
+            from akios.security.content_rules import check_agent_config
+            violations = check_agent_config(agent_type, config)
+            if violations:
+                raise SecurityViolationError(
+                    f"Content rule violation in tool_executor config [{violations[0]['rule']}]: "
+                    f"{violations[0]['matched']!r}"
+                )
 
     elif agent_type == "webhook":
         timeout = config.get("timeout", 10)
@@ -360,6 +369,15 @@ def validate_agent_config(agent_type: str, config: Dict[str, Any], settings: Any
         max_rows = config.get("max_rows", 1000)
         if max_rows > 10000:
             raise SecurityViolationError(f"Database max_rows {max_rows} exceeds maximum 10000")
+        # Content rule check for database queries via EnforceCore (v1.2.0+)
+        if getattr(settings, 'use_enforcecore', False) and getattr(settings, 'enforcecore_content_rules', True):
+            from akios.security.content_rules import check_agent_config
+            violations = check_agent_config(agent_type, config)
+            if violations:
+                raise SecurityViolationError(
+                    f"Content rule violation in database config [{violations[0]['rule']}]: "
+                    f"{violations[0]['matched']!r}"
+                )
 
 
 # ── Internal helpers ────────────────────────────────────────────────

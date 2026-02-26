@@ -1,5 +1,5 @@
 # AKIOS Examples and Tutorials
-**Document Version:** 1.1.2  
+**Document Version:** 1.2.0  
 **Date:** 2026-02-23  
 
 **Real-world usage examples demonstrating AKIOS features across different environments.**
