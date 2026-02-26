@@ -1,5 +1,5 @@
 # Developer API Reference
-**Document Version:** 1.2.0  
+**Document Version:** 1.2.1  
 **Date:** 2026-02-22  
 
 **Programmatic integration with AKIOS workflows**

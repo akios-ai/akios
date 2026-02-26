@@ -1,11 +1,32 @@
 # Changelog
-**Document Version:** 1.2.0
+**Document Version:** 1.2.1
 **Date:** 2026-02-26
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.1] - 2026-02-26
+
+### Added — "Foundation Beta" (EnforceCore Integration — Phase 2)
+
+#### PII Bridge (requires EnforceCore + `AKIOS_USE_ENFORCECORE=true`)
+- **Dual-engine PII detection** — AKIOS's 50+ patterns + EnforceCore's `SecretScanner` run together. AKIOS is authoritative; EC adds 11-category secret detection on top.
+- **Pattern registration** — AKIOS healthcare/financial/EU patterns registered into EnforceCore's `PatternRegistry`.
+- New module: `src/akios/security/pii/bridge.py`
+
+#### SQLite Audit Backend (optional, alongside JSONL)
+- **`AKIOS_AUDIT_BACKEND=sqlite`** — audit events written to SQLite **in addition to** primary JSONL. Merkle chain never replaced.
+- New setting: `audit_backend` (default: `jsonl`)
+- New modules: `src/akios/core/audit/backends/`
+
+#### Release Process Improvements
+- `pre_release_gate.sh` auto-uninstalls stale akios from EC2 before deploying.
+- EC2 setup fallback version corrected (was stuck at 1.0.11).
+
+### Infrastructure
+- 1,542 unit tests passing (+13 new tests).
 
 ## [1.2.0] - 2026-02-26
 
