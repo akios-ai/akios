@@ -1,5 +1,5 @@
 # AKIOS Roadmap
-**Document Version:** 1.1.2  
+**Document Version:** 1.2.0  
 **Date:** 2026-02-24  
 **License:** GPL-3.0-only  
 
@@ -183,44 +183,63 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## v1.2.0 — "Foundation" (Target: Q3 2026)
+## Shipped: v1.2.0 — "Foundation" (February 2026)
+
+**Status:** ✅ Shipped
 
 **Theme:** Begin EnforceCore integration — adopt the shared enforcement foundation without losing AKIOS identity.
 
-> **Context:** [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is AKIOUD AI's open enforcement library. AKIOS uses it as a dependency while keeping its own unique value: kernel sandbox, healthcare PII, workflow engine, agents, CLI, and compliance reports.
+> **Context:** [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is AKIOUD AI's open enforcement library. AKIOS uses it as an OPTIONAL dependency while keeping its own unique value: kernel sandbox, healthcare PII, workflow engine, agents, CLI, and compliance reports.
 
-- **EnforceCore dependency** — add `enforcecore>=1.0.0` to dependencies
-- **PII bridge** — delegate PII detection to EnforceCore's `Redactor` engine; register AKIOS's 50+ healthcare patterns (NPI, DEA, MRN) via `PatternRegistry`
-- **Unicode hardening** — gain EnforceCore's homoglyph/encoding evasion detection for free
-- **Secret detection** — gain EnforceCore's 11-category API key/token scanner
-- **Content rules** — add shell injection / SQL injection / path traversal detection to Tool Executor agent
+- **EnforceCore as optional dependency** — `pip install akios[enforcecore]` for enhanced features
+- **Secret detection** — 11-category API key/token scanner via EnforceCore (`akios protect secrets`)
+- **Content rules** — shell injection, SQL injection, path traversal detection in Tool Executor and Database agents
+- **EU AI Act compliance reports** — generate Article 9, 13, 14, 52 reports (`akios compliance report`)
+- **PII bridge** — register AKIOS's 50+ healthcare patterns into EnforceCore's `PatternRegistry` for unified scanning
+- **Unicode hardening** — homoglyph/encoding evasion detection for PII
+- **SQLite + PostgreSQL audit backends** — optional storage alongside default JSONL
+- **Lifecycle hooks** — pre_workflow, post_workflow, step_complete events
 
-**What stays AKIOS-only:** Kernel sandbox (seccomp-bpf + cgroups v2), healthcare PII patterns (GPL-3.0), workflow engine, 4 agents, CLI, compliance reports.
-
----
-
-## v1.3.0 — "Unified Audit" (Target: Q4 2026)
-
-**Theme:** Unified audit trail backed by EnforceCore's pluggable auditor.
-
-- **Audit bridge** — delegate Merkle-chained audit to EnforceCore's `Auditor` engine
-- **Pluggable backends** — gain JSONL, callback, and future backends (S3, database)
-- **Resource guards** — layer EnforceCore's `CostTracker` + `KillSwitch` under AKIOS's kernel sandbox
-- **Lifecycle hooks** — adopt EnforceCore's hook system for agent extensibility
-- **Webhook events** — adopt EnforceCore's webhook dispatcher for monitoring
+**What stays AKIOS-only:** Kernel sandbox (seccomp-bpf + cgroups v2), 50+ healthcare PII patterns (GPL-3.0), workflow engine, 6 agents, CLI, compliance reports. AKIOS works fully without EnforceCore.
 
 ---
 
-## v2.0.0 — "Platform" (Future)
+## v1.3.0 — "Unified Audit" (Target: Q3 2026)
 
-**Theme:** From CLI tool to security platform. Non-binding.
+**Theme:** Production-grade audit backends. EnforceCore auditstore becomes primary.
 
-- Fan-out / map-reduce execution patterns
-- Prometheus metrics + OpenTelemetry traces (via EnforceCore telemetry)
-- Community template marketplace
-- Streaming LLM output with per-token PII filtering
-- Multi-tenant isolation
-- EnforceCore adversarial eval suite integrated into AKIOS test pipeline
+- **Pluggable audit backends** — SQLite, PostgreSQL promoted to production-ready
+- **Audit data migration** — `akios audit migrate` command for JSONL → SQLite/PG
+- **Resource guards** — layer EnforceCore's `CostTracker` + `KillSwitch` under kernel sandbox
+- **HIPAA/SOX query templates** — compliance queries for healthcare and financial audit
+
+---
+
+## v1.4.0 — "Observability" (Target: Q4 2026)
+
+**Theme:** Production monitoring and observability.
+
+- **OpenTelemetry** — tracing + Prometheus metrics (via EnforceCore telemetry)
+- **Streaming LLM output** — per-token PII filtering
+- **Audit retention policies** — auto-archive, auto-delete based on age
+
+---
+
+## v1.5.0 — "Scale" (Target: Q1 2027)
+
+**Theme:** High-throughput and multi-tenant capabilities.
+
+- **Fan-out / map-reduce** — execution patterns for batch workflows
+- **Multi-tenant isolation** — per-tenant budgets, audit trails, PII policies
+- **Community template marketplace** — share and discover workflow templates
+
+---
+
+## v2.0.0 — "Platform" (Future, only if breaking changes needed)
+
+**Theme:** Major version only if backward-incompatible changes required. Non-binding.
+
+Most features will ship as v1.x minor releases. v2.0.0 is reserved for genuine breaking changes that cannot be done backward-compatibly (e.g., workflow schema v2, Python 3.11+ minimum, deprecated CLI removal).
 
 ---
 

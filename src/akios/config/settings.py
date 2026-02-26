@@ -61,6 +61,20 @@ class Settings(BaseSettings):
         description="PII detection backend: 'regex' (built-in) or 'presidio' (future)"
     )
 
+    # EnforceCore integration (v1.2.0+, optional)
+    use_enforcecore: bool = Field(
+        False,
+        description="Enable EnforceCore integration for secret detection, content rules, compliance reports"
+    )
+    enforcecore_content_rules: bool = Field(
+        True,
+        description="Enable content rule checks (shell injection, SQL injection, path traversal) when use_enforcecore=True"
+    )
+    enforcecore_secret_scan: bool = Field(
+        True,
+        description="Enable secret scanning in PII pipeline when use_enforcecore=True"
+    )
+
     # Cost & loop protection
     cost_kill_enabled: bool = Field(True, description="Enable cost kill-switches")
     max_tokens_per_call: int = Field(1000, gt=0, description="Maximum tokens per LLM call")

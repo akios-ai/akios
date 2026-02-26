@@ -109,6 +109,27 @@ def register_protect_command(subparsers: argparse._SubParsersAction) -> None:
     )
     show_prompt_parser.set_defaults(func=run_protect_show_prompt)
 
+    # protect secrets (v1.2.0+ — requires EnforceCore)
+    secrets_parser = subparsers_protect.add_parser(
+        "secrets",
+        help="Scan a file or text for leaked credentials and API keys (requires EnforceCore)"
+    )
+    secrets_parser.add_argument(
+        "file",
+        help="File path to scan for secrets, or inline text (auto-detected)"
+    )
+    secrets_parser.add_argument(
+        "--text",
+        action="store_true",
+        help="Treat argument as inline text instead of a file path"
+    )
+    secrets_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output in JSON format"
+    )
+    secrets_parser.set_defaults(func=run_protect_secrets)
+
 
 def run_protect_preview(args: argparse.Namespace) -> int:
     """Execute protect preview: scan workflow for PII + show safe prompt."""
@@ -682,5 +703,67 @@ def run_protect_show_prompt(args: argparse.Namespace) -> int:
                 print_success("No PII detected in interpolated prompt")
 
             print_success(f"Model: {params.get('model', 'default')} | Max tokens: {params.get('max_tokens', 1000)}")
+
+
+def run_protect_secrets(args: argparse.Namespace) -> int:
+    """
+    Execute protect secrets: scan a file or text for leaked credentials.
+
+    Requires EnforceCore: pip install akios[enforcecore]
+    """
+    import json
+
+    from ...security.secrets import scan_secrets, is_enforcecore_available
+
+    if not is_enforcecore_available():
+        msg = (
+            "Secret scanning requires EnforceCore. "
+            "Install with: pip install 'akios[enforcecore]'"
+        )
+        if getattr(args, "json", False):
+            print(json.dumps({"error": msg, "enforcecore_available": False}))
+        else:
+            print_warning(msg)
+        return 1
+
+    # Resolve input text
+    is_text_mode = getattr(args, "text", False)
+    if is_text_mode:
+        text = args.file
+        source = "inline text"
+    else:
+        file_path = Path(args.file)
+        if not file_path.exists():
+            msg = f"File not found: {file_path}"
+            if getattr(args, "json", False):
+                print(json.dumps({"error": msg}))
+            else:
+                print_error(msg)
+            return 1
+        try:
+            text = file_path.read_text(encoding="utf-8", errors="replace")
+            source = str(file_path)
+        except Exception as e:
+            print_error(f"Cannot read file: {e}")
+            return 1
+
+    result = scan_secrets(text)
+    result["source"] = source
+
+    if getattr(args, "json", False):
+        print(json.dumps(result, indent=2))
+        return 0
+
+    # Rich terminal output
+    n = result["secrets_found"]
+    if n == 0:
+        print_success(f"No secrets detected in {source}")
+    else:
+        print_error(f"{n} secret(s) detected in {source}")
+        for cat in result.get("categories", []):
+            print_info(f"  • {cat}")
+        print_warning("Rotate these credentials immediately.")
+
+    return 1 if n > 0 else 0
 
     return 0

@@ -235,6 +235,30 @@ def check_audit_system() -> Dict[str, Any]:
     return _check("Audit system", WARN, "No audit events yet (created on first workflow run)")
 
 
+def check_enforcecore() -> Dict[str, Any]:
+    """Check EnforceCore availability (v1.2.0+ optional integration)."""
+    try:
+        import enforcecore
+        version = getattr(enforcecore, '__version__', 'installed')
+        # Quick smoke test: secret scanner loads
+        from enforcecore.redactor.secrets import SecretScanner  # noqa: F401
+        from enforcecore.core.rules import RuleEngine  # noqa: F401
+        return _check(
+            "EnforceCore",
+            PASS,
+            f"{version} — secret detection, content rules, compliance reports available",
+        )
+    except ImportError:
+        return _check(
+            "EnforceCore",
+            WARN,
+            "Not installed (optional — enables secret detection + compliance reports)",
+            suggestion="pip install 'akios[enforcecore]'",
+        )
+    except Exception as e:
+        return _check("EnforceCore", WARN, f"Installed but import failed: {e}")
+
+
 def run_all_checks() -> List[Dict[str, Any]]:
     """Run all diagnostic checks and return results."""
     return [
@@ -247,6 +271,7 @@ def run_all_checks() -> List[Dict[str, Any]]:
         check_disk_space(),
         check_pii_engine(),
         check_audit_system(),
+        check_enforcecore(),
     ]
 
 

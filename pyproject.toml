@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.1.2"
+version = "1.2.0"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOUD AI", email = "contact@akioud.ai" },
@@ -118,6 +118,13 @@ bedrock = [
 api = [
     "fastapi>=0.104.0",
     "uvicorn[standard]>=0.24.0",
+]
+
+# EnforceCore integration (v1.2.0+)
+# Adds: secret detection (11 categories), content rules, EU AI Act compliance reports,
+# lifecycle hooks, unicode PII hardening, multi-backend audit storage
+enforcecore = [
+    "enforcecore>=1.2.0",
 ]
 
 # Prometheus monitoring

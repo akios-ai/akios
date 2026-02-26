@@ -1,5 +1,5 @@
-# AKIOS v1.1.2 – Deployment Scope & Boundaries  
-**Document Version:** 1.1.2  
+# AKIOS v1.2.0 – Deployment Scope & Boundaries  
+**Document Version:** 1.2.0  
 **Date:** 2026-02-22  
 
 **Status: FINAL – Locked for v1.0.16 Release (February 2026)**

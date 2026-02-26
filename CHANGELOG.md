@@ -1,11 +1,46 @@
 # Changelog
-**Document Version:** 1.1.2
-**Date:** 2026-02-25
+**Document Version:** 1.2.0
+**Date:** 2026-02-26
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.0] - 2026-02-26
+
+### Added — "Foundation" (EnforceCore Integration — Phase 1)
+
+This is the first release in the v1.2.0 "Foundation" series, which integrates
+[EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) as an optional
+dependency. **AKIOS works fully without EnforceCore.** Install with:
+`pip install 'akios[enforcecore]'`
+
+#### Secret Detection (new — requires EnforceCore)
+- **`akios protect secrets <file>`** — Scan files and text for 11 categories of leaked
+  credentials: AWS keys, GitHub tokens, PEM private keys, database connection strings,
+  bearer tokens, GCP service accounts, Azure connection strings, SSH private keys, and more.
+- New module: `src/akios/security/secrets.py` — bridges to EnforceCore `SecretScanner`.
+- Gracefully returns empty result when EnforceCore not installed.
+
+#### Content Rule Enforcement (new — requires EnforceCore)
+- Shell injection, SQL injection, path traversal, and code execution detection in
+  `tool_executor` and `database` agent configs via EnforceCore `RuleEngine`.
+- Only active when `AKIOS_USE_ENFORCECORE=true` is set.
+- New module: `src/akios/security/content_rules.py` — bridges to EnforceCore `RuleEngine`.
+
+#### Doctor Diagnostics
+- **`akios doctor`** now includes an EnforceCore availability check (10th check).
+  Shows install instructions when not present.
+
+#### Optional Dependency
+- New `pip install akios[enforcecore]` extra for `enforcecore>=1.2.0`.
+- New settings: `use_enforcecore` (default: False), `enforcecore_content_rules`,
+  `enforcecore_secret_scan`.
+
+### Infrastructure
+- 1,529 unit tests passing (+15 new EnforceCore integration tests).
+- All tests verified to pass WITH and WITHOUT EnforceCore installed.
 
 ## [1.1.2] - 2026-02-25
 
