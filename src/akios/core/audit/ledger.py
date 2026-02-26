@@ -223,7 +223,27 @@ class AuditLedger:
         if needs_flush:
             self._flush_buffer()
 
+        # v1.2.0-beta: dual-write to optional secondary backend (e.g. SQLite)
+        # JSONL + Merkle chain are always written above. This adds secondary storage.
+        self._write_to_extra_backend(event_data)
+
         return event
+
+    def _write_to_extra_backend(self, event_data: Dict[str, Any]) -> None:
+        """Write to optional secondary audit backend (non-blocking, never fails JSONL)."""
+        try:
+            import os
+            backend_name = os.environ.get("AKIOS_AUDIT_BACKEND", "jsonl")
+            if backend_name in ("jsonl", "default", ""):
+                return  # No extra backend configured
+            # Lazy-init extra backend on first use
+            if not hasattr(self, "_extra_backend"):
+                from akios.core.audit.backends import get_extra_backend
+                self._extra_backend = get_extra_backend(backend_name)
+            if self._extra_backend:
+                self._extra_backend.write_event(event_data)
+        except Exception:
+            pass  # Extra backend errors NEVER affect primary JSONL
 
     def _flush_buffer(self) -> None:
         """Flush buffered events to disk and update counter (thread-safe)"""

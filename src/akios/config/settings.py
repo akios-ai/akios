@@ -74,6 +74,10 @@ class Settings(BaseSettings):
         True,
         description="Enable secret scanning in PII pipeline when use_enforcecore=True"
     )
+    audit_backend: str = Field(
+        "jsonl",
+        description="Optional secondary audit backend: 'jsonl' (default/only) or 'sqlite' (requires enforcecore)"
+    )
 
     # Cost & loop protection
     cost_kill_enabled: bool = Field(True, description="Enable cost kill-switches")

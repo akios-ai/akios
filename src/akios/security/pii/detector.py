@@ -194,7 +194,19 @@ class RegexPIIDetector:
                 detected_pii[pattern_name].append(matched_text)
                 self.detection_stats[pattern_name] += 1
 
-        return dict(detected_pii)
+        akios_result = dict(detected_pii)
+
+        # Phase 4 (v1.2.0-beta): Dual-engine enrichment via EnforceCore
+        # AKIOS stays authoritative; EC adds secret detection and catches any gaps.
+        # Only active when use_enforcecore=True in settings.
+        try:
+            if getattr(self.settings, 'use_enforcecore', False):
+                from .bridge import dual_engine_detect
+                return dual_engine_detect(text, akios_result)
+        except Exception:
+            pass  # Never fail PII detection due to bridge errors
+
+        return akios_result
 
     def _resolve_overlaps(self, matches: List[Tuple[int, int, str, str, int]]) -> List[Tuple[int, int, str, str, int]]:
         """
