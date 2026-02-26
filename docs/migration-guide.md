@@ -1,5 +1,5 @@
 # AKIOS Migration Guide
-**Document Version:** 1.2.1  
+**Document Version:** 1.2.2  
 **Date:** 2026-02-23  
 
 **Upgrading from Previous Versions to v1.0 Hybrid Distribution**
@@ -117,11 +117,11 @@ chmod +x akios
 ### For **Emergency Recovery**
 ```bash
 # Direct Docker - When wrapper download fails
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.1 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 init my-project
 cd my-project
 # Create wrapper for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.1 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 "$@"' > akios
 chmod +x akios
 ```
 

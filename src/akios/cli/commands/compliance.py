@@ -85,6 +85,33 @@ def register_compliance_command(subparsers: argparse._SubParsersAction) -> None:
     )
     report_parser.set_defaults(func=run_compliance_report)
 
+    # compliance eu-ai-act (v1.2.0-rc — requires EnforceCore)
+    euaiact_parser = subparsers_compliance.add_parser(
+        "eu-ai-act",
+        help="Generate EU AI Act compliance report (requires EnforceCore)"
+    )
+    euaiact_parser.add_argument(
+        "--organization",
+        default="",
+        help="Organization name for the report header"
+    )
+    euaiact_parser.add_argument(
+        "--period",
+        default="",
+        help="Reporting period (e.g. 'Q1 2026')"
+    )
+    euaiact_parser.add_argument(
+        "--format",
+        choices=["html", "json"],
+        default="json",
+        help="Output format: html (rich report) or json (structured data)"
+    )
+    euaiact_parser.add_argument(
+        "--output",
+        help="Output file path (default: compliance_eu_ai_act.<format>)"
+    )
+    euaiact_parser.set_defaults(func=run_compliance_eu_ai_act)
+
     # Default handler for no subcommand
     parser.set_defaults(func=run_compliance_help)
 
@@ -206,3 +233,67 @@ Examples:
     )
 
     return 0
+
+
+def run_compliance_eu_ai_act(args: argparse.Namespace) -> int:
+    """
+    Generate EU AI Act compliance report using EnforceCore (v1.2.0-rc).
+
+    Requires: pip install akios[enforcecore]
+    """
+    import json as _json
+    try:
+        from enforcecore.auditstore.reports.generator import ReportGenerator
+        from enforcecore.auditstore.backends.jsonl import JSONLBackend
+        from enforcecore.auditstore.core import AuditStore
+    except ImportError:
+        msg = "EU AI Act reports require EnforceCore: pip install 'akios[enforcecore]'"
+        if getattr(args, "json", False):
+            print(_json.dumps({"error": msg, "enforcecore_available": False}))
+        else:
+            print_warning(msg)
+        return 1
+
+    try:
+        from ..helpers import check_project_context
+        check_project_context()
+    except Exception:
+        pass  # Reports can run without project context
+
+    try:
+        # Load audit trail from AKIOS's JSONL backend
+        from ....config import get_settings
+        import os
+        settings = get_settings()
+        audit_path = os.path.join(settings.audit_storage_path, "audit_events.jsonl")
+
+        backend = JSONLBackend(audit_path)
+        store = AuditStore(backend=backend)
+        generator = ReportGenerator(store)
+
+        organization = args.organization or "AKIOS Deployment"
+        period = args.period or "Current"
+        fmt = getattr(args, "format", "json")
+
+        report = generator.generate_eu_ai_act_report(
+            organization=organization,
+            period=period,
+            format=fmt,
+        )
+
+        output_path = args.output or f"compliance_eu_ai_act.{fmt}"
+
+        if fmt == "html":
+            report.save(output_path)
+            print_success(f"EU AI Act report saved: {output_path}")
+        else:
+            content = report.render()
+            with open(output_path, "w") as f:
+                f.write(content)
+            print_success(f"EU AI Act report saved: {output_path}")
+
+        return 0
+
+    except Exception as e:
+        print_error(f"Report generation failed: {e}")
+        return 1

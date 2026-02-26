@@ -155,6 +155,15 @@ class RegexPIIDetector:
         if not force_detection and not self.settings.pii_redaction_enabled:
             return {}
 
+        # Phase 0 (v1.2.0-rc): Unicode normalization via EnforceCore when enabled
+        # Catches accent-folded PII evasion: "jöhn.smith@example.com" → detected
+        if getattr(self.settings, 'use_enforcecore', False):
+            try:
+                from enforcecore.redactor.unicode import normalize_text
+                text = normalize_text(text)
+            except Exception:
+                pass  # Never fail PII detection due to normalization errors
+
         # Phase 1: Collect all matches with spans
         # Each entry: (start, end, pattern_name, matched_text, priority)
         all_matches: List[Tuple[int, int, str, str, int]] = []
