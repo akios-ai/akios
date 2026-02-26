@@ -353,6 +353,16 @@ class RuntimeEngine:
             print(f"🔒 Security: All protections active", file=sys.stderr)
             print("", file=sys.stderr)
 
+            # Lifecycle hook: pre_workflow (v1.2.0-rc)
+            try:
+                from akios.security.hooks import fire_workflow_hook
+                fire_workflow_hook("pre_workflow", {
+                    "workflow_name": workflow.name,
+                    "total_steps": len(workflow.steps),
+                })
+            except Exception:
+                pass  # Hooks never block execution
+
             # Execute all steps
             results = self._execute_workflow_steps(workflow, end_time)
 
@@ -362,6 +372,18 @@ class RuntimeEngine:
             print("", file=sys.stderr)
             print(f"🎉 Workflow completed in {total_time:.2f}s", file=sys.stderr)
             sys.stderr.flush()
+
+            # Lifecycle hook: post_workflow (v1.2.0-rc)
+            try:
+                from akios.security.hooks import fire_workflow_hook
+                fire_workflow_hook("post_workflow", {
+                    "workflow_name": workflow.name,
+                    "steps_executed": len(results),
+                    "execution_time": total_time,
+                    "status": "completed",
+                })
+            except Exception:
+                pass  # Hooks never block execution
 
             # Finalize successful execution
             return self._finalize_workflow_execution(workflow, results, start_time)

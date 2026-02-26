@@ -1,14 +1,16 @@
 # Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
 # GPL-3.0-only
 """
-Audit backends — pluggable storage for AKIOS audit trails (v1.2.0-beta).
+Audit backends — pluggable storage for AKIOS audit trails (v1.2.0-rc).
 
 Default: JSONL (always active, unchanged from v1.1.x).
-Optional: SQLite (requires EnforceCore), PostgreSQL (v1.3.0).
+Optional: SQLite (local/dev), PostgreSQL (production).
 
 Usage:
-    AKIOS_AUDIT_BACKEND=sqlite  → SQLite alongside JSONL
-    AKIOS_AUDIT_BACKEND=jsonl   → JSONL only (default)
+    AKIOS_AUDIT_BACKEND=sqlite       → SQLite alongside JSONL (local dev)
+    AKIOS_AUDIT_BACKEND=postgresql   → PostgreSQL alongside JSONL (production)
+    AKIOS_AUDIT_BACKEND=jsonl        → JSONL only (default)
+    AKIOS_AUDIT_PG_DSN=postgresql://user:pass@host:5432/db  → for postgresql
 """
 
 from .jsonl import JSONLBackend
@@ -32,8 +34,21 @@ def get_extra_backend(backend_name: str):
         except ImportError:
             import logging
             logging.getLogger(__name__).warning(
-                "SQLite audit backend requires EnforceCore: pip install akios[enforcecore]"
+                "SQLite audit backend not available"
             )
             return None
 
+    if backend_name == "postgresql":
+        try:
+            from .postgresql import PostgreSQLBackend
+            return PostgreSQLBackend()
+        except ImportError:
+            import logging
+            logging.getLogger(__name__).warning(
+                "PostgreSQL audit backend requires psycopg2: pip install psycopg2-binary"
+            )
+            return None
+
+    import logging
+    logging.getLogger(__name__).warning("Unknown audit backend: %s", backend_name)
     return None

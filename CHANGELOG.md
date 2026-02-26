@@ -1,11 +1,40 @@
 # Changelog
-**Document Version:** 1.2.1
+**Document Version:** 1.2.2
 **Date:** 2026-02-26
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.2] - 2026-02-26
+
+### Added — "Foundation RC" (EnforceCore Integration — Phase 3)
+
+#### EU AI Act Reports (`akios compliance eu-ai-act`, requires EnforceCore)
+- Generate Article 9/13/14/52 compliance reports from AKIOS audit trail
+- HTML + JSON formats via EnforceCore's `ReportGenerator`
+
+#### PostgreSQL Audit Backend (`AKIOS_AUDIT_BACKEND=postgresql`)
+- Events written to PostgreSQL alongside primary JSONL (never replaces it)
+- Configure via `AKIOS_AUDIT_PG_DSN=postgresql://...`
+
+#### Lifecycle Hooks (requires EnforceCore + `use_enforcecore=True`)
+- `pre_workflow`, `post_workflow` hooks at workflow lifecycle points
+- New module: `src/akios/security/hooks.py`
+
+#### Unicode PII Normalization (requires EnforceCore + `use_enforcecore=True`)
+- Accent-folded evasion detection via `normalize_text()`
+
+#### Merkle Cross-Verification Test (critical gate for v1.3.0)
+- Test verifies AKIOS audit JSONL is readable by EnforceCore verifier
+- MUST PASS before migrating audit backends in v1.3.0
+
+#### Release Process Improvement
+- `post_release_gate.sh` PyPI checks now retry 3× with 30s backoff
+
+### Infrastructure
+- 1,553 unit tests passing (+11 new RC tests).
 
 ## [1.2.1] - 2026-02-26
 

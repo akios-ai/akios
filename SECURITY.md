@@ -1,10 +1,10 @@
 # AKIOS Security Policy
-**Document Version:** 1.2.1
+**Document Version:** 1.2.2
 **Date:** 2026-02-25
 
 ## 🔒 Security Overview
 
-AKIOS v1.2.1 is a **minimal, open-source security cage** for AI agents.  
+AKIOS v1.2.2 is a **minimal, open-source security cage** for AI agents.  
 We take security very seriously — the entire product is built around hard containment, real-time protection, and provable audit.
 
 This policy explains how we handle vulnerabilities in the open runtime.
