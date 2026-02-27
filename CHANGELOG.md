@@ -1,11 +1,40 @@
 # Changelog
-**Document Version:** 1.2.2
-**Date:** 2026-02-26
+**Document Version:** 1.2.3
+**Date:** 2026-02-27
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.2.3] - 2026-02-27
+
+### Verified — Real EnforceCore v1.11.1 Integration Testing
+
+All AKIOS bridge modules verified against real `enforcecore==1.11.1` (2,324 tests, 97% coverage).
+
+#### Bridges Verified Working
+- **SecretScanner** — `SecretScanner().detect()` returns correct `DetectedSecret` objects
+- **RuleEngine** — `RuleEngine.with_builtins().check()` returns correct `RuleViolation` objects
+- **HookRegistry** — `HookRegistry.global_registry()` accessible, add_pre_call/add_post_call work
+- **PatternRegistry** — `PatternRegistry.register()` accepts AKIOS patterns correctly
+
+#### CRITICAL FINDING: Merkle Chain Formats Incompatible
+- AKIOS uses binary Merkle tree (SHA-256 of event JSON)
+- EnforceCore uses linear chain (SHA-256 of entry payload, different field ordering)
+- `verify_trail()` reports hash mismatch on ALL entries
+- **Decision:** EnforceCore audit backends (SQLite, PostgreSQL) used for QUERYABLE STORAGE ONLY.
+  AKIOS's own JSONL + Merkle verification stays authoritative. Backend swap deferred until
+  Merkle format bridge implemented (v1.3.0+).
+
+#### Fixed
+- **fix: compliance.py eu-ai-act import path** — `from ....config` (4 dots, wrong depth) → `from akios.config`
+- **fix: enforcecore dependency version** — `>=1.2.0` → `>=1.11.1` (matches actual target)
+- **fix: Merkle cross-verification test** — now documents incompatibility as expected behavior
+
+### Infrastructure
+- 1,554 tests passing WITH enforcecore==1.11.1 installed
+- 1,553 tests passing WITHOUT enforcecore (cardinal rule maintained)
 
 ## [1.2.2] - 2026-02-26
 

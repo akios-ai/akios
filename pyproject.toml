@@ -1,6 +1,6 @@
 [project]
 name = "akios"
-version = "1.2.2"
+version = "1.2.3"
 description = "AKIOS runtime for secure AI agent execution"
 authors = [
     { name = "AKIOUD AI", email = "contact@akioud.ai" },
@@ -124,7 +124,7 @@ api = [
 # Adds: secret detection (11 categories), content rules, EU AI Act compliance reports,
 # lifecycle hooks, unicode PII hardening, multi-backend audit storage
 enforcecore = [
-    "enforcecore>=1.2.0",
+    "enforcecore>=1.11.1",
 ]
 
 # Prometheus monitoring

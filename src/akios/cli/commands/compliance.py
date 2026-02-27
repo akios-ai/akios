@@ -262,7 +262,7 @@ def run_compliance_eu_ai_act(args: argparse.Namespace) -> int:
 
     try:
         # Load audit trail from AKIOS's JSONL backend
-        from ....config import get_settings
+        from akios.config import get_settings
         import os
         settings = get_settings()
         audit_path = os.path.join(settings.audit_storage_path, "audit_events.jsonl")
