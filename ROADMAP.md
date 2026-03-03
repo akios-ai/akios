@@ -204,14 +204,18 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## v1.3.0 — "Unified Audit" (Target: Q3 2026)
+## Next: v1.3.0 — "Unified Audit" (Target: Q3 2026)
 
-**Theme:** Production-grade audit backends. EnforceCore auditstore becomes primary.
+**Theme:** Merkle format bridge + production-grade audit backends.
 
-- **Pluggable audit backends** — SQLite, PostgreSQL promoted to production-ready
+> **Known limitation (v1.2.3):** AKIOS and EnforceCore use incompatible Merkle chain formats (AKIOS: binary tree, EnforceCore: linear chain). v1.3.0 must implement a format adapter before promoting EnforceCore backends to primary. Currently, EC backends (SQLite, PostgreSQL) are used for queryable storage only — AKIOS's own JSONL + Merkle verification stays authoritative.
+
+- **Merkle format bridge** — adapter that converts AKIOS events to EnforceCore hash format when writing to EC backends. Both systems keep their own format for verification.
+- **Pluggable audit backends** — SQLite, PostgreSQL promoted to production-ready (with bridge)
 - **Audit data migration** — `akios audit migrate` command for JSONL → SQLite/PG
 - **Resource guards** — layer EnforceCore's `CostTracker` + `KillSwitch` under kernel sandbox
 - **HIPAA/SOX query templates** — compliance queries for healthcare and financial audit
+- **EnforceCore version tracking** — release process updated to verify bridge compatibility on EC version changes
 
 ---
 

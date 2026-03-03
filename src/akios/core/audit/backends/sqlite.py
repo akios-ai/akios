@@ -80,11 +80,19 @@ class SQLiteBackend:
             return False
 
     def write_event(self, event_data: Dict[str, Any]) -> None:
-        """Write event to SQLite. Errors are logged but never block JSONL."""
+        """Write event to SQLite with Merkle bridge (v1.3.0).
+
+        If event_data contains 'akios_hash', stores it in metadata for
+        cross-verification with EnforceCore's verify_chain(skip_entry_hash=True).
+        """
         try:
             if not self._ensure_initialized():
                 return
-            metadata = event_data.get("metadata", {})
+            metadata = dict(event_data.get("metadata", {}))
+            # v1.3.0 Merkle bridge: preserve AKIOS hash in metadata
+            akios_hash = event_data.get("akios_hash", "")
+            if akios_hash:
+                metadata["akios_merkle_hash"] = akios_hash
             self._conn.execute("""
                 INSERT INTO audit_events (event_id, timestamp, workflow_id, step, agent, action, result, metadata)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
