@@ -223,14 +223,19 @@ class AuditLedger:
         if needs_flush:
             self._flush_buffer()
 
-        # v1.2.0-beta: dual-write to optional secondary backend (e.g. SQLite)
-        # JSONL + Merkle chain are always written above. This adds secondary storage.
-        self._write_to_extra_backend(event_data)
+        # v1.3.0: dual-write to optional secondary backend with Merkle bridge.
+        # Pass AKIOS's pre-computed hash so EC backends store it as-is (external_hash mode).
+        self._write_to_extra_backend(event_data, event)
 
         return event
 
-    def _write_to_extra_backend(self, event_data: Dict[str, Any]) -> None:
-        """Write to optional secondary audit backend (non-blocking, never fails JSONL)."""
+    def _write_to_extra_backend(self, event_data: Dict[str, Any], event=None) -> None:
+        """Write to optional secondary audit backend with Merkle bridge (v1.3.0).
+
+        Uses EnforceCore's external_hash mode to store AKIOS's pre-computed
+        Merkle hashes as-is, without re-hashing. This bridges the format gap
+        between AKIOS (binary tree) and EC (linear chain).
+        """
         try:
             import os
             backend_name = os.environ.get("AKIOS_AUDIT_BACKEND", "jsonl")
@@ -241,7 +246,11 @@ class AuditLedger:
                 from akios.core.audit.backends import get_extra_backend
                 self._extra_backend = get_extra_backend(backend_name)
             if self._extra_backend:
-                self._extra_backend.write_event(event_data)
+                # v1.3.0 Merkle bridge: include AKIOS hash for EC external_hash mode
+                enriched = dict(event_data)
+                if event is not None:
+                    enriched["akios_hash"] = getattr(event, "hash", "")
+                self._extra_backend.write_event(enriched)
         except Exception:
             pass  # Extra backend errors NEVER affect primary JSONL
 

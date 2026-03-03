@@ -1,11 +1,32 @@
 # Changelog
-**Document Version:** 1.2.3
+**Document Version:** 1.3.0
 **Date:** 2026-02-27
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.3.0] - 2026-02-27
+
+### Added — "Unified Audit" (Merkle Bridge + Production Backends)
+
+#### Merkle Bridge (EnforceCore v1.12.0)
+- **AKIOS audit events now include pre-computed Merkle hashes** when writing to EnforceCore backends.
+  EC stores AKIOS's hash via `external_hash` mode — no re-hashing, no format mismatch.
+- EnforceCore v1.12.0 `verify_trail(skip_entry_hash=True)` verifies chain linkage without
+  recomputing entry hashes — format-agnostic verification now possible.
+- SQLite backend stores `akios_merkle_hash` in event metadata for cross-reference.
+- EnforceCore dependency updated: `>=1.12.0` (was `>=1.11.1`).
+
+#### Audit Backend Improvements
+- Secondary backends (SQLite, PostgreSQL) now receive AKIOS Merkle hashes alongside events.
+- Dual-write enrichment: ledger passes both event data and computed hash to extra backends.
+
+### Infrastructure
+- 1,554 tests passing WITH enforcecore v1.12.0
+- 1,553 tests passing WITHOUT enforcecore (cardinal rule maintained)
+- Merkle cross-verification test updated for v1.12.0 bridge API
 
 ## [1.2.3] - 2026-02-27
 
