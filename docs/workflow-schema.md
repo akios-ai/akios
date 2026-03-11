@@ -1,8 +1,8 @@
-# AKIOS v1.0.16 Workflow Schema Guide
-**Document Version:** 1.2.2  
-**Date:** 2026-02-22  
+# AKIOS v1.4.0 Workflow Schema Guide
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 
-**Version 1.0.16** | **Last Updated:** February 22, 2026
+**Version 1.4.0** | **Last Updated:** March 11, 2026
 
 ## Overview
 
@@ -39,7 +39,7 @@ Each step in your workflow must include:
 ```yaml
 steps:
   - step: 1                       # Optional: Step number (recommended)
-    agent: llm                    # Required: One of 4 agents
+    agent: llm                    # Required: One of 6 agents
     action: complete             # Required: Agent-specific action
     config: {}                   # Required: Agent configuration
     parameters: {}               # Required: Action parameters
@@ -47,14 +47,16 @@ steps:
 
 ### Allowed Agents
 
-AKIOS v1.0 supports exactly 4 agents:
+AKIOS supports 6 agents:
 
 | Agent | Purpose | Example Actions |
-|-------|---------|-----------------|
+|-------|---------|------------------|
 | `llm` | AI language model calls | `complete`, `chat` |
 | `http` | Web API calls | `get`, `post`, `put`, `delete` |
 | `filesystem` | File operations | `read`, `write`, `stat` |
 | `tool_executor` | System commands | `run` |
+| `webhook` | Notifications (Slack, Discord, Teams) | `notify`, `send` |
+| `database` | SQL queries (PostgreSQL, SQLite) | `query`, `execute`, `count` |
 
 ## Common Validation Errors
 

@@ -1,11 +1,11 @@
 # AKIOS Roadmap
-**Document Version:** 1.2.2  
-**Date:** 2026-02-24  
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 **License:** GPL-3.0-only  
 
 This roadmap covers the open-source AKIOS project — the security-cage runtime for AI agents.
 
-> **Two-project model:** AKIOS (GPL-3.0) is the complete production runtime. [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is the general-purpose enforcement library. Starting from v1.2.0, AKIOS will use EnforceCore as its enforcement foundation while keeping its unique value: kernel sandbox, healthcare PII patterns, workflow engine, agents, CLI, and compliance reports.
+> **Two-project model:** AKIOS (GPL-3.0) is the complete production runtime. [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is the general-purpose enforcement library. Starting from v1.2.0, AKIOS will use EnforceCore as its enforcement foundation while keeping its unique value: kernel sandbox, PII redaction, workflow engine, 6 agents, CLI, and security posture scoring.
 
 > **Versioning note:** Releases v1.0.5 through v1.0.15 added significant new features (REST API, AWS Bedrock provider, `--json-output`, Rich UI, conditional execution, etc.) that per strict Semantic Versioning should have incremented the minor version. We are correcting this going forward: **v1.0.16 is the final patch release** in the v1.0.x series (bug fixes only), after which new features will ship under **v1.1.0+** with proper semver compliance.
 
@@ -18,11 +18,11 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ### What's Shipped
 - Policy-based container isolation (Docker + native Linux cgroups v2 + seccomp-bpf)
-- Real-time PII redaction (50+ patterns, 6 categories, >95% accuracy, <1ms overhead)
+- Real-time PII redaction (50+ patterns at launch; refined to 44 general-purpose patterns in v1.4.0)
 - Cryptographic Merkle tamper-evident audit ledger + PDF/JSON export
 - Hard cost & infinite loop kill-switches
-- 4 core agents: LLM, HTTP, Filesystem, Tool Executor
-- Multi-provider LLM support (OpenAI, Anthropic, Grok, Mistral, Gemini)
+- 6 core agents: LLM, HTTP, Filesystem, Tool Executor, Webhook, Database
+- Multi-provider LLM support (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, Ollama)
 - 20-command CLI with Rich UI panels
 - Docker wrapper + native Linux sandbox
 - 6 sector demo workflows (healthcare, banking, insurance, accounting, government, legal)
@@ -189,53 +189,57 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 **Theme:** Begin EnforceCore integration — adopt the shared enforcement foundation without losing AKIOS identity.
 
-> **Context:** [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is AKIOUD AI's open enforcement library. AKIOS uses it as an OPTIONAL dependency while keeping its own unique value: kernel sandbox, healthcare PII, workflow engine, agents, CLI, and compliance reports.
+> **Context:** [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is AKIOUD AI's open enforcement library. AKIOS uses it as an OPTIONAL dependency while keeping its own unique value: kernel sandbox, PII redaction, workflow engine, 6 agents, CLI, and security posture scoring.
 
 - **EnforceCore as optional dependency** — `pip install akios[enforcecore]` for enhanced features
 - **Secret detection** — 11-category API key/token scanner via EnforceCore (`akios protect secrets`)
 - **Content rules** — shell injection, SQL injection, path traversal detection in Tool Executor and Database agents
-- **EU AI Act compliance reports** — generate Article 9, 13, 14, 52 reports (`akios compliance report`)
-- **PII bridge** — register AKIOS's 50+ healthcare patterns into EnforceCore's `PatternRegistry` for unified scanning
+- **EU AI Act compliance** — generate Article 9, 13, 14, 52 assessments (`akios compliance eu-ai-act`, requires EnforceCore)
+- **PII bridge** — register AKIOS's PII patterns into EnforceCore's `PatternRegistry` for unified scanning
 - **Unicode hardening** — homoglyph/encoding evasion detection for PII
 - **SQLite + PostgreSQL audit backends** — optional storage alongside default JSONL
 - **Lifecycle hooks** — pre_workflow, post_workflow, step_complete events
 
-**What stays AKIOS-only:** Kernel sandbox (seccomp-bpf + cgroups v2), 50+ healthcare PII patterns (GPL-3.0), workflow engine, 6 agents, CLI, compliance reports. AKIOS works fully without EnforceCore.
+**What stays AKIOS-only:** Kernel sandbox (seccomp-bpf + cgroups v2), 44 PII patterns (GPL-3.0), workflow engine, 6 agents, CLI, security posture scoring. AKIOS works fully without EnforceCore.
 
 ---
 
-## Next: v1.3.0 — "Unified Audit" (Target: Q3 2026)
+## Shipped: v1.3.0 — "Unified Audit" (March 2026)
 
+**Status:** ✅ Shipped  
 **Theme:** Merkle format bridge + production-grade audit backends.
 
-> **Known limitation (v1.2.3):** AKIOS and EnforceCore use incompatible Merkle chain formats (AKIOS: binary tree, EnforceCore: linear chain). v1.3.0 must implement a format adapter before promoting EnforceCore backends to primary. Currently, EC backends (SQLite, PostgreSQL) are used for queryable storage only — AKIOS's own JSONL + Merkle verification stays authoritative.
+> **How the Merkle incompatibility was solved:** AKIOS and EnforceCore use different Merkle chain formats (AKIOS: binary tree SHA-256, EnforceCore: linear chain). Rather than changing either format, v1.3.0 uses EnforceCore v1.12.0's `external_hash` mode — AKIOS pre-computes its Merkle hashes and passes them to EC backends, which store them as-is. `verify_trail(skip_entry_hash=True)` enables format-agnostic chain verification.
 
-- **Merkle format bridge** — adapter that converts AKIOS events to EnforceCore hash format when writing to EC backends. Both systems keep their own format for verification.
-- **Pluggable audit backends** — SQLite, PostgreSQL promoted to production-ready (with bridge)
-- **Audit data migration** — `akios audit migrate` command for JSONL → SQLite/PG
-- **Resource guards** — layer EnforceCore's `CostTracker` + `KillSwitch` under kernel sandbox
-- **HIPAA/SOX query templates** — compliance queries for healthcare and financial audit
-- **EnforceCore version tracking** — release process updated to verify bridge compatibility on EC version changes
+- **Merkle format bridge** — AKIOS pre-computes hashes, passes via `external_hash` to EC backends. Both systems keep their own format. No re-hashing, no format mismatch.
+- **EC backends promoted to production-ready** — SQLite stores `akios_merkle_hash` for cross-reference; PostgreSQL stores events with full JSONB metadata.
+- **EnforceCore v1.12.0 required** — updated dependency `enforcecore>=1.12.0`.
+- **1,554 tests passing** WITH enforcecore; 1,553 WITHOUT (cardinal rule maintained).
 
 ---
 
-## v1.4.0 — "Observability" (Target: Q4 2026)
+## Next: v1.4.0 — "Goldilocks Boundary" (March 2026)
+
+**Theme:** Align OSS with the three-product equilibrium. Healthcare and financial PII patterns move to AKIOS Pro.
+**Status:** 🟡 In progress
+
+- **PII Goldilocks boundary** — 13 healthcare/financial patterns (MRN, NPI, DEA, ICD-10, CPT, HCPCS, NDC, health_insurance_us, iban, credit_card, bank_account, routing_number, financial_account) moved to AKIOS Pro. OSS retains 44 general-purpose patterns.
+- **7 LLM providers** — Ollama and AWS Bedrock now fully supported in setup wizard, doctor, and init
+- **Compliance terminology alignment** — "compliance reports" renamed to "security posture scoring" (Pro owns CISO-facing compliance reports)
+- **Version string cleanup** — all stale v1.0.x/v1.2.x references updated across source tree
+- **Schema updates** — workflow schema and config schema bumped to v1.4
+
+---
+
+## v1.5.0 — "Observability" (Target: Q4 2026)
 
 **Theme:** Production monitoring and observability.
 
+- **`--report` flag** — generate post-run security posture report
 - **OpenTelemetry** — tracing + Prometheus metrics (via EnforceCore telemetry)
 - **Streaming LLM output** — per-token PII filtering
 - **Audit retention policies** — auto-archive, auto-delete based on age
-
----
-
-## v1.5.0 — "Scale" (Target: Q1 2027)
-
-**Theme:** High-throughput and multi-tenant capabilities.
-
-- **Fan-out / map-reduce** — execution patterns for batch workflows
-- **Multi-tenant isolation** — per-tenant budgets, audit trails, PII policies
-- **Community template marketplace** — share and discover workflow templates
+- **`akios audit migrate`** — JSONL → SQLite/PG migration tool
 
 ---
 

@@ -1,8 +1,8 @@
 # AKIOS Comprehensive Quick Start Guide
-**Document Version:** 1.6  
+**Document Version:** 1.4.0  
 **Date:** 2026-02-22  
 
-**Master AKIOS v1.2.2 - From Beginner to Advanced User**
+**Master AKIOS v1.4.0 - From Beginner to Advanced User**
 
 *Complete tutorial: 15-30 minutes*
 
@@ -90,8 +90,8 @@ cd my-project
 akios run templates/hello-workflow.yml
 ```
 
-> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.16).
-> For specific versions: `pip install akios==1.2.2`.
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.4.0).
+> For specific versions: `pip install akios==1.4.0`.
 
 **Benefits:** Full kernel-hard security, Python ecosystem integration.
 
@@ -118,8 +118,8 @@ cd my-project
 akios run templates/hello-workflow.yml
 ```
 
-> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.0.16).
-> For specific versions: `pip install akios==1.2.2`.
+> **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.4.0).
+> For specific versions: `pip install akios==1.4.0`.
 > **🛡️ Security Note:** On Linux, `pip install akios` includes the seccomp module for kernel-hard security. Run with `sudo` for full protection.
 
 **Benefits:** Full kernel-hard security (with sudo), Python ecosystem integration.
@@ -144,11 +144,11 @@ AKIOS_FORCE_PULL=1 ./akios status
 **Emergency fallback when the wrapper script download fails:**
 ```bash
 # Use Docker directly (works even if curl/network fails)
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.0 init my-project
 cd my-project
 # Create wrapper script for future use
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.0 "$@"' > akios
 chmod +x akios
 ./akios run templates/hello-workflow.yml
 ```
@@ -159,7 +159,7 @@ chmod +x akios
 
 ### Prerequisites
 - **Docker Desktop** (for macOS/Windows) or Docker Engine (Linux)
-- **API key** from one AI provider (OpenAI, Anthropic, Grok, Mistral, or Gemini)
+- **API key** from one AI provider (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, or Ollama)
 
 ### Step 1: Download AKIOS Wrapper
 
@@ -221,7 +221,7 @@ The setup wizard automatically detects first-time usage and guides you through c
 ```
 
 The wizard guides you through:
-- Choosing your AI provider (OpenAI, Anthropic, Grok, Mistral, or Gemini)
+- Choosing your AI provider (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, or Ollama)
 - Selecting your preferred model (gpt-4o, claude-3.5-sonnet, grok-3, etc.)
 - Entering your API key with real validation
 - Setting budget and token limits
@@ -632,7 +632,7 @@ steps:
 **Core Settings:**
 ```bash
 # AI Provider (required)
-AKIOS_LLM_PROVIDER=grok          # openai, anthropic, grok
+AKIOS_LLM_PROVIDER=grok          # openai, anthropic, grok, mistral, gemini, bedrock, ollama
 AKIOS_LLM_MODEL=grok-3          # Model name
 
 # Security (optional)
@@ -686,7 +686,7 @@ AKIOS_BUDGET_LIMIT_PER_RUN=5.0
 
 ### Security Cage
 
-AKIOS v1.2.2 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
+AKIOS v1.4.0 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
 
 **Activate the cage:**
 ```bash
@@ -725,14 +725,14 @@ akios cage down --keep-data
 
 **Scan files for sensitive data before processing:**
 ```bash
-# Scan a file for PII (SSN, names, emails, NPI numbers, DEA numbers, medical record numbers, etc.)
-akios protect scan data/input/patient.txt
+# Scan a file for PII (SSN, names, emails, credit cards, etc.)
+akios protect scan data/input/document.txt
 
 # Preview the interpolated + redacted prompt the LLM will receive
-akios protect show-prompt templates/healthcare.yml
+akios protect show-prompt workflow.yml
 ```
 
-PII markers appear in **magenta** in terminal output: `«SSN»`, `«NAME»`, `«EMAIL»`, `«US_NPI»`, `«US_DEA»`, `«MEDICAL_RECORD_NUMBER»`, etc. Original text appears in red for contrast.
+PII markers appear in **magenta** in terminal output: `«SSN»`, `«NAME»`, `«EMAIL»`, `«CREDIT_CARD»`, `«PHONE»`, etc. Original text appears in red for contrast.
 
 ### Workflow Output
 
@@ -804,7 +804,7 @@ jq -r 'select(.metadata.cost_incurred) | .metadata.cost_incurred' audit/audit_ev
 
 **Regulatory Standards Met:**
 - **SOX**: Financial transaction audit trails
-- **HIPAA**: Protected health data logging
+- **HIPAA**: Protected health data logging (full healthcare PII patterns available in the premium tier)
 - **GDPR**: Personal data processing records
 - **PCI DSS**: Payment data security monitoring
 
@@ -827,12 +827,14 @@ jq -r 'select(.metadata.cost_incurred) | .metadata.cost_incurred' audit/audit_ev
 - **A:** The wrapper handles Docker for you. If the wrapper is unavailable, you can run direct Docker commands (shown above).
 
 **Q: Which AI provider should I choose?**
-- **A:** All five (OpenAI, Anthropic, Grok, Mistral, Gemini) work equally well. Choose based on your preferences:
+- **A:** All seven (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, Ollama) work equally well. Choose based on your preferences:
   - OpenAI: Most popular, good for general tasks
   - Anthropic: Best for safety and reasoning
   - Grok: Real-time knowledge and humor
   - Mistral: Cost-effective, strong reasoning
   - Gemini: Multimodal capabilities, strong coding
+  - Bedrock: AWS-native, IAM authentication, no API key needed
+  - Ollama: Local models, fully offline, zero cost
 
 **Q: Is AKIOS secure for production use?**
 - **A:** Yes! AKIOS provides military-grade security with PII redaction, audit trails, and sandboxing. See the Security section for details.
@@ -1031,6 +1033,6 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 
 ---
 
-*AKIOS v1.2.2 - Where AI meets unbreakable security*
+*AKIOS v1.4.0 - Where AI meets unbreakable security*
 
 **Need help?** Run `akios doctor`, check the audit logs, or create a GitHub issue.

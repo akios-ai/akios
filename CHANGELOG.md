@@ -1,11 +1,60 @@
 # Changelog
-**Document Version:** 1.3.0
-**Date:** 2026-02-27
+**Document Version:** 1.4.0
+**Date:** 2026-03-11
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.4.0] - 2026-03-11
+
+### Changed — "Goldilocks" (PII Boundary Enforcement)
+
+#### ⚠️ BREAKING: Healthcare & Financial PII Patterns Moved to Premium Tier
+
+The following PII patterns have been **removed from AKIOS OSS** and are now exclusive
+to the premium tier for regulated-industry compliance:
+
+**Healthcare patterns removed (8):**
+- `us_npi` — US National Provider Identifier
+- `us_dea` — US Drug Enforcement Administration number
+- `medical_record_number` — MRN-format medical record numbers
+- `insurance_policy` — HMO/PPO/BCBS policy numbers
+- `insurance_group` — Insurance group/employer IDs
+- `insurance_claim` — Insurance claim references
+- `prior_authorization` — Prior authorization numbers
+- `medicare_mbi` — Medicare Beneficiary Identifier
+
+**Financial patterns removed (5):**
+- `iban` — International Bank Account Numbers
+- `bic` — BIC/SWIFT codes
+- `routing_number` — US bank routing numbers (ABA)
+- `wire_transfer` — Wire transfer references
+- `crypto_wallet` — Cryptocurrency wallet addresses (BTC/ETH)
+
+**What stays in OSS (44 patterns across 6 categories):**
+- **Personal (20):** email, phone (FR/US/UK/DE), SSN, French SSN, passport EU,
+  driver's license, birth date, full name, France/Germany ID, UK NI, tax ID, ITIN,
+  license plate, company name, VIN, bank account
+- **Health (9):** French health insurance, US health insurance (generic), medical record
+  (generic), medication dosage, blood pressure, lab results, diagnosis codes, vital signs,
+  emergency contact
+- **Financial (3):** credit card, Amex, PayPal email
+- **Communication (3):** IPv4, IPv6, MAC address
+- **Digital (6):** AWS keys, API keys, JWT, private key headers, GitHub tokens, passwords in URLs
+- **Location (3):** postal address, French address, GPS coordinates
+
+#### Migration Guide
+If your workflows depend on NPI, DEA, MRN, IBAN, BIC, routing number, wire transfer, or
+crypto wallet detection, upgrade to the premium tier for continued coverage. All other patterns
+continue to work identically.
+
+### Updated
+- Documentation updated across 12 files to reflect new pattern count (44)
+- Release checklist and process updated for v1.4.0
+- Test suite updated: removed `test_pii_mrn.py`, updated accuracy corpus and dedup tests
+- PII bridge module updated for new pattern count
 
 ## [1.3.0] - 2026-02-27
 

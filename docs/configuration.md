@@ -1,6 +1,6 @@
-# AKIOS v1.2.2 – Configuration Reference
-**Document Version:** 1.2.2  
-**Date:** 2026-02-22  
+# AKIOS v1.4.0 – Configuration Reference
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 
 **Complete configuration guide for the AKIOS security cage.**
 
@@ -26,7 +26,7 @@ AKIOS includes an interactive setup wizard that makes initial configuration effo
 ### Interactive Setup Wizard
 
 The setup wizard guides you through:
-- Provider selection (OpenAI, Anthropic, Grok, Mistral, or Gemini)
+- Provider selection (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, or Ollama)
 - API key setup with format validation
 - Configuration generation and validation
 
@@ -224,7 +224,7 @@ network_access_allowed: true   # Allow HTTP agent network calls
 **Default:** `[]` (empty — only LLM APIs allowed)  
 **Description:** HTTPS domains whitelist for HTTP agent requests
 
-**Important:** LLM APIs (OpenAI, Anthropic, Grok, Mistral, Gemini) **always pass through** regardless of this setting — they are core to AKIOS functionality and never blocked.
+**Important:** LLM APIs (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, Ollama) **always pass through** regardless of this setting — they are core to AKIOS functionality and never blocked.
 
 This setting controls only the **HTTP agent** for custom API calls (CRM, data services, 3rd-party APIs).
 
@@ -269,9 +269,8 @@ Automatically detects and redacts sensitive data in prompts and messages:
 - Credit card numbers
 - IP addresses
 - API keys and passwords
-- NPI (National Provider Identifier)
-- DEA Registration Numbers
-- Medical Record Numbers (MRN-prefixed)
+- Birth dates and full names
+- Addresses and coordinates
 
 ```yaml
 pii_redaction_enabled: true  # Recommended: always true
@@ -438,7 +437,7 @@ export AKIOS_LOG_LEVEL=DEBUG
 ## 📋 Complete Example Configuration
 
 ```yaml
-# AKIOS v1.0 Production Configuration
+# AKIOS v1.4.0 Production Configuration
 # Security-maximized settings for production workloads
 
 # Security cage - maximum protection

@@ -1,5 +1,5 @@
 # Developer API Reference
-**Document Version:** 1.2.2  
+**Document Version:** 1.4.0  
 **Date:** 2026-02-22  
 
 **Programmatic integration with AKIOS workflows**
@@ -238,6 +238,95 @@ result = agent.run(
 - Execute external command
 - Returns: Dict with stdout, stderr, returncode, duration
 
+### Webhook Agent
+
+Secure notification delivery to Slack, Discord, Teams, or any HTTP endpoint with PII redaction.
+
+```python
+from akios.core.runtime.agents.webhook import WebhookAgent
+
+agent = WebhookAgent()
+
+# Send Slack notification
+result = agent.notify(
+    url="https://hooks.slack.com/services/...",
+    message="Workflow complete: analysis finished",
+    platform="slack"
+)
+
+print(f"Status: {result['status_code']}")
+print(f"Success: {result['success']}")
+print(f"PII redacted: {result['pii_redactions_applied']}")
+
+# Send generic webhook
+result = agent.send(
+    url="https://api.example.com/webhook",
+    message="Event triggered",
+    headers={"X-Custom-Header": "value"}
+)
+```
+
+#### Methods
+
+**`notify(url, message, platform='generic', headers=None, timeout=30)`**
+- Send notification to a platform or generic endpoint
+- `platform`: `slack`, `discord`, `teams`, `generic`
+- Returns: Dict with status_code, success, pii_redactions_applied
+
+**`send(url, message, headers=None, timeout=30)`**
+- Alias for notify with `platform='generic'`
+
+### Database Agent
+
+Secure SQL queries against PostgreSQL or SQLite with injection prevention and PII redaction.
+
+```python
+from akios.core.runtime.agents.database import DatabaseAgent
+
+agent = DatabaseAgent()
+
+# SELECT query
+result = agent.query(
+    query="SELECT id, status FROM orders WHERE created_at > ?",
+    params=["2026-01-01"],
+    database="orders.db"
+)
+
+print(f"Rows: {result['row_count']}")
+print(f"Columns: {result['columns']}")
+for row in result["rows"]:
+    print(row)
+
+# Count rows
+count = agent.count(
+    table="orders",
+    where="status = 'pending'",
+    database="orders.db"
+)
+print(f"Pending orders: {count['row_count']}")
+
+# Write (requires allow_write: true in config)
+agent.execute(
+    query="UPDATE orders SET status = ? WHERE id = ?",
+    params=["processed", 42],
+    database="orders.db"
+)
+```
+
+#### Methods
+
+**`query(query, params=None, database=None, timeout=60)`**
+- Run a SELECT query
+- Returns: Dict with rows, row_count, columns
+
+**`execute(query, params=None, database=None, timeout=60)`**
+- Run a write statement (requires `allow_write: true`)
+- Returns: Dict with row_count
+
+**`count(table, where=None, database=None, timeout=60)`**
+- Count rows matching a condition
+- Returns: Dict with row_count
+
 ## Configuration
 
 ### Settings Management
@@ -267,7 +356,7 @@ custom_settings = Settings(
 
 ```python
 # LLM Configuration
-os.environ["AKIOS_LLM_PROVIDER"] = "grok"  # openai, anthropic, grok
+os.environ["AKIOS_LLM_PROVIDER"] = "grok"  # openai, anthropic, grok, mistral, gemini, bedrock, ollama
 os.environ["AKIOS_LLM_MODEL"] = "grok-3"
 os.environ["GROK_API_KEY"] = "your-key-here"
 

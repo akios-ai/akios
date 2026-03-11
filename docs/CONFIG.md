@@ -1,6 +1,6 @@
-# AKIOS v1.2.2 – Configuration Reference
-**Document Version:** 1.0.13  
-**Date:** 2026-02-22  
+# AKIOS v1.4.0 – Configuration Reference
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 
 **Complete configuration guide for the AKIOS security cage.**
 
@@ -209,10 +209,9 @@ Automatically detects and redacts:
 - Credit card numbers
 - IP addresses
 - API keys and passwords
-- **NPI numbers** (National Provider Identifier — healthcare)
-- **DEA registration numbers** (Drug Enforcement Administration — healthcare)
-- **Medical record numbers (MRN)** (healthcare)
-- Insurance policy, group, claim, and prior-authorization numbers
+- Dates of birth, driver's licenses, passport numbers
+- French health insurance (Carte Vitale), national IDs
+- 44 patterns across 6 categories (additional healthcare/financial patterns available in the premium tier)
 
 ```yaml
 pii_redaction_enabled: true  # Recommended: always true
@@ -392,7 +391,7 @@ export AKIOS_LOG_LEVEL=DEBUG
 ## 📋 Complete Example Configuration
 
 ```yaml
-# AKIOS V1.0.O Production Configuration
+# AKIOS v1.4.0 Production Configuration
 # Security-maximized settings for production workloads
 
 # Security cage - maximum protection

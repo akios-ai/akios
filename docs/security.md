@@ -1,10 +1,10 @@
 # Security Features
-**Document Version:** 1.2.2  
+**Document Version:** 1.4.0  
 **Date:** 2026-02-22  
 
 ## Security Overview
 
-AKIOS v1.2.2 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
+AKIOS v1.4.0 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
 
 ## Supported Versions
 
@@ -129,7 +129,7 @@ The cage blocks four attack vectors:
 
 ## PII Protection
 
-AKIOS detects and redacts 53 PII patterns across 6 categories (personal, financial, health, digital identity, communication, location).
+AKIOS detects and redacts 44 PII patterns across 6 categories (personal, financial, health, digital identity, communication, location).
 
 ### Scanning Files
 
@@ -141,7 +141,7 @@ akios protect scan data/input/document.txt
 akios protect preview templates/workflow.yml
 
 # Show the exact interpolated & redacted prompt sent to the LLM
-akios protect show-prompt templates/healthcare.yml
+akios protect show-prompt workflow.yml
 ```
 
 ### PII Marker Format
@@ -156,9 +156,6 @@ Detected PII is replaced with typed markers using guillemet notation:
 | Name | `«NAME»` | James T. Kirk → `«NAME»` |
 | Address | `«ADDRESS»` | 1701 Enterprise Way → `«ADDRESS»` |
 | Credit Card | `«CREDIT_CARD»` | 4111-1111-1111-1111 → `«CREDIT_CARD»` |
-| NPI | `«US_NPI»` | 1234567893 → `«US_NPI»` |
-| DEA Number | `«US_DEA»` | AB1234563 → `«US_DEA»` |
-| Medical Record | `«MEDICAL_RECORD_NUMBER»` | MRN-2024-0847 → `«MEDICAL_RECORD_NUMBER»` |
 
 In terminal output, PII markers display in **magenta** for instant visual identification. Original text appears in red for contrast.
 
@@ -167,7 +164,7 @@ In terminal output, PII markers display in **magenta** for instant visual identi
 1. **Before LLM calls**: All input data is scanned and PII replaced with markers
 2. **After LLM responses**: Output is re-scanned for any PII the model may have generated
 3. **In audit logs**: All logged data is automatically redacted
-4. **In exports**: Audit exports and compliance reports contain only redacted text
+4. **In exports**: Audit exports and security posture reports contain only redacted text
 
 ---
 
@@ -244,7 +241,7 @@ AKIOS audit exports are designed for regulatory examination across sectors:
 
 | Sector | Regulation | Compliance Features |
 |--------|-----------|-------------------|
-| Healthcare | HIPAA, HITECH | PHI redaction, access logging, audit proof |
+| Healthcare | HIPAA, HITECH | Audit logging, access proof (full PHI redaction in the premium tier) |
 | Banking | PCI-DSS, BSA-AML, GLBA | Financial PII redaction, transaction audit |
 | Insurance | NAIC, State DOI | Claim data protection, fraud detection audit |
 | Accounting | SOX 302/404, PCAOB | Financial audit trail, control verification |
@@ -315,7 +312,7 @@ This protects against:
 
 ### LLM APIs Always Pass Through
 
-**Important:** LLM API endpoints (OpenAI, Anthropic, Grok, Mistral, Gemini) **always have network access** regardless of lock status. This is by design — AKIOS is built for AI workflows and cannot function without LLM connectivity.
+**Important:** LLM API endpoints (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, Ollama) **always have network access** regardless of lock status. This is by design — AKIOS is built for AI workflows and cannot function without LLM connectivity.
 
 The `network_access_allowed` setting controls **only the HTTP agent**, not LLM APIs.
 

@@ -3,7 +3,7 @@
   <h1>AKIOS</h1>
   <h3>The open-source security cage for AI agents</h3>
   <p>
-    <strong>Kernel-hard sandbox</strong> · <strong>50+ PII patterns</strong> · <strong>Merkle audit trail</strong> · <strong>Cost kill-switches</strong>
+    <strong>Kernel-hard sandbox</strong> · <strong>44 PII patterns</strong> · <strong>Merkle audit trail</strong> · <strong>Cost kill-switches</strong>
   </p>
 
   <a href="https://pypi.org/project/akios/"><img src="https://img.shields.io/pypi/v/akios?color=%2334D058&label=PyPI" alt="PyPI"></a>
@@ -50,7 +50,7 @@ so you can deploy AI workflows in regulated environments without building securi
 ║  ┌──────────────────────────────────────────────────────────┐  ║
 ║  │ 1. Policy Engine    allowlist verification               │  ║
 ║  │ 2. Kernel Sandbox   seccomp-bpf + cgroups v2             │  ║
-║  │ 3. PII Redaction    50+ patterns, 6 categories           │  ║
+║  │ 3. PII Redaction    44 patterns, 6 categories            │  ║
 ║  │ 4. Budget Control   cost kill-switches, token limits     │  ║
 ║  │ 5. Audit Ledger     Merkle tree, SHA-256, JSONL          │  ║
 ║  └──────────────────────────────────────────────────────────┘  ║
@@ -93,7 +93,7 @@ $ akios run workflow.yml
 ║                   AKIOS Security Cage                    ║
 ╠══════════════════════════════════════════════════════════╣
 ║  🔒 Sandbox:   ACTIVE (seccomp-bpf + cgroups v2)        ║
-║  🚫 PII Scan:  50+ patterns loaded                      ║
+║  🚫 PII Scan:  44 patterns loaded                       ║
 ║  💰 Budget:    $1.00 limit ($0.00 used)                  ║
 ║  📋 Audit:     Merkle chain initialized                  ║
 ╚══════════════════════════════════════════════════════════╝
@@ -143,7 +143,7 @@ AKIOS provides **compliance-by-construction** — security guarantees that are a
 seccomp-bpf syscall filtering + cgroups v2 resource isolation on native Linux. Policy-based isolation on Docker (all platforms).
 
 ### 🚫 PII Redaction Engine
-50+ detection patterns across 6 categories: personal, financial, health, digital, communication, location. Includes NPI, DEA, and medical records. Redaction happens **before** data reaches any LLM.
+44 detection patterns across 6 categories: personal, financial, health, digital, communication, location. Covers SSN, credit cards, emails, phones, addresses, API keys, and more. Redaction happens **before** data reaches any LLM.
 
 ### 📋 Merkle Audit Trail
 Every action is cryptographically chained. Tamper-evident JSONL logs with SHA-256 proofs. Export to JSON for compliance reporting.
@@ -155,10 +155,10 @@ Every action is cryptographically chained. Tamper-evident JSONL logs with SHA-25
 Hard budget limits ($1 default) with automatic workflow termination. Token tracking across all providers. Real-time `akios status --budget` dashboard.
 
 ### 🤖 Multi-Provider LLM Support
-OpenAI, Anthropic, Grok (xAI), Mistral, Gemini — swap providers in one line of config. All calls are sandboxed, audited, and budget-tracked.
+OpenAI, Anthropic, Grok (xAI), Mistral, Gemini, AWS Bedrock, Ollama — swap providers in one line of config. All calls are sandboxed, audited, and budget-tracked.
 
 ### 🏥 Industry Templates
-Healthcare (HIPAA), Banking (PCI-DSS), Insurance, Accounting (SOX), Government (FedRAMP), Legal — production-ready sector workflows out of the box.
+Accounting (SOX), Government (FedRAMP), Legal, Insurance — production-ready sector workflows out of the box. Healthcare (HIPAA) and Banking (PCI-DSS) templates available in the premium tier.
 
 </td>
 </tr>
@@ -166,7 +166,7 @@ Healthcare (HIPAA), Banking (PCI-DSS), Insurance, Accounting (SOX), Government (
 
 ## 📝 Workflow Schema
 
-AKIOS orchestrates YAML-defined workflows through **4 secure agents** — each running inside the security cage:
+AKIOS orchestrates YAML-defined workflows through **6 secure agents** — each running inside the security cage:
 
 ```yaml
 # workflow.yml — every step runs inside the cage
@@ -249,7 +249,7 @@ Interpolated prompt (redacted):
 | Operation | Latency | Notes |
 |:---|:---:|:---|
 | Full security pipeline | **0.47 ms** | PII + policy + audit + budget |
-| PII scan (50+ patterns) | 0.46 ms | All 6 categories |
+| PII scan (44 patterns) | 0.46 ms | All 6 categories |
 | SHA-256 Merkle hash | 0.001 ms | Per audit event |
 | CLI cold start (Docker) | ~1.4 s | One-time startup |
 
@@ -270,7 +270,7 @@ All benchmarks are reproducible. See [EC2 Performance Testing](docs/ec2-performa
 | ⌨️ | [CLI Reference](docs/cli-reference.md) | All commands and flags |
 | ⚙️ | [Configuration](docs/configuration.md) | Settings, `.env`, `config.yaml` |
 | 🔒 | [Security](docs/security.md) | Architecture and threat model |
-| 🤖 | [Agents](AGENTS.md) | Filesystem, HTTP, LLM, Tool Executor |
+| 🤖 | [Agents](AGENTS.md) | Filesystem, HTTP, LLM, Tool Executor, Webhook, Database |
 | 🐳 | [Deployment](docs/deployment.md) | Docker, native Linux, EC2 |
 | 🔧 | [Troubleshooting](TROUBLESHOOTING.md) | Common issues and fixes |
 | 📝 | [Changelog](CHANGELOG.md) | Release history |
@@ -289,15 +289,15 @@ src/akios/
 │   ├── analytics/              # Cost tracking (cost_tracker.py)
 │   ├── audit/                  # Merkle-chained JSONL ledger
 │   │   └── merkle/             # SHA-256 Merkle tree (tree.py, node.py)
-│   ├── compliance/             # Compliance report generation
+│   ├── compliance/             # Security posture scoring
 │   ├── runtime/
-│   │   ├── agents/             # LLM, HTTP, Filesystem, ToolExecutor
+│   │   ├── agents/             # LLM, HTTP, Filesystem, ToolExecutor, Webhook, Database
 │   │   ├── engine/             # Workflow orchestrator + kill switches
-│   │   ├── llm_providers/      # OpenAI, Anthropic, Grok, Mistral, Gemini
+│   │   ├── llm_providers/      # OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, Ollama
 │   │   └── workflow/           # YAML parser + validator
 │   └── ui/                     # Rich terminal output, PII display, colors
 └── security/
-    ├── pii/                    # 50+ regex patterns, 6 categories (detector, redactor, rules)
+    ├── pii/                    # 44 regex patterns, 6 categories (detector, redactor, rules)
     ├── sandbox/                # cgroups v2 resource isolation (manager, quotas)
     ├── syscall/                # seccomp-bpf policy + interceptor
     └── validation.py           # Runtime security validation
@@ -341,7 +341,7 @@ Good first issues are tagged with [`good first issue`](https://github.com/akios-
 - **You are responsible for** your own API keys, cloud costs (AWS/GCP/Azure), IAM configurations, credential management, and infrastructure security. AKIOS cost kill-switches cover LLM API spend only — not compute, storage, or data transfer.
 - **Docker mode** provides strong policy-based security but does **not** enforce host filesystem permissions or kernel-level seccomp-bpf isolation. For maximum security, use native Linux with sudo.
 - **Performance varies** by instance type, region, load, and configuration. Published benchmarks are measured on AWS EC2 t4g.micro (ARM64) in us-east-1 and may not match your environment.
-- **PII redaction** uses regex pattern matching (50+ patterns, >95% accuracy) — it is not a substitute for professional data governance. Review output before sharing with external parties.
+- **PII redaction** uses regex pattern matching (44 patterns, >95% accuracy) — it is not a substitute for professional data governance. Review output before sharing with external parties.
 - **Audit logs** in Docker may lose up to ~100 events if the container is forcefully killed (SIGKILL) during a flush window. Use native Linux for zero-loss audit durability.
 
 AKIOS is **not responsible** for: cloud infrastructure charges, credential leaks, data breaches from misconfigured deployments, performance on untested platforms, or regulatory compliance decisions. See [LEGAL.md](LEGAL.md) and [SECURITY.md](SECURITY.md) for full details.
@@ -350,7 +350,7 @@ AKIOS is **not responsible** for: cloud infrastructure charges, credential leaks
 
 ## � Related Projects
 
-**[EnforceCore](https://github.com/akios-ai/EnforceCore)** — The open-source enforcement library (Apache-2.0) for AI agents. EnforceCore provides general-purpose policy enforcement, PII redaction, and audit trails for any agent framework. AKIOS is the complete production runtime built on top of it, adding kernel-level sandboxing, healthcare PII patterns, workflow orchestration, and compliance reporting.
+**[EnforceCore](https://github.com/akios-ai/EnforceCore)** — The open-source enforcement library (Apache-2.0) for AI agents. EnforceCore provides general-purpose policy enforcement, PII redaction, and audit trails for any agent framework. AKIOS is the complete production runtime built on top of it, adding kernel-level sandboxing, comprehensive PII redaction, workflow orchestration, and compliance reporting.
 
 ## �📄 License
 

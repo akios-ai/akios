@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     # EnforceCore integration (v1.2.0+, optional)
     use_enforcecore: bool = Field(
         False,
-        description="Enable EnforceCore integration for secret detection, content rules, compliance reports"
+        description="Enable EnforceCore integration for secret detection, content rules, security posture scoring"
     )
     enforcecore_content_rules: bool = Field(
         True,
@@ -197,6 +197,6 @@ class Settings(BaseSettings):
         """
         schema = cls.model_json_schema()
         schema["$schema"] = "https://json-schema.org/draft/2020-12/schema"
-        schema["$id"] = "https://akios.ai/schemas/config/v1.0"
+        schema["$id"] = "https://akios.ai/schemas/config/v1.4"
         return schema
 

@@ -1,10 +1,10 @@
-# AKIOS v1.2.2 CLI Reference
-**Document Version:** 1.2.2  
-**Date:** 2026-02-22  
+# AKIOS v1.4.0 CLI Reference
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.2.2 supports three deployment methods:
+AKIOS v1.4.0 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.0 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.0 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -144,7 +144,7 @@ akios setup --mock-mode
 ```
 
 **Features:**
-- **Provider Selection**: Choose from 6 AI providers (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock)
+- **Provider Selection**: Choose from 7 AI providers (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock, Ollama)
 - **Model Selection**: Pick specific models (gpt-4o, claude-3-sonnet, grok-3, etc.)
 - **API Key Validation**: Real-time format checking and test API calls
 - **Advanced Settings**: Configure budget limits and token controls
@@ -164,7 +164,7 @@ akios setup --mock-mode
 
 **Automation Options:**
 - `--defaults`: Uses recommended defaults for instant setup
-- `--provider {openai,anthropic,grok,mistral,google,bedrock}`: Pre-selects AI provider
+- `--provider {openai,anthropic,grok,mistral,google,bedrock,ollama}`: Pre-selects AI provider
 - `--mock-mode`: Enables mock mode without API keys
 - `--non-interactive`: Skips setup wizard entirely
 
@@ -182,10 +182,11 @@ AKIOS validates LLM provider and model compatibility at startup to prevent API f
 | **Mistral** | `mistral-small`, `mistral-medium`, `mistral-large` |
 | **Gemini** | `gemini-1.0-pro`, `gemini-1.5-pro`, `gemini-1.5-flash` |
 | **AWS Bedrock** | `anthropic.claude-3-5-haiku-20241022-v1:0`, `anthropic.claude-3-5-sonnet-20241022-v2:0`, `meta.llama3-1-8b-instruct-v1:0`, `amazon.titan-text-express-v1` |
+| **Ollama** | Any locally hosted model (e.g., `llama3`, `mistral`, `codellama`, `phi3`) |
 
 ### Validation Rules
 
-- **Provider Check**: Must be one of the 6 supported providers
+- **Provider Check**: Must be one of the 7 supported providers
 - **Model Check**: Model must be compatible with selected provider
 - **Case Insensitive**: Model names are matched case-insensitively (e.g., `GPT-4` works)
 - **Early Failure**: Invalid combinations are caught during configuration loading, not during workflow execution
@@ -529,19 +530,19 @@ akios clean --json
 
 **Safety:** Only removes `data/output/run_*` directories. Audit logs are never touched.
 
-### `akios compliance report` - Generate Compliance Reports
+### `akios compliance report` - Security Posture Reports
 
-Generate compliance reports for workflow execution and security validation.
+Generate security posture reports for workflow execution and security validation.
 
 ```bash
-# Generate compliance report for a workflow
+# Generate security posture report for a workflow
 akios compliance report hello-workflow.yml
 
-# Generate detailed compliance report
+# Generate detailed security posture report
 akios compliance report workflow.yml --type detailed
 
-# Export compliance report to file
-akios compliance report workflow.yml --output compliance-report.json
+# Export security posture report to file
+akios compliance report workflow.yml --output posture-report.json
 
 # Generate executive summary report
 akios compliance report workflow.yml --type executive --format txt
@@ -751,8 +752,8 @@ Display the fully interpolated and PII-redacted prompt that would be sent to the
 # Show the exact prompt the LLM will receive
 akios protect show-prompt workflow.yml
 
-# Show prompt for a healthcare template
-akios protect show-prompt templates/healthcare.yml
+# Show prompt for a workflow template
+akios protect show-prompt templates/document_ingestion.yml
 ```
 
 **Arguments:**

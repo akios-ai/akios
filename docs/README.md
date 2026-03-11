@@ -1,6 +1,6 @@
-# 📚 AKIOS v1.2.2 - Documentation
-**Document Version:** 1.2.2
-**Date:** 2026-02-25
+# 📚 AKIOS v1.4.0 - Documentation
+**Document Version:** 1.4.0
+**Date:** 2026-03-11
 
 **Complete user guide for AKIOS - Secure AI Workflow Execution**
 
@@ -42,7 +42,7 @@ Welcome to the official AKIOS documentation! This section contains all the guide
 - **[best-practices.md](best-practices.md)** - AKIOS development and deployment best practices
 
 ### For Organizations
-- **[Compliance Reporting](deployment.md#compliance--audit-trails)** - Cryptographic audit trails and compliance logging
+- **[Security & Audit](deployment.md#compliance--audit-trails)** - Cryptographic audit trails and security posture scoring
 - **[Integration Guides](integration/)** - API integration and document processing examples
 ## 📋 Templates & Examples
 
@@ -84,7 +84,7 @@ AKIOS is part of the [AKIOUD AI](https://github.com/akios-ai) ecosystem:
 
 | Project | License | Description |
 |---------|---------|-------------|
-| **[AKIOS](https://github.com/akios-ai/akios)** | GPL-3.0-only | Production runtime for secure AI agents — kernel sandbox, workflow engine, 4 agents, CLI, compliance reports |
+| **[AKIOS](https://github.com/akios-ai/akios)** | GPL-3.0-only | Production runtime for secure AI agents — kernel sandbox, workflow engine, 6 agents, CLI, security posture scoring |
 | **[EnforceCore](https://github.com/akios-ai/EnforceCore)** | Apache-2.0 | General-purpose enforcement library — policy engine, PII redaction, audit trails, framework integrations (LangChain, CrewAI, AutoGen) |
 
 EnforceCore is the enforcement foundation; AKIOS is the complete production runtime built on top of it.
@@ -105,4 +105,4 @@ EnforceCore is the enforcement foundation; AKIOS is the complete production runt
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS v1.2.2 - Where AI meets unbreakable security*
+*AKIOS v1.4.0 - Where AI meets unbreakable security*

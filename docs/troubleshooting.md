@@ -1,10 +1,10 @@
 # Troubleshooting Guide
-**Document Version:** 1.2.2  
+**Document Version:** 1.4.0  
 **Date:** 2026-02-23  
 
 **Resolve common AKIOS issues and configuration problems**
 
-This guide covers frequently encountered issues, their causes, and step-by-step solutions for AKIOS v1.2.2.
+This guide covers frequently encountered issues, their causes, and step-by-step solutions for AKIOS v1.4.0.
 
 ## Quick Diagnosis
 
@@ -321,6 +321,12 @@ AKIOS_FORCE_PULL=1 ./akios status
 
    # Gemini models
    AKIOS_LLM_PROVIDER=gemini AKIOS_LLM_MODEL=gemini-1.5-pro
+
+   # AWS Bedrock models
+   AKIOS_LLM_PROVIDER=bedrock AKIOS_LLM_MODEL=anthropic.claude-3-5-sonnet-20241022-v2:0
+
+   # Ollama models (local)
+   AKIOS_LLM_PROVIDER=ollama AKIOS_LLM_MODEL=llama3
    ```
 
 2. **Common mistakes:**
@@ -836,7 +842,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 
 2. **Pull specific version:**
    ```bash
-   docker pull akiosai/akios:v1.2.2
+   docker pull akiosai/akios:v1.4.0
    ```
 
 3. **Clear Docker cache:**
@@ -860,7 +866,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 1. **Check volume mounts:**
    ```bash
    # Ensure correct mount syntax
-   docker run -v $(pwd):/app akiosai/akios:v1.2.2
+   docker run -v $(pwd):/app akiosai/akios:v1.4.0
    ```
 
 2. **Fix file permissions:**

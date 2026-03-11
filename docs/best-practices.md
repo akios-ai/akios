@@ -1,5 +1,5 @@
 # Best Practices Guide
-**Document Version:** 1.2.2  
+**Document Version:** 1.4.0  
 **Date:** 2026-02-23  
 
 **Optimize AKIOS workflows for performance, security, and maintainability**
@@ -223,7 +223,7 @@ Always preview prompts before sending to LLM providers, especially when template
 # Preview the interpolated + PII-redacted prompt the LLM will receive
 akios protect show-prompt workflow.yml
 
-# Verify no sensitive data leaks (SSN, NPI, DEA, medical records, etc.)
+# Verify no sensitive data leaks (SSN, emails, credit cards, etc.)
 akios protect scan data/input/document.txt
 ```
 

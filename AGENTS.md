@@ -1,17 +1,17 @@
-# AKIOS v1.2.2 – Core Agents Reference
-**Document Version:** 1.2.2  
-**Date:** 2026-02-23  
+# AKIOS v1.4.0 – Core Agents Reference
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 
-**The 4 core agents that power AKIOS workflows with military-grade security.**
+**The 6 core agents that power AKIOS workflows with military-grade security.**
 
-AKIOS provides 4 specialized agents, each running inside the security cage with full audit logging, syscall sandboxing, and automatic PII redaction. These agents form the foundation of secure AI workflows.
+AKIOS provides 6 specialized agents, each running inside the security cage with full audit logging, syscall sandboxing, and automatic PII redaction. These agents form the foundation of secure AI workflows.
 
 ## 🔒 Security Guarantees (All Agents)
 
 Every agent execution includes:
 - **Process isolation** via cgroups v2 + seccomp-bpf
 - **Syscall filtering** blocking dangerous operations
-- **PII redaction** on all inputs/outputs (>95% accuracy, including healthcare: NPI, DEA, medical records)
+- **PII redaction** on all inputs/outputs (>95% accuracy)
 - **Cryptographic audit logging** of every action
 - **Cost/resource limits** with automatic kill-switches
 - **Sandbox enforcement** preventing system access
@@ -356,6 +356,118 @@ Safe, commonly needed commands:
 - **Process isolation**: Each command in separate sandboxed process
 - **Memory limits**: Automatic termination on excessive memory usage
 
+---
+
+## 🔔 Webhook Agent
+
+**Secure notification delivery to Slack, Discord, Teams, or any HTTP endpoint.**
+
+### Purpose
+Sends workflow notifications and alerts to external platforms with full PII redaction on message content and HTTPS enforcement.
+
+### Actions
+
+#### `notify` / `send`
+Send a notification to a platform or generic endpoint.
+```yaml
+- name: "alert_team"
+  agent: "webhook"
+  action: "notify"
+  parameters:
+    url: "https://hooks.slack.com/services/..."
+    message: "Workflow complete: {{ output }}"
+    platform: "slack"  # slack | discord | teams | generic
+```
+
+**Parameters:**
+- `url` (string): Webhook URL (HTTPS required)
+- `message` (string): Message content (PII automatically redacted)
+- `platform` (string, optional): `slack`, `discord`, `teams`, `generic` (default: `generic`)
+- `headers` (object, optional): Additional HTTP headers
+- `timeout` (int, optional): Request timeout in seconds (default: 30)
+
+**Returns:**
+- `status_code` (int): HTTP response status
+- `success` (boolean): Whether delivery was confirmed
+- `pii_redactions_applied` (int): PII items redacted from message
+
+### Security Controls
+- **HTTPS enforcement**: Plain `http://` blocked
+- **PII redaction**: All message content automatically redacted
+- **Rate limiting**: 10 requests per minute
+- **Retry policy**: 3 attempts with exponential backoff
+- **Audit logging**: Every notification logged
+
+---
+
+## 🗄️ Database Agent
+
+**Secure SQL queries against PostgreSQL or SQLite with injection prevention.**
+
+### Purpose
+Runs SQL queries against configured databases while enforcing parameterized-query-only execution, DDL blocking, row limits, and PII redaction on results.
+
+### Actions
+
+#### `query`
+Run a SELECT query and return results.
+```yaml
+- name: "fetch_records"
+  agent: "database"
+  action: "query"
+  parameters:
+    query: "SELECT id, status FROM orders WHERE created_at > ?"
+    params: ["2026-01-01"]
+    database: "orders.db"
+```
+
+#### `execute`
+Run a write statement (requires `allow_write: true` in config).
+```yaml
+- name: "update_status"
+  agent: "database"
+  action: "execute"
+  parameters:
+    query: "UPDATE orders SET status = ? WHERE id = ?"
+    params: ["processed", 42]
+```
+
+#### `count`
+Count rows matching a condition.
+```yaml
+- name: "count_pending"
+  agent: "database"
+  action: "count"
+  parameters:
+    table: "orders"
+    where: "status = 'pending'"
+```
+
+**Common Parameters:**
+- `query` (string): SQL query string (parameterized only — no string concatenation)
+- `params` (array, optional): Positional query parameters
+- `database` (string): SQLite file path or PostgreSQL DSN
+- `timeout` (int, optional): Query timeout seconds (default: 60)
+
+**Returns:**
+- `rows` (array): Query result rows (PII redacted)
+- `row_count` (int): Number of rows returned
+- `columns` (array): Column names
+
+### Security Controls
+- **Parameterized queries only**: No raw SQL string building
+- **SELECT only by default**: `allow_write: false` in config
+- **DDL always blocked**: CREATE, DROP, ALTER, TRUNCATE — no override possible
+- **Row limits**: Maximum 10,000 rows per query
+- **PII redaction**: All result data automatically redacted
+- **Audit logging**: Every query logged with redacted parameters
+
+### Backends
+- **SQLite**: Built-in, no extra dependencies
+- **PostgreSQL**: Requires `psycopg2` (`pip install psycopg2-binary`)
+
+---
+
 ## ⚙️ Agent Configuration
 
 All agents respect `config.yaml` settings:
@@ -367,7 +479,7 @@ max_tokens_per_call: 500       # LLM token limits
 
 # Security controls (All Agents)
 sandbox_enabled: true          # Syscall restrictions
-pii_redaction_enabled: true    # Auto PII masking (SSN, NPI, DEA, MRN, etc.)
+pii_redaction_enabled: true    # Auto PII masking (SSN, email, credit card, etc.)
 network_access_allowed: false  # HTTP agent control
 allowed_domains:               # Domain whitelist for HTTP agent
   - api.example.com
@@ -393,11 +505,14 @@ max_output_size: 1048576      # 1MB
 | Web scraping | **HTTP** + **Filesystem** | Fetch data, save results |
 | System monitoring | **Tool Executor** | Safe system commands |
 | Prompt inspection | **CLI** (`protect show-prompt`) | Preview interpolated + redacted LLM prompts |
+| Team notifications | **Webhook** | Slack/Discord/Teams delivery with PII redaction |
+| Structured data queries | **Database** | Safe SQL with injection prevention |
+| Workflow alerts | **Webhook** + **LLM** | Generate alert text, then notify |
 
 ## 🚨 Security Notes
 
 - **All agents run sandboxed** with kernel-level isolation
-- **PII redaction applied** to all inputs and outputs (including healthcare: NPI, DEA, MRN). If PII module is unavailable, data is blocked (never passed through raw).
+- **PII redaction applied** to all inputs and outputs. If PII module is unavailable, data is blocked (never passed through raw).
 - **Cost limits enforced** with automatic kill-switches
 - **Full audit trail** maintained for compliance
 - **Network access controlled** via domain whitelisting per agent capabilities

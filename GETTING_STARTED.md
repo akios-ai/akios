@@ -1,6 +1,6 @@
-# 🚀 AKIOS v1.2.2 - Get Started in 3 Minutes
-**Document Version:** 1.2.2  
-**Date:** 2026-02-23  
+# 🚀 AKIOS v1.4.0 - Get Started in 3 Minutes
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 
 **Secure AI workflows made simple.**
 
@@ -30,7 +30,7 @@ pipx install akios
 pip install akios
 
 # Or install a specific version:
-pip install akios==1.2.2
+pip install akios==1.4.0
 
 # Verify installation
 akios --version
@@ -43,14 +43,14 @@ akios init my-project
 **Containerized deployment works everywhere - no Python/dependencies needed**
 ```bash
 # Pull the Docker image
-docker pull akiosai/akios:v1.2.2
+docker pull akiosai/akios:v1.4.0
 
 # Initialize a new project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.0 init my-project
 
 # Run workflows
 cd my-project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.2.2 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.0 run templates/hello-workflow.yml
 ```
 
 **OR use the wrapper script for easier commands:**
@@ -153,7 +153,7 @@ allowed_domains:
 export AKIOS_ALLOWED_DOMAINS="api.salesforce.com,api.example.com"
 ```
 
-**Note:** LLM APIs (OpenAI, Anthropic, Grok, Mistral, Gemini) always bypass the whitelist.
+**Note:** LLM APIs (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, Ollama) always bypass the whitelist.
 
 ### 3. Create Your Project
 ```bash
@@ -224,7 +224,7 @@ akios audit rotate
 akios protect scan data/input/document_example.txt
 
 # Scan inline text for PII (auto-detected or use --text flag)
-akios protect scan --text "Patient John Smith, NPI 1234567893"
+akios protect scan --text "Contact John Smith, SSN 123-45-6789"
 
 # Preview the exact prompt sent to the LLM
 akios protect show-prompt workflow.yml
@@ -261,4 +261,4 @@ akios clean
 
 ---
 
-*AKIOS v1.2.2 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.4.0 - Where AI meets unbreakable security* 🛡️🤖
