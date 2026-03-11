@@ -521,49 +521,6 @@ class ComplianceRules:
                 examples=['3782-822463-10005', '371449635398431']
             ),
 
-            'iban': PIIPattern(
-                name='iban',
-                pattern=r'\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b',
-                compiled_pattern=re.compile(r'\b[A-Z]{2}\d{2}[A-Z0-9]{11,30}\b'),
-                category='financial',
-                sensitivity='high',
-                description='IBAN account numbers',
-                examples=['FR1420041010050500013M02606', 'DE89370400440532013000'],
-                priority=75
-            ),
-
-            'bic': PIIPattern(
-                name='bic',
-                pattern=r'\b(?:BIC|SWIFT|swift)\s*[:=]\s*[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b',
-                compiled_pattern=re.compile(r'\b(?:BIC|SWIFT|swift)\s*[:=]\s*[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}(?:[A-Z0-9]{3})?\b'),
-                category='financial',
-                sensitivity='medium',
-                description='BIC/SWIFT codes (requires context prefix to avoid false positives on English words)',
-                examples=['BIC: BNPAFRPP', 'SWIFT: DEUTDEFF']
-            ),
-
-            'routing_number': PIIPattern(
-                name='routing_number',
-                pattern=r'(?:routing|aba|transit)\s*(?:number|no|#)?[\s:]*\b(\d{9})\b',
-                compiled_pattern=re.compile(r'(?:routing|aba|transit)\s*(?:number|no|#)?[\s:]*\b(\d{9})\b', re.IGNORECASE),
-                category='financial',
-                sensitivity='high',
-                description='Bank routing numbers (ABA) — requires context keyword to reduce false positives on bare 9-digit numbers',
-                examples=['routing number 021000021', 'ABA: 123456789'],
-                priority=30,
-                context_keywords=['routing', 'aba', 'transit', 'bank', 'wire', 'ach']
-            ),
-
-            'wire_transfer': PIIPattern(
-                name='wire_transfer',
-                pattern=r'\b(WIRE|SWIFT|FEDWIRE)\s+(REF|REFERENCE|ID)[\s:]*[A-Z0-9\-]{6,}\b',
-                compiled_pattern=re.compile(r'\b(WIRE|SWIFT|FEDWIRE)\s+(REF|REFERENCE|ID)[\s:]*[A-Z0-9\-]{6,}\b', re.IGNORECASE),
-                category='financial',
-                sensitivity='high',
-                description='Wire transfer references',
-                examples=['WIRE REF: WT123456789', 'SWIFT ID: SF-ABC-123']
-            ),
-
             'paypal_email': PIIPattern(
                 name='paypal_email',
                 pattern=r'\b[A-Za-z0-9._%+-]+@paypal\.(com|de|fr|co\.uk)\b',
@@ -574,15 +531,11 @@ class ComplianceRules:
                 examples=['user@paypal.com', 'merchant@paypal.fr']
             ),
 
-            'crypto_wallet': PIIPattern(
-                name='crypto_wallet',
-                pattern=r'\b(0x[a-fA-F0-9]{40}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})\b',
-                compiled_pattern=re.compile(r'\b(0x[a-fA-F0-9]{40}|[13][a-km-zA-HJ-NP-Z1-9]{25,34})\b'),
-                category='financial',
-                sensitivity='high',
-                description='Cryptocurrency wallet addresses (BTC/Ethereum)',
-                examples=['1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2', '0x742d35Cc6634C0532925a3b844Bc454e4438f44e']
-            )
+            # ────────────────────────────────────────────────────────────
+            # Financial-regulated patterns (IBAN, BIC, routing number,
+            # wire transfer, cryptocurrency wallets)
+            # Removed in v1.4.0 (Goldilocks boundary enforcement)
+            # ────────────────────────────────────────────────────────────
         }
 
     def _load_health_patterns(self) -> Dict[str, PIIPattern]:
@@ -679,99 +632,11 @@ class ComplianceRules:
                 examples=['Emergency Contact: John Doe +1-555-123-4567', 'Next of Kin: Jane Smith (555) 987-6543']
             ),
 
-            'us_npi': PIIPattern(
-                name='us_npi',
-                pattern=r'\bNPI[\s:]*\d{10}\b',
-                compiled_pattern=re.compile(r'\bNPI[\s:]*\d{10}\b', re.IGNORECASE),
-                category='health',
-                sensitivity='high',
-                description='US National Provider Identifier (NPI)',
-                examples=['NPI: 1234567890', 'NPI:1234567890'],
-                priority=85
-            ),
-
-            'us_dea': PIIPattern(
-                name='us_dea',
-                pattern=r'\bDEA[\s:]*[A-Z]{1,2}\d{7}\b',
-                compiled_pattern=re.compile(r'\bDEA[\s:]*[A-Z]{1,2}\d{7}\b', re.IGNORECASE),
-                category='health',
-                sensitivity='high',
-                description='US Drug Enforcement Administration number',
-                examples=['DEA: AM9812345', 'DEA:AB1234567'],
-                priority=85
-            ),
-
-            'medical_record_number': PIIPattern(
-                name='medical_record_number',
-                pattern=r'\bMRN[-\s]?\d{3}[-\s]?\d{3}[-\s]?\d{4}\b',
-                compiled_pattern=re.compile(r'\bMRN[-\s]?\d{3}[-\s]?\d{3}[-\s]?\d{4}\b'),
-                category='health',
-                sensitivity='high',
-                description='Medical Record Numbers (MRN format)',
-                examples=['MRN-882-441-7739', 'MRN 882 441 7739'],
-                priority=85
-            ),
-
-            # v1.0.9: Insurance patterns (issue #10)
-            'insurance_policy': PIIPattern(
-                name='insurance_policy',
-                pattern=r'\b(?:HMO|PPO|EPO|POS|HDHP|BCBS|BC-BS|POL|POLICY)[-\s]?(?:[A-Z]{2}[-\s]?)?(?:\d{4}[-\s]?)?\d{4,12}\b',
-                compiled_pattern=re.compile(
-                    r'\b(?:HMO|PPO|EPO|POS|HDHP|BCBS|BC-BS|POL|POLICY)[-\s]?(?:[A-Z]{2}[-\s]?)?(?:\d{4}[-\s]?)?\d{4,12}\b',
-                    re.IGNORECASE
-                ),
-                category='health',
-                sensitivity='high',
-                description='US health/auto/home insurance policy numbers',
-                examples=['HMO-IL-2024-884712', 'BC-BS-987654321', 'POL-12345678', 'PPO-2024-556677'],
-                priority=80,
-                context_keywords=['policy', 'insurance', 'coverage', 'plan', 'premium', 'deductible', 'copay']
-            ),
-
-            'insurance_group': PIIPattern(
-                name='insurance_group',
-                pattern=r'\b(?:GRP|GROUP|EMP)[-\s]?\d{4,12}\b|\b(?:GRP|GROUP|EMP)[-\s]?\d{4}[-\s]?[A-Z]{2,6}\b',
-                compiled_pattern=re.compile(
-                    r'\b(?:GRP|GROUP|EMP)[-\s]?\d{4,12}\b|\b(?:GRP|GROUP|EMP)[-\s]?\d{4}[-\s]?[A-Z]{2,6}\b',
-                    re.IGNORECASE
-                ),
-                category='health',
-                sensitivity='high',
-                description='Insurance group numbers / employer group IDs',
-                examples=['GRP-44556789', 'GROUP-458923', 'EMP-2024-PHMC'],
-                priority=80,
-                context_keywords=['group', 'employer', 'plan', 'insurance', 'member']
-            ),
-
-            'insurance_claim': PIIPattern(
-                name='insurance_claim',
-                pattern=r'\b(?:CLM|CLAIM)[-\s]?\d{4}[-\s]?\d{3,8}\b',
-                compiled_pattern=re.compile(
-                    r'\b(?:CLM|CLAIM)[-\s]?\d{4}[-\s]?\d{3,8}\b',
-                    re.IGNORECASE
-                ),
-                category='health',
-                sensitivity='high',
-                description='Insurance claim reference numbers',
-                examples=['CLM-2024-001234', 'CLAIM-2024-56789'],
-                priority=80,
-                context_keywords=['claim', 'filed', 'adjudication', 'denied', 'approved', 'benefits']
-            ),
-
-            'prior_authorization': PIIPattern(
-                name='prior_authorization',
-                pattern=r'\b(?:PA|PRIOR[-\s]?AUTH)[-\s]?\d{4}[-\s]?\d{3,8}\b',
-                compiled_pattern=re.compile(
-                    r'\b(?:PA|PRIOR[-\s]?AUTH)[-\s]?\d{4}[-\s]?\d{3,8}\b',
-                    re.IGNORECASE
-                ),
-                category='health',
-                sensitivity='high',
-                description='Prior authorization numbers for medical treatments',
-                examples=['PA-2024-56789', 'PRIOR-AUTH-2024-12345'],
-                priority=80,
-                context_keywords=['authorization', 'prior', 'auth', 'approved', 'treatment', 'procedure']
-            ),
+            # ────────────────────────────────────────────────────────────
+            # Healthcare-regulated patterns (NPI, DEA, MRN, insurance
+            # policy/group/claim, prior authorization, Medicare MBI)
+            # Removed in v1.4.0 (Goldilocks boundary enforcement)
+            # ────────────────────────────────────────────────────────────
         }
 
     def _load_location_patterns(self) -> Dict[str, PIIPattern]:
@@ -843,16 +708,6 @@ class ComplianceRules:
                 sensitivity='high',
                 description='US Individual Taxpayer Identification Number (ITIN)',
                 examples=['912-78-1234', '999-88-5678']
-            ),
-
-            'medicare_mbi': PIIPattern(
-                name='medicare_mbi',
-                pattern=r'\b[1-9][A-Z](?:[A-Z0-9])[0-9]-[A-Z](?:[A-Z0-9])[0-9]-[A-Z]{2}[0-9]{2}\b',
-                compiled_pattern=re.compile(r'\b[1-9][A-Z](?:[A-Z0-9])[0-9]-[A-Z](?:[A-Z0-9])[0-9]-[A-Z]{2}[0-9]{2}\b'),
-                category='health',
-                sensitivity='high',
-                description='US Medicare Beneficiary Identifier (MBI, 11-char new format)',
-                examples=['1EG4-TE5-MK72']
             ),
 
             'vin': PIIPattern(
@@ -1013,7 +868,7 @@ def get_eu_ai_act_patterns() -> List[str]:
     """
     return [
         'email', 'phone_fr', 'phone_us', 'ssn', 'france_id',
-        'passport_eu', 'credit_card', 'iban', 'health_insurance_fr',
+        'passport_eu', 'credit_card', 'health_insurance_fr',
         'medical_record'
     ]
 

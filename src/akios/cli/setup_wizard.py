@@ -1,5 +1,5 @@
 """
-Interactive Setup Wizard for AKIOS v1.0.11
+Interactive Setup Wizard for AKIOS
 
 Provides step-by-step configuration prompts using questionary.
 Supports back/skip navigation and input validation.
@@ -35,6 +35,8 @@ class LLMProvider(str, Enum):
     GROK = "grok"
     MISTRAL = "mistral"
     GEMINI = "gemini"
+    BEDROCK = "bedrock"
+    OLLAMA = "ollama"
 
 
 class SetupWizardStep:
@@ -109,7 +111,7 @@ class InteractiveSetupWizard:
         step.display_header()
 
         if not self.is_interactive_available():
-            provider = input("\nEnter LLM provider (openai/anthropic/grok/mistral/gemini): ").lower().strip()
+            provider = input("\nEnter LLM provider (openai/anthropic/grok/mistral/gemini/bedrock/ollama): ").lower().strip()
             if provider not in [p.value for p in LLMProvider]:
                 print(f"⚠️ Invalid provider: {provider}")
                 return None
@@ -125,6 +127,8 @@ class InteractiveSetupWizard:
                     questionary.Choice(title="Grok (xAI)", value=LLMProvider.GROK.value),
                     questionary.Choice(title="Mistral", value=LLMProvider.MISTRAL.value),
                     questionary.Choice(title="Google Gemini", value=LLMProvider.GEMINI.value),
+                    questionary.Choice(title="AWS Bedrock (IAM auth)", value=LLMProvider.BEDROCK.value),
+                    questionary.Choice(title="Ollama (Local)", value=LLMProvider.OLLAMA.value),
                 ],
                 style=questionary.Style([
                     ("highlighted", f"fg:{get_theme_color('success')} bold"),

@@ -14,11 +14,11 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-PII Bridge — register AKIOS's 50+ patterns into EnforceCore's PatternRegistry (v1.2.0-beta)
+PII Bridge — register AKIOS’s 44 patterns into EnforceCore’s PatternRegistry (v1.2.0-beta)
 
-AKIOS has 3x more PII patterns than EnforceCore (50+ vs 7):
-- Healthcare: NPI, DEA, MRN, ICD-10 (GPL-3.0, cannot live in Apache-2.0 EnforceCore)
-- Financial: IBAN, SWIFT, cryptocurrency addresses
+AKIOS has more PII patterns than EnforceCore (44 vs 7):
+- Personal: SSN, French/German/UK IDs, EU passports, driver’s licenses
+- Financial: credit cards, PayPal
 - French identifiers, EU patterns
 
 This bridge registers AKIOS patterns INTO EnforceCore, making both engines use the
@@ -41,7 +41,7 @@ _REGISTERED_COUNT = 0
 
 def register_akios_patterns_into_enforcecore() -> int:
     """
-    Register AKIOS's 50+ PII patterns into EnforceCore's PatternRegistry.
+    Register AKIOS's 44 PII patterns into EnforceCore's PatternRegistry.
 
     Returns the number of patterns registered, or 0 if EnforceCore not available.
     Only registers once per process (cached after first call).

@@ -16,7 +16,7 @@
 """
 CLI compliance command - akios compliance <subcommand>
 
-Compliance reporting and status dashboard for workflow isolation.
+Security posture checks for workflow isolation.
 """
 
 import argparse
@@ -43,8 +43,8 @@ def register_compliance_command(subparsers: argparse._SubParsersAction) -> None:
     """
     parser = subparsers.add_parser(
         "compliance",
-        help="Generate compliance reports",
-        description="Generate compliance reports and view compliance status"
+        help="Security posture checks",
+        description="View security posture and compliance status"
     )
 
     subparsers_compliance = parser.add_subparsers(
@@ -56,7 +56,7 @@ def register_compliance_command(subparsers: argparse._SubParsersAction) -> None:
     # compliance report
     report_parser = subparsers_compliance.add_parser(
         "report",
-        help="Generate compliance report for a workflow"
+        help="Generate security posture report for a workflow"
     )
     report_parser.add_argument(
         "workflow",
@@ -66,7 +66,7 @@ def register_compliance_command(subparsers: argparse._SubParsersAction) -> None:
         "--type",
         choices=["basic", "detailed", "executive"],
         default="basic",
-        help="Type of compliance report (default: basic)"
+        help="Type of security posture report (default: basic)"
     )
     report_parser.add_argument(
         "--format",
@@ -88,7 +88,7 @@ def register_compliance_command(subparsers: argparse._SubParsersAction) -> None:
     # compliance eu-ai-act (v1.2.0-rc — requires EnforceCore)
     euaiact_parser = subparsers_compliance.add_parser(
         "eu-ai-act",
-        help="Generate EU AI Act compliance report (requires EnforceCore)"
+        help="Generate EU AI Act compliance assessment (requires EnforceCore)"
     )
     euaiact_parser.add_argument(
         "--organization",
@@ -118,7 +118,7 @@ def register_compliance_command(subparsers: argparse._SubParsersAction) -> None:
 
 def run_compliance_report(args: argparse.Namespace) -> int:
     """
-    Execute the compliance report command.
+    Execute the security posture report command.
 
     Args:
         args: Parsed command line arguments
@@ -156,7 +156,7 @@ def run_compliance_report(args: argparse.Namespace) -> int:
                 }, json_mode=True)
             else:
                 print_success(
-                    message=f"Generated compliance report for workflow '{args.workflow}'",
+                    message=f"Generated security posture report for workflow '{args.workflow}'",
                     details=[
                         f"Report Type: {args.type}",
                         f"Export Format: {args.format}",
@@ -178,7 +178,7 @@ def run_compliance_report(args: argparse.Namespace) -> int:
                 score = report.get('compliance_score', {})
                 
                 # Prepare report content
-                report_title = f"Compliance Report - {args.workflow}"
+                report_title = f"Security Posture Report - {args.workflow}"
                 report_content = f"""Generated: {metadata.get('generated_at', 'unknown')}
 Report Type: {args.type}
 
@@ -210,12 +210,12 @@ def run_compliance_help(args: argparse.Namespace) -> int:
         Exit code
     """
     help_content = """Commands:
-  report <workflow>        Generate compliance report
+  report <workflow>        Generate security posture report
 
 Report Types:
-  basic      - Cost, audit, and security compliance summary
+  basic      - Cost, audit, and security posture summary
   detailed   - Includes execution breakdown and model usage
-  executive  - High-level compliance overview
+  executive  - High-level security posture overview
 
 Export Formats:
   json       - Structured JSON format
@@ -227,8 +227,8 @@ Examples:
   akios compliance report fraud-detection --format txt       # Text export"""
 
     print_panel(
-        "AKIOS Compliance Reporting",
-        "Generate compliance reports and view compliance status for workflows.\n\n" + help_content,
+        "AKIOS Security Posture",
+        "Generate security posture reports and check compliance status for workflows.\n\n" + help_content,
         style=get_theme_color("info")
     )
 
@@ -237,7 +237,7 @@ Examples:
 
 def run_compliance_eu_ai_act(args: argparse.Namespace) -> int:
     """
-    Generate EU AI Act compliance report using EnforceCore (v1.2.0-rc).
+    Generate EU AI Act compliance assessment using EnforceCore (v1.2.0-rc).
 
     Requires: pip install akios[enforcecore]
     """

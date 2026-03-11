@@ -1,6 +1,6 @@
 # AKIOS Trademark Guidelines
-**Document Version:** 1.0  
-**Date:** 2026-01-26  
+**Document Version:** 1.4.0  
+**Date:** 2026-03-11  
 
 These guidelines cover use of the **AKIOS** name, logos, and related brand assets.
 

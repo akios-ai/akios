@@ -37,6 +37,8 @@ VALID_AGENTS: Dict[str, List[str]] = {
     "http": ["get", "post", "put", "delete"],
     "llm": ["complete", "chat"],
     "tool_executor": ["run"],
+    "webhook": ["notify", "send"],
+    "database": ["query", "execute", "count"],
 }
 
 

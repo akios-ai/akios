@@ -116,7 +116,7 @@ class LLMAgent(BaseAgent):
             required_var = self._get_required_env_var(self.provider_name)
             provider_name, api_url = self._get_provider_info(self.provider_name)
             raise AgentError(
-                f"🤖 AKIOS v1.0 requires a real {provider_name} API key for AI workflows.\n\n"
+                f"🤖 AKIOS requires a real {provider_name} API key for AI workflows.\n\n"
                 f"🚀 Quick Setup:\n"
                 f"1. Visit: {api_url}\n"
                 f"2. Create an API key\n"
@@ -241,7 +241,7 @@ class LLMAgent(BaseAgent):
             required_var = self._get_required_env_var(self.provider_name)
             provider_name, api_url = self._get_provider_info(self.provider_name)
             raise AgentError(
-                f"🤖 AKIOS v1.0 requires a real {provider_name} API key for AI workflows.\n\n"
+                f"🤖 AKIOS requires a real {provider_name} API key for AI workflows.\n\n"
                 f"🚀 Quick Setup (choose one):\n"
                 f"• Guided wizard: Run 'akios setup'\n"
                 f"• Manual setup:\n"

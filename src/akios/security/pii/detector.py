@@ -391,8 +391,6 @@ class RegexPIIDetector:
             return self._validate_phone(match)
         elif pattern_name == 'credit_card':
             return self._validate_credit_card(match)
-        elif pattern_name == 'iban':
-            return self._validate_iban(match)
         elif pattern_name == 'ip_address':
             return self._validate_ip_address(match)
         elif pattern_name == 'coordinates':
@@ -456,18 +454,6 @@ class RegexPIIDetector:
             return checksum % 10 == 0
 
         return luhn_checksum(card)
-
-    def _validate_iban(self, iban: str) -> bool:
-        """Validate IBAN format"""
-        # Remove spaces
-        iban = iban.replace(' ', '')
-
-        # Check basic format (2 letters + 2 digits + up to 30 alphanumerics)
-        if not re.match(r'^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$', iban):
-            return False
-
-        # Should be reasonable length
-        return 15 <= len(iban) <= 34
 
     def _validate_ip_address(self, ip: str) -> bool:
         """Validate IP address format"""

@@ -122,7 +122,7 @@ def get_command_descriptions() -> Dict[str, str]:
         "setup": "Interactive setup wizard for first-time configuration",
         "doctor": "Run diagnostics and security checks",
         "files": "Show available input and output files",
-        "compliance": "Generate compliance reports",
+        "compliance": "Security posture checks",
         "output": "Manage workflow outputs",
         "docs": "View documentation with beautiful Markdown rendering",
         "timeline": "View workflow execution timeline with performance analysis",

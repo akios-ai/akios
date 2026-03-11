@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://akios.ai/schemas/workflow/v1.1",
-  "version": "1.2.0",
+  "$id": "https://akios.ai/schemas/workflow/v1.4",
+  "version": "1.4.1",
   "title": "AKIOS Workflow Schema",
-  "description": "JSON schema for AKIOS workflow validation (v1.2 — adds parallel blocks, webhook/database agents, plugin support)",
+  "description": "JSON schema for AKIOS workflow validation (v1.4 — parallel blocks, 6 agents, 7 LLM providers, Goldilocks PII boundary)",
   "type": "object",
   "required": ["name", "description", "steps"],
   "properties": {

@@ -16,7 +16,7 @@
 """
 AKIOS compliance module.
 
-Provides compliance reporting and validation functionality.
+Provides security posture scoring and validation functionality.
 """
 
 from .report import ComplianceGenerator, get_compliance_generator

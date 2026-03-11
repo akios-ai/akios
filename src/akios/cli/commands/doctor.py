@@ -153,6 +153,10 @@ def check_api_key() -> Dict[str, Any]:
     if os.environ.get("AWS_DEFAULT_REGION") or os.environ.get("AKIOS_BEDROCK_REGION"):
         configured.append("Bedrock")
 
+    # Check Ollama (local, no API key needed)
+    if os.environ.get("OLLAMA_BASE_URL") or os.environ.get("OLLAMA_HOST"):
+        configured.append("Ollama")
+
     # Check mock mode
     if os.environ.get("AKIOS_MOCK_LLM") == "1":
         return _check("API provider", PASS, "Mock mode active (safe testing, no costs)")
@@ -246,13 +250,13 @@ def check_enforcecore() -> Dict[str, Any]:
         return _check(
             "EnforceCore",
             PASS,
-            f"{version} — secret detection, content rules, compliance reports available",
+            f"{version} — secret detection, content rules, security posture scoring available",
         )
     except ImportError:
         return _check(
             "EnforceCore",
             WARN,
-            "Not installed (optional — enables secret detection + compliance reports)",
+            "Not installed (optional — enables secret detection + security posture scoring)",
             suggestion="pip install 'akios[enforcecore]'",
         )
     except Exception as e:

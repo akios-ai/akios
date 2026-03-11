@@ -469,7 +469,7 @@ exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v{__version__} "$@"
 
 def create_default_config() -> str:
     """Create default config.yaml content"""
-    return """# AKIOS v1.0 Configuration
+    return """# AKIOS Configuration
 # Security-first defaults - modify carefully
 
 # Security cage essentials
@@ -602,7 +602,7 @@ steps:
   - step: 2
     agent: llm
     config:
-      provider: grok  # Options: openai, anthropic, grok, mistral, gemini
+      provider: grok  # Options: openai, anthropic, grok, mistral, gemini, bedrock, ollama
       api_key: "${GROK_API_KEY}"  # Or ${OPENAI_API_KEY}, ${ANTHROPIC_API_KEY}, ${MISTRAL_API_KEY}, ${GEMINI_API_KEY}
       model: "grok-3"  # Or gpt-4o-mini, claude-3.5-sonnet
     action: complete
@@ -662,9 +662,14 @@ def create_akios_env() -> str:
 # AKIOS_BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
 # AKIOS_BEDROCK_REGION=us-east-1
 
+# Ollama (local): https://ollama.com/ (no API key needed — runs locally)
+# OLLAMA_BASE_URL=http://localhost:11434
+# AKIOS_LLM_PROVIDER=ollama
+# AKIOS_LLM_MODEL=llama3
+
 # === LLM SETTINGS ===
 # Default LLM provider and model
-# AKIOS_LLM_PROVIDER=openai  # Options: openai, anthropic, grok, mistral, gemini, bedrock
+# AKIOS_LLM_PROVIDER=openai  # Options: openai, anthropic, grok, mistral, gemini, bedrock, ollama
 # AKIOS_LLM_MODEL=gpt-4o-mini  # Or claude-3.5-sonnet, grok-4.1-fast
 
 # === DEVELOPMENT ===
@@ -712,8 +717,13 @@ def create_env_example() -> str:
 # AKIOS_BEDROCK_MODEL_ID=anthropic.claude-3-sonnet-20240229-v1:0
 # AKIOS_BEDROCK_REGION=us-east-1
 
+# Ollama (local): https://ollama.com/ (no API key needed — runs locally)
+# OLLAMA_BASE_URL=http://localhost:11434
+# AKIOS_LLM_PROVIDER=ollama
+# AKIOS_LLM_MODEL=llama3
+
 # === AKIOS SETTINGS ===
-# Default LLM provider and model (Options: openai, anthropic, grok, mistral, gemini, bedrock)
+# Default LLM provider and model (Options: openai, anthropic, grok, mistral, gemini, bedrock, ollama)
 # Provider is auto-detected from your API key — these are optional overrides.
 # AKIOS_LLM_PROVIDER=grok
 # AKIOS_LLM_MODEL=grok-3
@@ -794,7 +804,7 @@ Welcome to your AKIOS (AI Knowledge & Intelligence Operating System) project! Th
 
    **Direct Docker (if you do not have `{get_command_prefix()}`):**
    ```bash
-   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.11 run templates/hello-workflow.yml
+   docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.1 run templates/hello-workflow.yml
    ```
 
 2. **Configure for API workflows** (if using batch_processing.yml):
@@ -811,6 +821,8 @@ Welcome to your AKIOS (AI Knowledge & Intelligence Operating System) project! Th
    # For Grok: GROK_API_KEY=xai-your-key-here
    # For Mistral: MISTRAL_API_KEY=your-mistral-key-here
    # For Gemini: GEMINI_API_KEY=your-gemini-key-here
+   # For Bedrock: AWS_DEFAULT_REGION=us-east-1 (uses IAM)
+   # For Ollama: OLLAMA_BASE_URL=http://localhost:11434 (local, no key needed)
    ```
 
 ## 📁 Project Structure
@@ -863,7 +875,7 @@ AKIOS comes with 4 pre-built workflow templates. Here's what each one does:
 {FILE_ANALYSIS_COMMAND}
 
 # Direct Docker (if you do not have {get_command_prefix()})
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.0.11 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.1 run templates/hello-workflow.yml
 ```
 
 ### Creating Custom Workflows
@@ -911,7 +923,7 @@ AKIOS provides 18 commands organized by function:
 | `{get_command_prefix()} audit export` | Export cryptographic audit reports (JSON) |
 | `{get_command_prefix()} audit verify` | Verify Merkle-chain integrity of audit trail |
 | `{get_command_prefix()} audit log` | View recent audit log entries |
-| `{get_command_prefix()} compliance report <file>` | Generate compliance reports (basic/detailed/executive) |
+| `{get_command_prefix()} compliance report <file>` | Security posture check (basic/detailed/executive) |
 | `{get_command_prefix()} logs` | Show recent workflow execution logs |
 
 ### File Management

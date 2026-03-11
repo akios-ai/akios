@@ -13,7 +13,7 @@ from akios.core.ui.colors import Colors
 CONFIG_DIR = Path.home() / ".akios"
 INITIALIZED_FILE = CONFIG_DIR / ".initialized"
 
-TAGLINE = "Secure AI Runtime v1.0"
+TAGLINE = "Secure AI Runtime"
 
 def should_show_logo() -> bool:
     """

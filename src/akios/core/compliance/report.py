@@ -14,9 +14,9 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 """
-Compliance report generator for AKIOS.
+Security posture report generator for AKIOS.
 
-Generates compliance reports for workflow execution and security validation.
+Generates security posture reports for workflow execution and security validation.
 Scores are computed from real runtime data — audit ledger, cage status,
 budget configuration — never hardcoded.
 """
@@ -66,7 +66,7 @@ def _check_sandbox_available() -> bool:
 
 class ComplianceGenerator:
     """
-    Generates compliance reports for AKIOS workflows.
+    Generates security posture reports for AKIOS workflows.
 
     Scores are derived from real data:
     - Security score: cage status, PII redaction, sandbox, syscall filtering
@@ -239,7 +239,7 @@ class ComplianceGenerator:
         findings = []
 
         if not security.get("_settings_available"):
-            findings.append("Settings not available — cannot assess compliance")
+            findings.append("Settings not available — cannot assess security posture")
             return findings
 
         if not security.get("pii_redaction"):
@@ -274,13 +274,13 @@ class ComplianceGenerator:
         if not cost.get("budget_configured"):
             recs.append("Set budget limit: add budget_limit_per_run to config.yaml")
         if audit.get("event_count", 0) == 0:
-            recs.append("Run a workflow to generate audit data for compliance assessment")
+            recs.append("Run a workflow to generate audit data for security posture assessment")
 
         return recs
 
     def generate_report(self, workflow_name: str, report_type: str = "basic") -> Dict[str, Any]:
         """
-        Generate a compliance report for a workflow.
+        Generate a security posture report for a workflow.
 
         All scores are computed from real runtime data.
 
@@ -289,7 +289,7 @@ class ComplianceGenerator:
             report_type: Type of report (basic, detailed, executive)
 
         Returns:
-            Compliance report data
+            Security posture report data
         """
         now = datetime.now(tz=timezone.utc)
 
@@ -388,7 +388,7 @@ class ComplianceGenerator:
     def export_report(self, report: Dict[str, Any], format: str = "json",
                      output_file: Optional[str] = None) -> str:
         """
-        Export a compliance report to a file.
+        Export a security posture report to a file.
 
         Args:
             report: Report data to export
@@ -410,8 +410,8 @@ class ComplianceGenerator:
         else:
             # Text format
             with open(output_path, 'w') as f:
-                f.write(f"AKIOS Compliance Report\n")
-                f.write(f"======================\n\n")
+                f.write(f"AKIOS Security Posture Report\n")
+                f.write(f"==============================\n\n")
                 f.write(f"Workflow: {report['workflow_name']}\n")
                 f.write(f"Status: {report['compliance_status']}\n")
                 f.write(f"Generated: {report['timestamp']}\n\n")

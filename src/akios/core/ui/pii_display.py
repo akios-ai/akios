@@ -10,7 +10,7 @@ Features:
   - Detailed discovery reports with line/position information
   - Progress tracking for large file analyses
   - Export-friendly formatting
-  - Compliance report generation
+  - Security posture report formatting
 """
 
 from typing import Dict, List, Optional, Any
