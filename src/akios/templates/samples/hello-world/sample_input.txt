@@ -1,0 +1,19 @@
+Greetings from the AKIOS sample data repository!
+
+This is a sample text file to demonstrate the hello-workflow template.
+When you run the hello-workflow.yml template, it will:
+
+1. Read this file using the filesystem agent
+2. Send the content to your LLM provider (OpenAI/Anthropic/Grok/Mistral/Gemini)
+3. Generate a creative AI response
+4. Save the AI-generated content to a new file
+
+This demonstrates the complete AKIOS workflow:
+- Secure file access with path restrictions
+- AI API integration with cost controls
+- Result storage with audit logging
+
+Try it out with: akios run templates/hello-workflow.yml
+
+Note: This file contains sample data for testing purposes.
+License: MIT (sample data - free for testing)

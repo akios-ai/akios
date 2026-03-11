@@ -1,10 +1,10 @@
 # Security Features
-**Document Version:** 1.4.0  
+**Document Version:** 1.4.1  
 **Date:** 2026-02-22  
 
 ## Security Overview
 
-AKIOS v1.4.0 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
+AKIOS v1.4.1 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
 
 ## Supported Versions
 
@@ -241,7 +241,7 @@ AKIOS audit exports are designed for regulatory examination across sectors:
 
 | Sector | Regulation | Compliance Features |
 |--------|-----------|-------------------|
-| Healthcare | HIPAA, HITECH | Audit logging, access proof (full PHI redaction in the premium tier) |
+| Healthcare | HIPAA, HITECH | Audit logging, access proof |
 | Banking | PCI-DSS, BSA-AML, GLBA | Financial PII redaction, transaction audit |
 | Insurance | NAIC, State DOI | Claim data protection, fraud detection audit |
 | Accounting | SOX 302/404, PCAOB | Financial audit trail, control verification |

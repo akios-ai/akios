@@ -1,0 +1,46 @@
+AKIOS CORPORATION - CONFIDENTIAL DOCUMENT
+
+Project Status Report
+Date: January 15, 2026
+
+Project Lead: Sarah Johnson
+Email: sarah.johnson@example.com
+Phone: +1 (555) 123-4567
+
+Team Members:
+- John Smith (john.smith@example.com) - Senior Developer
+- Maria Garcia (maria.garcia@example.com) - QA Engineer
+- David Chen (david.chen@example.com) - DevOps Engineer
+
+Client Contact:
+Name: Robert Wilson
+Company: TechCorp Industries
+Email: r.wilson@techcorp.com
+Phone: +1 (555) 987-6543
+SSN: 123-45-6789
+
+Project Overview:
+This document contains sensitive information about our AI security project.
+The project involves developing advanced sandboxing technology for LLM applications.
+
+Key Deliverables:
+1. Complete security audit framework
+2. Automated PII redaction system
+3. Real-time cost monitoring for AI APIs
+4. Comprehensive audit trail generation
+
+Budget Information:
+Total Budget: $500,000
+Spent to Date: $125,000
+Credit Card for Expenses: 4111-1111-1111-1111
+
+Security Notes:
+- All PII data must be redacted before AI processing
+- Audit logs must be tamper-evident
+- Cost limits must prevent budget overruns
+
+This document demonstrates AKIOS's PII redaction capabilities.
+When processed through document_ingestion.yml, sensitive data above will be automatically masked.
+
+Sample data for testing - contains realistic PII examples
+License: MIT (sample data for testing purposes only)

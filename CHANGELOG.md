@@ -1,5 +1,5 @@
 # Changelog
-**Document Version:** 1.4.0
+**Document Version:** 1.4.1
 **Date:** 2026-03-11
 
 All notable changes to AKIOS will be documented in this file.
@@ -7,14 +7,22 @@ All notable changes to AKIOS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-03-11
+
+### Fixed — Hotfix
+
+- Removed internal product-name references from all public-facing files (P10 gate compliance)
+- Restored `_load_health_patterns` / `_load_location_patterns` function definitions in PII rules module
+- Corrected CHANGELOG migration language to use neutral phrasing
+
 ## [1.4.0] - 2026-03-11
 
 ### Changed — "Goldilocks" (PII Boundary Enforcement)
 
-#### ⚠️ BREAKING: Healthcare & Financial PII Patterns Moved to Premium Tier
+#### ⚠️ BREAKING: Healthcare & Financial PII Patterns Removed from OSS
 
-The following PII patterns have been **removed from AKIOS OSS** and are now exclusive
-to the premium tier for regulated-industry compliance:
+The following PII patterns have been **removed from AKIOS OSS** as part of the
+Goldilocks boundary enforcement for regulated-industry compliance:
 
 **Healthcare patterns removed (8):**
 - `us_npi` — US National Provider Identifier
@@ -47,7 +55,7 @@ to the premium tier for regulated-industry compliance:
 
 #### Migration Guide
 If your workflows depend on NPI, DEA, MRN, IBAN, BIC, routing number, wire transfer, or
-crypto wallet detection, upgrade to the premium tier for continued coverage. All other patterns
+crypto wallet detection, contact us for continued regulated-industry coverage. All other patterns
 continue to work identically.
 
 ### Updated

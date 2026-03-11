@@ -1,10 +1,10 @@
 # Troubleshooting Guide
-**Document Version:** 1.4.0  
+**Document Version:** 1.4.1  
 **Date:** 2026-02-23  
 
 **Resolve common AKIOS issues and configuration problems**
 
-This guide covers frequently encountered issues, their causes, and step-by-step solutions for AKIOS v1.4.0.
+This guide covers frequently encountered issues, their causes, and step-by-step solutions for AKIOS v1.4.1.
 
 ## Quick Diagnosis
 
@@ -842,7 +842,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 
 2. **Pull specific version:**
    ```bash
-   docker pull akiosai/akios:v1.4.0
+   docker pull akiosai/akios:v1.4.1
    ```
 
 3. **Clear Docker cache:**
@@ -866,7 +866,7 @@ All other security guarantees (PII redaction, sandboxing, path/command restricti
 1. **Check volume mounts:**
    ```bash
    # Ensure correct mount syntax
-   docker run -v $(pwd):/app akiosai/akios:v1.4.0
+   docker run -v $(pwd):/app akiosai/akios:v1.4.1
    ```
 
 2. **Fix file permissions:**

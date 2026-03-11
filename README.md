@@ -158,7 +158,7 @@ Hard budget limits ($1 default) with automatic workflow termination. Token track
 OpenAI, Anthropic, Grok (xAI), Mistral, Gemini, AWS Bedrock, Ollama — swap providers in one line of config. All calls are sandboxed, audited, and budget-tracked.
 
 ### 🏥 Industry Templates
-Accounting (SOX), Government (FedRAMP), Legal, Insurance — production-ready sector workflows out of the box. Healthcare (HIPAA) and Banking (PCI-DSS) templates available in the premium tier.
+Accounting (SOX), Government (FedRAMP), Legal, Insurance — production-ready sector workflows out of the box.
 
 </td>
 </tr>

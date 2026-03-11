@@ -1,0 +1,30 @@
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+"""
+PII Detection and Redaction Module
+
+Provides PII detection and redaction functionality for AKIOS.
+PII redaction is mandatory for compliance and cannot be disabled.
+
+v1.0.9: Added PIIDetectorProtocol for pluggable backends.
+"""
+
+from .protocols import PIIDetectorProtocol, create_pii_detector as create_pluggable_detector
+from .detector import RegexPIIDetector, PIIDetector, create_pii_detector
+from .redactor import PIIRedactor, create_pii_redactor
+from .redactor import apply_pii_redaction  # Convenience function
+
+__all__ = ["PIIDetector", "PIIRedactor", "apply_pii_redaction", "create_pii_detector", "create_pii_redactor"]

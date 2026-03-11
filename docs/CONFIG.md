@@ -1,5 +1,5 @@
-# AKIOS v1.4.0 – Configuration Reference
-**Document Version:** 1.4.0  
+# AKIOS v1.4.1 – Configuration Reference
+**Document Version:** 1.4.1  
 **Date:** 2026-03-11  
 
 **Complete configuration guide for the AKIOS security cage.**
@@ -211,7 +211,7 @@ Automatically detects and redacts:
 - API keys and passwords
 - Dates of birth, driver's licenses, passport numbers
 - French health insurance (Carte Vitale), national IDs
-- 44 patterns across 6 categories (additional healthcare/financial patterns available in the premium tier)
+- 44 patterns across 6 categories
 
 ```yaml
 pii_redaction_enabled: true  # Recommended: always true
@@ -391,7 +391,7 @@ export AKIOS_LOG_LEVEL=DEBUG
 ## 📋 Complete Example Configuration
 
 ```yaml
-# AKIOS v1.4.0 Production Configuration
+# AKIOS v1.4.1 Production Configuration
 # Security-maximized settings for production workloads
 
 # Security cage - maximum protection
