@@ -1,11 +1,20 @@
 # Changelog
-**Document Version:** 1.4.3
+**Document Version:** 1.4.4
 **Date:** 2026-03-12
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.4.4] - 2026-03-12
+
+### Fixed — Documentation Patch
+
+- **37 stale v1.4.2 body-text references** across 16 docs/ files (quickstart, cli-reference, troubleshooting, deployment, configuration, CONFIG, README, migration-guide, ec2-performance-testing, rich-ui, security, workflow-schema, document-processing, api-integration) — all bumped to v1.4.4
+- **9 root markdown files with stale Document Version headers** — LEGAL.md (was 1.0.13), TRADEMARKS.md (was 1.4.0), THIRD_PARTY_LICENSES.md (was 1.4.0), SECURITY.md (was 1.4.1), CONTRIBUTING.md (was 1.4.1), SUPPORT.md (was 1.4.1), TROUBLESHOOTING.md (was 1.4.1), ROADMAP.md (was 1.4.1) — all bumped to 1.4.4
+- Fixed stale "GPT-3.5" model description in first-run setup wizard (now "GPT-4o, GPT-4o-mini")
+- **Patched release process** — Upgraded P6 (stale version check) from WARN to HARD gate; added comprehensive all-versions grep that catches refs from ANY prior release, not just the immediate predecessor; added missing files to bump-version.sh (docs/integration/, docs/workflow-schema.md, docs/theme-customization.md, docs/accessibility-guide.md, docs/detection-system.md, docs/examples.md, TRADEMARKS.md, THIRD_PARTY_LICENSES.md, LEGAL.md)
 
 ## [1.4.3] - 2026-03-12
 

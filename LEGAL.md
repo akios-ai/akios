@@ -1,6 +1,6 @@
 # AKIOS Legal Information & Disclaimers
-**Document Version:** 1.0.13  
-**Date:** 2026-02-22  
+**Document Version:** 1.4.4  
+**Date:** 2026-03-12  
 
 ---
 

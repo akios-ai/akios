@@ -963,7 +963,7 @@ AKIOS_MOCK_MODE=false
         info = {
             'openai': {
                 'name': 'OpenAI',
-                'description': 'Access to GPT-3.5, GPT-4, and other models',
+                'description': 'Access to GPT-4o, GPT-4o-mini, and other models',
                 'signup_url': 'https://platform.openai.com/api-keys'
             },
             'anthropic': {
