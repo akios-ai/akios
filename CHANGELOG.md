@@ -1,11 +1,25 @@
 # Changelog
-**Document Version:** 1.4.2
+**Document Version:** 1.4.3
 **Date:** 2026-03-12
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.4.3] - 2026-03-12
+
+### Fixed — Hotfix
+
+- **Ollama blocked at security gate** — Added `ollama` to `allowed_providers` in settings (workflows with `provider: "ollama"` were rejected by `SecurityViolationError`)
+- **Ollama models rejected** — Added common Ollama model names (`llama3.2`, `llama3`, `mistral`, `codellama`, `phi3`, etc.) to `allowed_models`
+- **GPL §6 compliance** — Updated Dockerfile `SOURCE.txt` source pointer from stale `v1.0.16`/`v1.2.2` to `v1.4.3`
+- **`allowed_commands` mismatch** — Aligned global settings default (was 9 commands) with tool_executor default (22 commands) — workflows using `sort`, `uniq`, `find`, etc. no longer rejected
+- Fixed stale `gpt-3.5-turbo` references in AGENTS.md, quickstart.md, and setup wizard (actual default: `gpt-4o-mini`)
+- Removed stale `(v1.0.13+)` version annotations from AGENTS.md
+- Fixed stale Docker image tags in `akios init` generated READMEs (`v1.4.1` → `v1.4.3`)
+- Fixed stale version refs in `src/akios/README.md`, `workflow_schema.json`, TLA+ spec
+- Updated all doc version headers and dates to 1.4.3
 
 ## [1.4.2] - 2026-03-12
 

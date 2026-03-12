@@ -59,7 +59,7 @@ ARG BUILD_TIMESTAMP
 # OCI Labels for container metadata and GPL-3.0-only compliance
 LABEL org.opencontainers.image.title="AKIOS - Secure AI Workflow Engine"
 LABEL org.opencontainers.image.description="GPL-3.0-only licensed AI agent execution engine with military-grade security"
-LABEL org.opencontainers.image.version="1.4.2"
+LABEL org.opencontainers.image.version="1.4.3"
 LABEL org.opencontainers.image.source="https://github.com/akios-ai/akios"
 LABEL org.opencontainers.image.licenses="GPL-3.0-only"
 LABEL org.opencontainers.image.vendor="AKIOUD AI, SAS"
@@ -106,11 +106,11 @@ RUN echo "SOURCE AVAILABILITY\n\
 This Docker image contains GPL-3.0-only licensed software.\n\
 GPL-3.0-only requires that corresponding source code be available.\n\
 \n\
-Source Location: https://github.com/akios-ai/akios/releases/tag/v1.0.16\n\
-Build Instructions: See https://github.com/akios-ai/akios/blob/v1.2.2/GETTING_STARTED.md\n\
+Source Location: https://github.com/akios-ai/akios/releases/tag/v1.4.3\n\
+Build Instructions: See https://github.com/akios-ai/akios/blob/v1.4.3/GETTING_STARTED.md\n\
 License Text: See /usr/share/akios/legal/LICENSE\n\
 \n\
-Source Availability Commitment: 3 years minimum (until 2029-02-11)\n\
+Source Availability Commitment: 3 years minimum (until 2029-03-12)\n\
 This source will remain available for at least 3 years from the release date.\n\
 Earlier versions remain available via GitHub releases history.\n\
 \n\

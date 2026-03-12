@@ -106,7 +106,7 @@ class Settings(BaseSettings):
 
     # LLM provider controls
     allowed_providers: List[str] = Field(
-        ["openai", "anthropic", "grok", "mistral", "gemini", "bedrock"],
+        ["openai", "anthropic", "grok", "mistral", "gemini", "bedrock", "ollama"],
         description="Allowed LLM providers for security"
     )
     allowed_models: List[str] = Field(
@@ -133,6 +133,10 @@ class Settings(BaseSettings):
             "meta.llama3-1-405b-instruct-v1:0",
             "amazon.titan-text-express-v1",
             "amazon.titan-text-lite-v1",
+            # Ollama (local models — common defaults)
+            "llama3.2", "llama3.1", "llama3", "llama2",
+            "mistral", "mixtral", "codellama", "phi3",
+            "gemma2", "gemma", "qwen2.5", "deepseek-r1",
         ],
         description="Allowed LLM model identifiers (security restriction)"
     )
@@ -140,7 +144,13 @@ class Settings(BaseSettings):
 
     # Tool executor controls
     allowed_commands: List[str] = Field(
-        ["echo", "cat", "grep", "head", "tail", "wc", "ls", "pwd", "date"],
+        [
+            "echo", "cat", "grep", "head", "tail",
+            "wc", "sort", "uniq", "cut", "tr",
+            "date", "pwd", "ls", "find", "ps",
+            "df", "free", "sh", "true", "false",
+            "sleep", "env", "file",
+        ],
         description="Globally allowed commands for tool_executor agent"
     )
 
