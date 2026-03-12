@@ -1,8 +1,8 @@
-# AKIOS v1.4.1 Workflow Schema Guide
-**Document Version:** 1.4.1  
+# AKIOS v1.4.2 Workflow Schema Guide
+**Document Version:** 1.4.2  
 **Date:** 2026-03-11  
 
-**Version 1.4.1** | **Last Updated:** March 11, 2026
+**Version 1.4.2** | **Last Updated:** March 12, 2026
 
 ## Overview
 
@@ -53,7 +53,7 @@ AKIOS supports 6 agents:
 |-------|---------|------------------|
 | `llm` | AI language model calls | `complete`, `chat` |
 | `http` | Web API calls | `get`, `post`, `put`, `delete` |
-| `filesystem` | File operations | `read`, `write`, `stat` |
+| `filesystem` | File operations | `read`, `write`, `list`, `exists`, `stat` |
 | `tool_executor` | System commands | `run` |
 | `webhook` | Notifications (Slack, Discord, Teams) | `notify`, `send` |
 | `database` | SQL queries (PostgreSQL, SQLite) | `query`, `execute`, `count` |
@@ -75,16 +75,16 @@ steps:
 
 ### Unknown Agent
 
-**Error:** `Step 1 uses unknown agent 'gpt'. Valid agents: filesystem, http, llm, tool_executor`
+**Error:** `Step 1 uses unknown agent 'gpt'. Valid agents: filesystem, http, llm, tool_executor, webhook, database`
 
-**Fix:** Use one of the 4 supported agents:
+**Fix:** Use one of the 6 supported agents:
 ```yaml
 agent: llm  # ← Use llm instead of gpt
 ```
 
 ### Invalid Action for Agent
 
-**Error:** `Step 1: action 'execute' not allowed for agent 'filesystem'. Must be one of: read, write, stat`
+**Error:** `Step 1: action 'execute' not allowed for agent 'filesystem'. Must be one of: read, write, list, exists, stat`
 
 **Fix:** Use an action supported by that agent:
 ```yaml
@@ -242,7 +242,7 @@ parameters:
 | Problem | Symptom | Solution |
 |---------|---------|----------|
 | Missing action | `missing required field 'action'` | Add `action:` to your step |
-| Wrong agent | `unknown agent 'xyz'` | Use one of: llm, http, filesystem, tool_executor |
+| Wrong agent | `unknown agent 'xyz'` | Use one of: llm, http, filesystem, tool_executor, webhook, database |
 | Invalid action | `action not allowed` | Check the action table for your agent |
 | Wrong structure | `must be a dictionary` | Ensure proper YAML indentation |
 

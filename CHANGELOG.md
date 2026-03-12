@@ -1,11 +1,32 @@
 # Changelog
-**Document Version:** 1.4.1
-**Date:** 2026-03-11
+**Document Version:** 1.4.2
+**Date:** 2026-03-12
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.4.2] - 2026-03-12
+
+### Added
+
+- **Ollama provider** — Full runtime implementation for locally-hosted open-source models (Llama, Mistral, Gemma, Phi, etc.) via the Ollama REST API. No API key required. Default model: `llama3.2`. Configurable via `OLLAMA_HOST` / `OLLAMA_BASE_URL` environment variables.
+- Commercial offerings breadcrumb in README for organizations needing extended PII coverage
+
+### Fixed
+
+- Corrected class names in API reference (`HttpAgent` → `HTTPAgent`, `LlmAgent` → `LLMAgent`)
+- Fixed default model in API reference (`gpt-3.5-turbo` → `gpt-4o-mini`)
+- Removed false "Industry Templates" claim from README
+- Fixed CLI command count across all docs (was "18", actual is 21)
+- Fixed `cage down` documentation to correctly state that `data/input/` is preserved (not destroyed)
+- Updated stale version strings (`1.0.16` → `1.4.1`) in CLI reference
+- Added missing agents (webhook, database) to workflow schema error examples
+- Added missing filesystem actions (list, exists) to workflow schema
+- Fixed stale dates across documentation files
+- Removed obsolete model names from CLI reference (gpt-3.5-turbo, gpt-4)
+- Fixed garbled emoji characters in README headings
 
 ## [1.4.1] - 2026-03-11
 
@@ -17,12 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.4.0] - 2026-03-11
 
-### Changed — "Goldilocks" (PII Boundary Enforcement)
+### Changed — PII Boundary Refinement
 
 #### ⚠️ BREAKING: Healthcare & Financial PII Patterns Removed from OSS
 
-The following PII patterns have been **removed from AKIOS OSS** as part of the
-Goldilocks boundary enforcement for regulated-industry compliance:
+The following specialized PII patterns have been **removed from AKIOS OSS** to focus
+the open-source engine on general-purpose detection:
 
 **Healthcare patterns removed (8):**
 - `us_npi` — US National Provider Identifier
@@ -55,7 +76,7 @@ Goldilocks boundary enforcement for regulated-industry compliance:
 
 #### Migration Guide
 If your workflows depend on NPI, DEA, MRN, IBAN, BIC, routing number, wire transfer, or
-crypto wallet detection, contact us for continued regulated-industry coverage. All other patterns
+crypto wallet detection, reach out if you need continued coverage for these patterns. All other patterns
 continue to work identically.
 
 ### Updated

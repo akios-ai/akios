@@ -16,7 +16,7 @@
 """
 LLM Providers Package
 
-Provides unified interface for multiple LLM providers (OpenAI, Anthropic, Grok, Mistral, Gemini, etc.)
+Provides unified interface for multiple LLM providers (OpenAI, Anthropic, Grok, Mistral, Gemini, Bedrock, Ollama)
 with lazy loading to avoid import errors for unavailable providers.
 """
 
@@ -49,6 +49,9 @@ def __getattr__(name):
             return BedrockProvider
         except ImportError:
             raise ImportError("Bedrock provider requires 'boto3' library. Install with: pip install akios[bedrock]")
+    elif name == 'OllamaProvider':
+        from .ollama import OllamaProvider
+        return OllamaProvider
     else:
         raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
@@ -60,5 +63,6 @@ __all__ = [
     'GrokProvider',
     'MistralProvider',
     'GeminiProvider',
-    'BedrockProvider'
+    'BedrockProvider',
+    'OllamaProvider'
 ]

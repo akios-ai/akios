@@ -218,23 +218,29 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Next: v1.4.0 — "Goldilocks Boundary" (March 2026)
+## Shipped: v1.4.0 / v1.4.1 — "PII Boundary" (March 2026)
 
-**Theme:** Align OSS with the three-product equilibrium. Healthcare and financial PII patterns move to AKIOS Pro.
-**Status:** 🟡 In progress
+**Theme:** Focus OSS PII detection on general-purpose patterns. Remove specialized healthcare/financial patterns.
+**Status:** ✅ Shipped (v1.4.1 hotfix)
 
-- **PII Goldilocks boundary** — 13 healthcare/financial patterns (MRN, NPI, DEA, ICD-10, CPT, HCPCS, NDC, health_insurance_us, iban, credit_card, bank_account, routing_number, financial_account) moved to AKIOS Pro. OSS retains 44 general-purpose patterns.
-- **7 LLM providers** — Ollama and AWS Bedrock now fully supported in setup wizard, doctor, and init
-- **Compliance terminology alignment** — "compliance reports" renamed to "security posture scoring" (Pro owns CISO-facing compliance reports)
+- **PII scope refinement** — 13 specialized healthcare/financial patterns (MRN, NPI, DEA, ICD-10, CPT, HCPCS, NDC, health_insurance_us, iban, credit_card, bank_account, routing_number, financial_account) removed. OSS retains 44 general-purpose patterns across 6 categories.
+- **7 LLM providers** — Ollama and AWS Bedrock now supported in setup wizard, doctor, and init templates
 - **Version string cleanup** — all stale v1.0.x/v1.2.x references updated across source tree
 - **Schema updates** — workflow schema and config schema bumped to v1.4
+- **v1.4.1 hotfix** — fixed internal product references in public documentation, restored PII rule function definitions
 
 ---
 
-## v1.5.0 — "Observability" (Target: Q4 2026)
+## Next: v1.5.0 — "Observability" (Target: Q2 2026)
 
-**Theme:** Production monitoring and observability.
+**Theme:** Complete Ollama provider support and add production observability.
 
+### Ollama Provider
+- **Ollama provider runtime** — implement `ollama.py` provider module for local LLM inference
+- **Provider dispatch** — add Ollama to `allowed_providers`, default models, API key mapping, and provider factory
+- **Ollama tests** — unit + integration tests against local Ollama instance
+
+### Observability
 - **`--report` flag** — generate post-run security posture report
 - **OpenTelemetry** — tracing + Prometheus metrics (via EnforceCore telemetry)
 - **Streaming LLM output** — per-token PII filtering

@@ -1,6 +1,6 @@
 # Developer API Reference
-**Document Version:** 1.4.1  
-**Date:** 2026-02-22  
+**Document Version:** 1.4.2  
+**Date:** 2026-03-12  
 
 **Programmatic integration with AKIOS workflows**
 
@@ -113,9 +113,9 @@ print(f"Modified: {info['modified']}")
 Secure HTTP requests with domain whitelisting and automatic PII redaction. Outbound requests are restricted to configured `allowed_domains`; LLM provider APIs bypass the whitelist. Also available as a standalone CLI command: `akios http <METHOD> <URL>`.
 
 ```python
-from akios.core.runtime.agents.http import HttpAgent
+from akios.core.runtime.agents.http import HTTPAgent
 
-agent = HttpAgent()
+agent = HTTPAgent()
 
 # GET request
 response = agent.get(
@@ -162,9 +162,9 @@ All methods return: Dict with status_code, headers, content, json (if applicable
 AI language model integration with cost tracking.
 
 ```python
-from akios.core.runtime.agents.llm import LlmAgent
+from akios.core.runtime.agents.llm import LLMAgent
 
-agent = LlmAgent()
+agent = LLMAgent()
 
 # Text completion
 result = agent.complete(
@@ -193,11 +193,11 @@ chat_result = agent.chat(
 
 #### Methods
 
-**`complete(prompt, model='gpt-3.5-turbo', max_tokens=1000, temperature=0.7, ...)`**
+**`complete(prompt, model='gpt-4o-mini', max_tokens=1000, temperature=0.7, ...)`**
 - Generate text completion
 - Returns: Dict with content, usage, cost, model, finish_reason
 
-**`chat(messages, model='gpt-3.5-turbo', max_tokens=1000, ...)`**
+**`chat(messages, model='gpt-4o-mini', max_tokens=1000, ...)`**
 - Have conversation with context
 - Returns: Same as complete()
 
