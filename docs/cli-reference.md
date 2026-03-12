@@ -1,10 +1,10 @@
-# AKIOS v1.4.1 CLI Reference
-**Document Version:** 1.4.1  
+# AKIOS v1.4.2 CLI Reference
+**Document Version:** 1.4.2  
 **Date:** 2026-03-11  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.4.1 supports three deployment methods:
+AKIOS v1.4.2 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.1 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.2 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.1 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.2 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -176,8 +176,8 @@ AKIOS validates LLM provider and model compatibility at startup to prevent API f
 
 | Provider | Models |
 |----------|--------|
-| **OpenAI** | `gpt-3.5-turbo`, `gpt-4`, `gpt-4-turbo`, `gpt-4o`, `gpt-4o-mini` |
-| **Anthropic** | `claude-3.5-haiku`, `claude-3.5-sonnet` |
+| **OpenAI** | `gpt-4o-mini`, `gpt-4o`, `gpt-4-turbo` |
+| **Anthropic** | `claude-3.5-haiku`, `claude-3.5-sonnet`, `claude-3-opus` |
 | **Grok** | `grok-3` |
 | **Mistral** | `mistral-small`, `mistral-medium`, `mistral-large` |
 | **Gemini** | `gemini-1.0-pro`, `gemini-1.5-pro`, `gemini-1.5-flash` |
@@ -186,7 +186,7 @@ AKIOS validates LLM provider and model compatibility at startup to prevent API f
 
 ### Validation Rules
 
-- **Provider Check**: Must be one of the 7 supported providers
+- **Provider Check**: Must be one of the supported providers
 - **Model Check**: Model must be compatible with selected provider
 - **Case Insensitive**: Model names are matched case-insensitively (e.g., `GPT-4` works)
 - **Early Failure**: Invalid combinations are caught during configuration loading, not during workflow execution
@@ -328,7 +328,7 @@ akios run workflow.yml --json-output
 **`--json-output` response format:**
 ```json
 {
-  "akios_version": "1.0.16",
+  "akios_version": "1.4.2",
   "status": "completed",
   "workflow_id": "abc-123",
   "steps_executed": 3,
@@ -595,7 +595,7 @@ The output includes:
 Example output:
 ```json
 {
-  "akios_version": "1.0.16",
+  "akios_version": "1.4.2",
   "workflow_name": "Hello World Workflow",
   "status": "completed",
   "steps_executed": 3,

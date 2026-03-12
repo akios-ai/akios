@@ -1,10 +1,10 @@
 # Security Features
-**Document Version:** 1.4.1  
-**Date:** 2026-02-22  
+**Document Version:** 1.4.2  
+**Date:** 2026-03-12  
 
 ## Security Overview
 
-AKIOS v1.4.1 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
+AKIOS v1.4.2 provides **defense-in-depth security** for AI agent workflows. The system is built around kernel-level isolation (native Linux) or container-based isolation (Docker), real-time PII protection, cryptographic audit trails, and strict cost controls.
 
 ## Supported Versions
 
@@ -83,15 +83,15 @@ akios cage down --keep-data
 **Default behavior `akios cage down`:** Permanently destroys:
 - ✂️ `audit/` — All Merkle-chained audit logs (cannot be recovered)
 - ✂️ `data/output/` — All workflow outputs and `output.json` (cannot be recovered)
-- ✂️ `data/input/` — All user-provided input files (cannot be recovered)
+- ✅ `data/input/` — User-provided input files are **preserved** to prevent accidental data loss
 
-**After `cage down`: ZERO DATA RESIDUE. Nothing survives.**
+**After `cage down`: All session artifacts removed.**
 
 This is the cage's core security promise:
 - No audit trail left behind
 - No outputs stored on disk
-- No input data leaked
-- No recovery possible
+- No recovery possible for session artifacts
+- User input data (`data/input/`) preserved
 
 **Use `--keep-data` only during active development** when you need to inspect intermediate results:
 ```bash

@@ -111,8 +111,14 @@ class LLMAgent(BaseAgent):
         if self.provider_name == "bedrock":
             self.api_key = self.api_key or ""
 
+        # Ollama runs locally — no API key required.  The provider resolves
+        # the server address from OLLAMA_HOST / OLLAMA_BASE_URL env vars
+        # or defaults to http://localhost:11434.
+        if self.provider_name == "ollama":
+            self.api_key = self.api_key or ""
+
         # Validate we have an API key
-        if not self.api_key and self.provider_name != "bedrock":
+        if not self.api_key and self.provider_name not in ("bedrock", "ollama"):
             required_var = self._get_required_env_var(self.provider_name)
             provider_name, api_url = self._get_provider_info(self.provider_name)
             raise AgentError(
@@ -150,7 +156,8 @@ class LLMAgent(BaseAgent):
             "grok": "grok-3",
             "mistral": "mistral-small",
             "gemini": "gemini-1.5-flash",
-            "bedrock": "anthropic.claude-3-5-haiku-20241022-v1:0"
+            "bedrock": "anthropic.claude-3-5-haiku-20241022-v1:0",
+            "ollama": "llama3.2"
         }
         return defaults.get(provider, "gpt-4o-mini")
 
@@ -165,7 +172,8 @@ class LLMAgent(BaseAgent):
             "grok": ["GROK_API_KEY"],
             "mistral": ["MISTRAL_API_KEY"],
             "gemini": ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
-            "bedrock": ["AWS_ACCESS_KEY_ID"]
+            "bedrock": ["AWS_ACCESS_KEY_ID"],
+            "ollama": ["OLLAMA_HOST", "OLLAMA_BASE_URL"]
         }
 
         env_vars = key_mapping.get(provider, [])
@@ -184,7 +192,8 @@ class LLMAgent(BaseAgent):
             "grok": "GROK_API_KEY",
             "mistral": "MISTRAL_API_KEY",
             "gemini": "GEMINI_API_KEY",
-            "bedrock": "AWS_ACCESS_KEY_ID"
+            "bedrock": "AWS_ACCESS_KEY_ID",
+            "ollama": "OLLAMA_HOST"
         }
         return mapping.get(provider, f"{provider.upper()}_API_KEY")
 
@@ -196,7 +205,8 @@ class LLMAgent(BaseAgent):
             "grok": ("Grok/xAI", "https://console.x.ai/"),
             "mistral": ("Mistral AI", "https://console.mistral.ai/"),
             "gemini": ("Google Gemini", "https://makersuite.google.com/app/apikey"),
-            "bedrock": ("AWS Bedrock", "https://docs.aws.amazon.com/bedrock/")
+            "bedrock": ("AWS Bedrock", "https://docs.aws.amazon.com/bedrock/"),
+            "ollama": ("Ollama", "https://ollama.com")
         }
         return info.get(provider, (provider.title(), f"https://{provider}.com"))
 
@@ -227,6 +237,9 @@ class LLMAgent(BaseAgent):
                     return BedrockProvider(api_key, model)
                 except ImportError:
                     raise AgentError("Bedrock provider requires 'boto3' library. Install with: pip install akios[bedrock]")
+            elif provider_name == "ollama":
+                from akios.core.runtime.llm_providers.ollama import OllamaProvider
+                return OllamaProvider(api_key, model)
             else:
                 raise AgentError(f"Unsupported provider: {provider_name}")
         except ImportError as e:

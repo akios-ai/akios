@@ -1,5 +1,5 @@
-# AKIOS v1.4.1 – Core Agents Reference
-**Document Version:** 1.4.1  
+# AKIOS v1.4.2 – Core Agents Reference
+**Document Version:** 1.4.2  
 **Date:** 2026-03-11  
 
 **The 6 core agents that power AKIOS workflows with military-grade security.**
@@ -220,7 +220,7 @@ Make HTTP DELETE request.
 **Secure language model API calls with token tracking and cost kill-switches.**
 
 ### Purpose
-Makes calls to language model APIs (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock) while tracking token usage, enforcing cost limits, and ensuring data protection.
+Makes calls to language model APIs (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock, Ollama) while tracking token usage, enforcing cost limits, and ensuring data protection.
 
 ### Actions
 
@@ -256,7 +256,7 @@ Have a conversation with context.
 - `prompt` (string): Text prompt for completion
 - `messages` (array): Chat messages for conversation
 - `model` (string, optional): Model to use (default: "gpt-3.5-turbo")
-- `provider` (string, optional): LLM provider — `openai`, `anthropic`, `grok`, `mistral`, `gemini`, or `bedrock` (v1.0.13+)
+- `provider` (string, optional): LLM provider — `openai`, `anthropic`, `grok`, `mistral`, `gemini`, `bedrock`, or `ollama` (v1.0.13+)
 - `max_tokens` (int, optional): Maximum tokens to generate (default: 1000)
 - `temperature` (float, optional): Randomness (0.0-2.0, default: 0.7)
 - `top_p` (float, optional): Nucleus sampling (default: 1.0)

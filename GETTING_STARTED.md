@@ -1,5 +1,5 @@
-# 🚀 AKIOS v1.4.1 - Get Started in 3 Minutes
-**Document Version:** 1.4.1  
+# 🚀 AKIOS v1.4.2 - Get Started in 3 Minutes
+**Document Version:** 1.4.2  
 **Date:** 2026-03-11  
 
 **Secure AI workflows made simple.**
@@ -30,7 +30,7 @@ pipx install akios
 pip install akios
 
 # Or install a specific version:
-pip install akios==1.4.1
+pip install akios==1.4.2
 
 # Verify installation
 akios --version
@@ -43,14 +43,14 @@ akios init my-project
 **Containerized deployment works everywhere - no Python/dependencies needed**
 ```bash
 # Pull the Docker image
-docker pull akiosai/akios:v1.4.1
+docker pull akiosai/akios:v1.4.2
 
 # Initialize a new project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.1 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.2 init my-project
 
 # Run workflows
 cd my-project
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.1 run templates/hello-workflow.yml
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.2 run templates/hello-workflow.yml
 ```
 
 **OR use the wrapper script for easier commands:**
@@ -176,7 +176,7 @@ akios setup
 ```
 
 The wizard guides you through:
-- Choosing your AI provider (OpenAI, Anthropic, Grok, Mistral, or Gemini)
+- Choosing your AI provider (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock, or Ollama)
 - Selecting your preferred model (gpt-4o, claude-3-sonnet, grok-3, etc.)
 - Entering your API key with real validation
 - Setting budget and token limits
@@ -245,6 +245,8 @@ akios clean
 - **Grok**: https://console.x.ai/
 - **Mistral**: https://console.mistral.ai/
 - **Gemini**: https://makersuite.google.com/app/apikey
+- **AWS Bedrock**: https://docs.aws.amazon.com/bedrock/ (uses IAM credentials)
+- **Ollama**: https://ollama.com/ (local — no API key needed)
 
 **Free tiers available for testing!**
 
@@ -261,4 +263,4 @@ akios clean
 
 ---
 
-*AKIOS v1.4.1 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.4.2 - Where AI meets unbreakable security* 🛡️🤖

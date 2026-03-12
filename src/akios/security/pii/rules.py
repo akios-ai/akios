@@ -534,7 +534,7 @@ class ComplianceRules:
             # ────────────────────────────────────────────────────────────
             # Financial-regulated patterns (IBAN, BIC, routing number,
             # wire transfer, cryptocurrency wallets)
-            # Removed in v1.4.0 (Goldilocks boundary enforcement)
+            # Removed in v1.4.0 — specialized financial patterns
             # ────────────────────────────────────────────────────────────
         }
 
@@ -635,7 +635,7 @@ class ComplianceRules:
             # ────────────────────────────────────────────────────────────
             # Healthcare-regulated patterns (NPI, DEA, MRN, insurance
             # policy/group/claim, prior authorization, Medicare MBI)
-            # Removed in v1.4.0 (Goldilocks boundary enforcement)
+            # Removed in v1.4.0 — specialized healthcare patterns
             # ────────────────────────────────────────────────────────────
         }
 

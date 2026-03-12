@@ -157,9 +157,6 @@ Hard budget limits ($1 default) with automatic workflow termination. Token track
 ### 🤖 Multi-Provider LLM Support
 OpenAI, Anthropic, Grok (xAI), Mistral, Gemini, AWS Bedrock, Ollama — swap providers in one line of config. All calls are sandboxed, audited, and budget-tracked.
 
-### 🏥 Industry Templates
-Accounting (SOX), Government (FedRAMP), Legal, Insurance — production-ready sector workflows out of the box.
-
 </td>
 </tr>
 </table>
@@ -282,7 +279,7 @@ All benchmarks are reproducible. See [EC2 Performance Testing](docs/ec2-performa
 
 ```
 src/akios/
-├── cli/                        # 18 CLI commands (argparse)
+├── cli/                        # 21 CLI commands (argparse)
 │   └── commands/               # audit, compliance, doctor, http, protect, run, ...
 ├── config/                     # YAML + .env configuration, themes, detection
 ├── core/
@@ -348,11 +345,15 @@ AKIOS is **not responsible** for: cloud infrastructure charges, credential leaks
 
 </details>
 
-## � Related Projects
+## 🏢 Need More?
+
+AKIOS covers 44 PII patterns, 6 agents, and full audit logging for most compliance workflows. If your organization needs **extended PII coverage** (50+ patterns including jurisdiction-specific identifiers), **governance dashboards**, or **dedicated support**, visit [akioud.ai](https://akioud.ai) to learn about our commercial offerings.
+
+## 🔗 Related Projects
 
 **[EnforceCore](https://github.com/akios-ai/EnforceCore)** — The open-source enforcement library (Apache-2.0) for AI agents. EnforceCore provides general-purpose policy enforcement, PII redaction, and audit trails for any agent framework. AKIOS is the complete production runtime built on top of it, adding kernel-level sandboxing, comprehensive PII redaction, workflow orchestration, and compliance reporting.
 
-## �📄 License
+## 📄 License
 
 AKIOS is licensed under [GPL-3.0-only](LICENSE).
 See [NOTICE](NOTICE), [LEGAL.md](LEGAL.md), and [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

@@ -1,5 +1,5 @@
-# 📚 AKIOS v1.4.1 - Documentation
-**Document Version:** 1.4.1
+# 📚 AKIOS v1.4.2 - Documentation
+**Document Version:** 1.4.2
 **Date:** 2026-03-11
 
 **Complete user guide for AKIOS - Secure AI Workflow Execution**
@@ -105,4 +105,4 @@ EnforceCore is the enforcement foundation; AKIOS is the complete production runt
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS v1.4.1 - Where AI meets unbreakable security*
+*AKIOS v1.4.2 - Where AI meets unbreakable security*
