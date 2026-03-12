@@ -1,6 +1,6 @@
 # AKIOS Comprehensive Quick Start Guide
-**Document Version:** 1.4.2  
-**Date:** 2026-02-22  
+**Document Version:** 1.4.3  
+**Date:** 2026-03-12  
 
 **Master AKIOS v1.4.2 - From Beginner to Advanced User**
 
@@ -35,7 +35,7 @@ AKIOS (AI Knowledge & Intelligence Operating System) is a **security-first runti
 - **Resource Controls**: CPU, memory, and cost limits
 
 ### 🤖 **Multi-Provider AI Support**
-- **OpenAI**: GPT-4, GPT-3.5-turbo
+- **OpenAI**: GPT-4o, GPT-4o-mini
 - **Anthropic**: Claude-3.5-haiku, Claude-3.5-sonnet
 - **Grok**: Real-time knowledge and reasoning
 - **Mistral**: Efficient inference, strong reasoning
@@ -915,7 +915,7 @@ docker system prune  # Clean unused images
 AKIOS_BUDGET_LIMIT_PER_RUN=1.0
 
 # Use efficient models
-AKIOS_LLM_MODEL=gpt-3.5-turbo  # Cheaper than gpt-4
+AKIOS_LLM_MODEL=gpt-4o-mini  # Cheaper than gpt-4o
 
 # Monitor usage
 jq -r 'select(.metadata.cost_incurred) | .metadata.cost_incurred' audit/audit_events.jsonl | awk '{sum += $1} END {print "Total: $" sum}'

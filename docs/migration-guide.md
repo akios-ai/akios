@@ -1,6 +1,6 @@
 # AKIOS Migration Guide
-**Document Version:** 1.4.2  
-**Date:** 2026-02-23  
+**Document Version:** 1.4.3  
+**Date:** 2026-03-12  
 
 **Upgrading from Previous Versions to v1.0 Hybrid Distribution**
 

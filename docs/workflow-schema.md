@@ -1,6 +1,6 @@
 # AKIOS v1.4.2 Workflow Schema Guide
-**Document Version:** 1.4.2  
-**Date:** 2026-03-11  
+**Document Version:** 1.4.3  
+**Date:** 2026-03-12  
 
 **Version 1.4.2** | **Last Updated:** March 12, 2026
 

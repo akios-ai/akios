@@ -1,7 +1,7 @@
 # EC2 Performance Testing Guide – Complete Setup & Validation
 
-**Document Version:** 1.4.2  
-**Date:** 2026-02-23  
+**Document Version:** 1.4.3  
+**Date:** 2026-03-12  
 **Scope:** AKIOS v1.4.2 native Linux performance & security validation on AWS EC2
 
 ---

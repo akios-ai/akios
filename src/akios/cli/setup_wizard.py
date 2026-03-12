@@ -122,7 +122,7 @@ class InteractiveSetupWizard:
             provider = questionary.select(
                 "Select LLM provider:",
                 choices=[
-                    questionary.Choice(title="OpenAI (GPT-4, GPT-3.5-Turbo)", value=LLMProvider.OPENAI.value),
+                    questionary.Choice(title="OpenAI (GPT-4o, GPT-4o-mini)", value=LLMProvider.OPENAI.value),
                     questionary.Choice(title="Anthropic (Claude)", value=LLMProvider.ANTHROPIC.value),
                     questionary.Choice(title="Grok (xAI)", value=LLMProvider.GROK.value),
                     questionary.Choice(title="Mistral", value=LLMProvider.MISTRAL.value),

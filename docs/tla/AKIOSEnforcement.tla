@@ -1,8 +1,8 @@
 ---- MODULE AKIOSEnforcement ----
 \* =========================================================================
 \* AKIOS Enforcement Pipeline — TLA+ Formal Specification
-\* Version: 1.0.13
-\* Date: 2026-02-19
+\* Version: 1.4.3
+\* Date: 2026-03-12
 \*
 \* Model-checks safety invariants for the AKIOS security cage:
 \*   1. PII redaction is ALWAYS applied before output leaves the cage.
