@@ -1,5 +1,5 @@
 # AKIOS Theme Customization Guide
-**Document Version:** 1.4.3  
+**Document Version:** 1.4.4  
 **Date:** 2026-03-12  
 
 **Creating and customizing color themes for AKIOS output.**

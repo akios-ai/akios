@@ -1,7 +1,7 @@
 # AKIOS Governance
 
-**Version:** 1.4.1  
-**Last Updated:** March 11, 2026  
+**Version:** 1.4.4  
+**Last Updated:** March 12, 2026  
 **Status:** Active
 
 ## Overview
