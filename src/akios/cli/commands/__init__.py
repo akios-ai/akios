@@ -102,6 +102,9 @@ def register_all_commands(subparsers: argparse._SubParsersAction) -> None:
     serve_module = _import_command_module('serve')
     serve_module.register_serve_command(subparsers)
 
+    dashboard_module = _import_command_module('dashboard')
+    dashboard_module.register_dashboard_command(subparsers)
+
 
 def get_command_descriptions() -> Dict[str, str]:
     """
@@ -132,6 +135,7 @@ def get_command_descriptions() -> Dict[str, str]:
         "http": "Make secure HTTP requests through the security cage",
         "workflow": "Validate and inspect AKIOS workflow files",
         "serve": "Start the AKIOS REST API server (requires akios[api])",
+        "dashboard": "Launch the local compliance dashboard",
     }
 
 

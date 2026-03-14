@@ -49,8 +49,8 @@ except (ValueError, AttributeError):
 
 # Version metadata
 VERSION_MAJOR = 1
-VERSION_MINOR = 5
-VERSION_PATCH = 2
+VERSION_MINOR = 6
+VERSION_PATCH = 0
 VERSION_SUFFIX = ""
 
 # Build information (populated by CI/CD)
