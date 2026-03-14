@@ -142,6 +142,64 @@ def register_audit_command(subparsers: argparse._SubParsersAction) -> None:
     )
     stats_parser.set_defaults(func=run_audit_stats_command)
 
+    # audit migrate subcommand
+    migrate_parser = subparsers_audit.add_parser(
+        "migrate",
+        help="Migrate audit logs from JSONL to SQLite or PostgreSQL backend"
+    )
+    migrate_parser.add_argument(
+        "--backend",
+        choices=["sqlite", "postgresql"],
+        required=True,
+        help="Target backend to migrate to"
+    )
+    migrate_parser.add_argument(
+        "--source",
+        default="audit/audit_events.jsonl",
+        help="Source JSONL file path (default: audit/audit_events.jsonl)"
+    )
+    migrate_parser.add_argument(
+        "--target",
+        help="Target path: SQLite file path or PostgreSQL DSN"
+    )
+    migrate_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output migration result as JSON"
+    )
+    migrate_parser.set_defaults(func=run_audit_migrate_command)
+
+    # audit prune subcommand
+    prune_parser = subparsers_audit.add_parser(
+        "prune",
+        help="Enforce audit retention policies: archive or delete events older than configured thresholds"
+    )
+    prune_parser.add_argument(
+        "--days",
+        type=int,
+        default=None,
+        help="Delete events older than N days (overrides audit_retention_days from config; 0 = disabled)"
+    )
+    prune_parser.add_argument(
+        "--archive-days",
+        type=int,
+        default=None,
+        dest="archive_days",
+        help="Archive events older than N days to compressed files (overrides audit_archive_days from config; 0 = disabled)"
+    )
+    prune_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help="Show what would be pruned without making changes"
+    )
+    prune_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output prune result as JSON"
+    )
+    prune_parser.set_defaults(func=run_audit_prune_command)
+
 
 def export_audit_report(format_type: str = "json", output_path: str = None) -> dict:
     """
@@ -663,3 +721,377 @@ def run_audit_stats_command(args: argparse.Namespace) -> int:
 
     except Exception as e:
         raise CLIError(f"Failed to read audit stats: {str(e)}")
+
+
+def run_audit_migrate_command(args) -> int:
+    """
+    Migrate audit logs from JSONL to SQLite or PostgreSQL backend.
+
+    Reads events from the source JSONL file and writes them to the
+    target backend. Does NOT delete the source file — migration is
+    additive and safe.
+
+    Args:
+        args: Parsed command line arguments
+
+    Returns:
+        Exit code (0 on success)
+    """
+    import json as _json
+    from pathlib import Path
+    from datetime import datetime, timezone
+
+    try:
+        source_path = Path(args.source)
+        if not source_path.exists():
+            raise CLIError(f"Source file not found: {args.source}")
+
+        # Count events in source
+        events = []
+        with open(source_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line:
+                    try:
+                        events.append(_json.loads(line))
+                    except _json.JSONDecodeError:
+                        continue
+
+        if not events:
+            raise CLIError("No events found in source file")
+
+        # Determine target
+        backend = args.backend
+        target = args.target
+
+        if backend == "sqlite":
+            if not target:
+                target = "audit/audit_events.db"
+            # Ensure parent directory exists
+            Path(target).parent.mkdir(parents=True, exist_ok=True)
+            _migrate_to_sqlite(events, target)
+        elif backend == "postgresql":
+            if not target:
+                raise CLIError(
+                    "PostgreSQL DSN required. Example: "
+                    "--target postgresql://user:pass@host:5432/dbname"
+                )
+            _migrate_to_postgresql(events, target)
+
+        result = {
+            "status": "completed",
+            "source": str(source_path),
+            "backend": backend,
+            "target": target,
+            "events_migrated": len(events),
+            "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        }
+
+        if getattr(args, 'json', False):
+            print(_json.dumps(result, indent=2))
+        else:
+            try:
+                from ...core.ui.rich_output import print_success, print_info
+                print_success(
+                    f"Migrated {len(events)} events to {backend} backend"
+                )
+                print_info(f"  Source: {source_path}")
+                print_info(f"  Target: {target}")
+                print_info(
+                    "  Note: Source JSONL file preserved (safe to delete manually if desired)"
+                )
+            except ImportError:
+                print(f"Migrated {len(events)} events to {backend}: {target}")
+
+        return 0
+
+    except CLIError:
+        raise
+    except Exception as e:
+        raise CLIError(f"Migration failed: {str(e)}")
+
+
+def _migrate_to_sqlite(events: list, target: str) -> None:
+    """Migrate audit events to SQLite database."""
+    import sqlite3
+    import json as _json
+
+    conn = sqlite3.connect(target)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS audit_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp TEXT,
+            event_type TEXT,
+            agent TEXT,
+            action TEXT,
+            workflow_id TEXT,
+            step_name TEXT,
+            data TEXT,
+            merkle_hash TEXT,
+            migrated_at TEXT
+        )
+    """)
+
+    from datetime import datetime, timezone
+    migrated_at = datetime.now(tz=timezone.utc).isoformat()
+
+    for event in events:
+        cursor.execute(
+            """INSERT INTO audit_events
+               (timestamp, event_type, agent, action, workflow_id, step_name, data, merkle_hash, migrated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                event.get("timestamp", ""),
+                event.get("event_type", ""),
+                event.get("agent", ""),
+                event.get("action", ""),
+                event.get("workflow_id", ""),
+                event.get("step_name", ""),
+                _json.dumps(event.get("data", {})),
+                event.get("merkle_hash", ""),
+                migrated_at,
+            ),
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def _migrate_to_postgresql(events: list, dsn: str) -> None:
+    """Migrate audit events to PostgreSQL database."""
+    try:
+        import psycopg2
+    except ImportError:
+        raise CLIError(
+            "psycopg2 not installed. Install it: pip install psycopg2-binary"
+        )
+
+    import json as _json
+    from datetime import datetime, timezone
+
+    conn = psycopg2.connect(dsn)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS audit_events (
+            id SERIAL PRIMARY KEY,
+            timestamp TEXT,
+            event_type TEXT,
+            agent TEXT,
+            action TEXT,
+            workflow_id TEXT,
+            step_name TEXT,
+            data JSONB,
+            merkle_hash TEXT,
+            migrated_at TEXT
+        )
+    """)
+
+    migrated_at = datetime.now(tz=timezone.utc).isoformat()
+
+    for event in events:
+        cursor.execute(
+            """INSERT INTO audit_events
+               (timestamp, event_type, agent, action, workflow_id, step_name, data, merkle_hash, migrated_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (
+                event.get("timestamp", ""),
+                event.get("event_type", ""),
+                event.get("agent", ""),
+                event.get("action", ""),
+                event.get("workflow_id", ""),
+                event.get("step_name", ""),
+                _json.dumps(event.get("data", {})),
+                event.get("merkle_hash", ""),
+                migrated_at,
+            ),
+        )
+
+    conn.commit()
+    conn.close()
+
+
+def run_audit_prune_command(args) -> int:
+    """
+    Enforce audit retention policies: archive or delete events by age.
+
+    Reads config for ``audit_retention_days`` / ``audit_archive_days`` unless
+    overridden by CLI flags.  Events older than the archive threshold are
+    compressed to ``audit/archive/pruned_YYYY-MM-DD.jsonl.gz``; events older
+    than the delete threshold are removed entirely.
+
+    The live JSONL file is rewritten atomically (temp-file swap).
+
+    Returns:
+        Exit code (0 on success)
+    """
+    import gzip
+    import json as _json
+    import os as _os
+    import tempfile
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    try:
+        from ...config.settings import Settings
+        _settings = Settings()
+    except Exception:
+        _settings = None
+
+    # Resolve thresholds: CLI arg overrides config, 0 = disabled
+    if args.days is not None:
+        retention_days = args.days
+    elif _settings is not None:
+        retention_days = getattr(_settings, "audit_retention_days", 0)
+    else:
+        retention_days = 0
+
+    if args.archive_days is not None:
+        archive_days = args.archive_days
+    elif _settings is not None:
+        archive_days = getattr(_settings, "audit_archive_days", 0)
+    else:
+        archive_days = 0
+
+    def _info(msg):
+        try:
+            from ...core.ui.rich_output import print_info
+            print_info(msg)
+        except ImportError:
+            print(msg)
+
+    def _success(msg):
+        try:
+            from ...core.ui.rich_output import print_success
+            print_success(msg)
+        except ImportError:
+            print(msg)
+
+    if retention_days == 0 and archive_days == 0:
+        _info(
+            "No retention policy configured. "
+            "Use --days / --archive-days or set audit_retention_days / "
+            "audit_archive_days in config."
+        )
+        return 0
+
+    try:
+        audit_path = Path(_settings.audit_storage_path) if _settings else Path("./audit")
+    except Exception:
+        audit_path = Path("./audit")
+
+    source_file = audit_path / "audit_events.jsonl"
+    if not source_file.exists():
+        _info(f"Audit file not found: {source_file}")
+        return 0
+
+    now = datetime.now(tz=timezone.utc)
+
+    # Load events
+    events = []
+    with open(source_file, "r") as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped:
+                try:
+                    events.append(_json.loads(stripped))
+                except _json.JSONDecodeError:
+                    continue
+
+    total = len(events)
+    kept = []
+    to_archive = []
+    deleted_count = 0
+
+    for event in events:
+        ts_str = event.get("timestamp", "")
+        try:
+            event_time = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+            if event_time.tzinfo is None:
+                event_time = event_time.replace(tzinfo=timezone.utc)
+        except (ValueError, AttributeError):
+            kept.append(event)
+            continue
+
+        age_days = (now - event_time).days
+
+        if retention_days > 0 and age_days >= retention_days:
+            deleted_count += 1
+        elif archive_days > 0 and age_days >= archive_days:
+            to_archive.append(event)
+        else:
+            kept.append(event)
+
+    archived_count = len(to_archive)
+    archive_file_path = None
+
+    if args.dry_run:
+        result = {
+            "dry_run": True,
+            "total_events": total,
+            "would_archive": archived_count,
+            "would_delete": deleted_count,
+            "would_keep": len(kept),
+            "retention_days": retention_days,
+            "archive_days": archive_days,
+        }
+        if getattr(args, "json", False):
+            print(_json.dumps(result, indent=2))
+        else:
+            _info(
+                f"[DRY RUN] Would archive {archived_count}, "
+                f"delete {deleted_count}, keep {len(kept)} (of {total} total)"
+            )
+        return 0
+
+    # Archive to gzip
+    if to_archive:
+        archive_dir = audit_path / "archive"
+        archive_dir.mkdir(parents=True, exist_ok=True)
+        archive_file_path = (
+            archive_dir / f"pruned_{now.strftime('%Y-%m-%d_%H-%M-%S')}.jsonl.gz"
+        )
+        with gzip.open(archive_file_path, "wt", encoding="utf-8") as gz:
+            for ev in to_archive:
+                gz.write(_json.dumps(ev) + "\n")
+
+    # Atomic rewrite: keep events that are neither archived nor deleted
+    fd, tmp_path = tempfile.mkstemp(dir=str(audit_path), suffix=".tmp")
+    try:
+        with _os.fdopen(fd, "w") as f:
+            for ev in kept:
+                f.write(_json.dumps(ev) + "\n")
+        _os.replace(tmp_path, str(source_file))
+    except Exception:
+        try:
+            _os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
+
+    result = {
+        "status": "completed",
+        "total_events": total,
+        "archived": archived_count,
+        "deleted": deleted_count,
+        "kept": len(kept),
+        "retention_days": retention_days,
+        "archive_days": archive_days,
+        "timestamp": now.isoformat(),
+    }
+    if archive_file_path:
+        result["archive_file"] = str(archive_file_path)
+
+    if getattr(args, "json", False):
+        print(_json.dumps(result, indent=2))
+    else:
+        _success(
+            f"Audit pruned: {archived_count} archived, "
+            f"{deleted_count} deleted, {len(kept)} kept"
+        )
+        if archive_file_path:
+            _info(f"  Archive: {archive_file_path}")
+
+    return 0

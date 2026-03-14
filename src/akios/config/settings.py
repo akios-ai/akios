@@ -93,6 +93,16 @@ class Settings(BaseSettings):
         pattern="^(json)$",
         description="Audit export format"
     )
+    audit_retention_days: int = Field(
+        default=0,
+        ge=0,
+        description="Auto-delete audit events older than N days (0 = disabled, keep forever)"
+    )
+    audit_archive_days: int = Field(
+        default=0,
+        ge=0,
+        description="Auto-archive audit events older than N days to compressed files (0 = disabled)"
+    )
 
     # UI & Theming
     ui_theme: str = Field(

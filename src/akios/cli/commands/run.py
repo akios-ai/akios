@@ -89,6 +89,12 @@ def register_run_command(subparsers: argparse._SubParsersAction) -> None:
     )
 
     parser.add_argument(
+        "--report",
+        action="store_true",
+        help="Generate HTML security posture report after workflow execution (saved to output directory)"
+    )
+
+    parser.add_argument(
         "--exec",
         dest="exec_cmd",
         default=None,
@@ -336,6 +342,44 @@ def run_run_command(args: argparse.Namespace) -> int:
             exit_code = 137  # Killed by cost/loop kill-switch
         else:
             exit_code = 1
+
+        # Generate security posture report if --report flag is set
+        if getattr(args, 'report', False) and result.get("status") == "completed":
+            try:
+                from ...core.compliance.report import ComplianceGenerator
+                from ...core.compliance.html_report import save_html_report
+
+                generator = ComplianceGenerator()
+                report_data = generator.generate_report(
+                    workflow_name=os.path.basename(workflow_path),
+                    report_type="detailed",
+                )
+                # Find the latest run output directory
+                from pathlib import Path as _Path
+                output_base = _Path("./data/output")
+                report_path = None
+                if output_base.exists():
+                    run_dirs = [d for d in output_base.iterdir() if d.is_dir() and d.name.startswith('run_')]
+                    if run_dirs:
+                        latest_run = max(run_dirs, key=lambda x: x.stat().st_mtime)
+                        report_path = save_html_report(report_data, str(latest_run), result)
+
+                if report_path and not args.quiet:
+                    output_with_mode(
+                        message="Security posture report generated",
+                        details=[f"Report: {report_path}", "Open in browser to view detailed security analysis"],
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="success",
+                    )
+            except Exception as e:
+                if not args.quiet:
+                    output_with_mode(
+                        message=f"Report generation failed: {e}",
+                        json_mode=False,
+                        quiet_mode=False,
+                        output_type="warning",
+                    )
 
         # Output result
         if getattr(args, 'json_output', False):
