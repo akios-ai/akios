@@ -1,0 +1,67 @@
+name: Compliance Security Posture Demo
+version: 1.5.0
+description: |
+  Demonstrates AKIOS v1.5.0 observability features:
+  - Run with `--report` to generate an HTML security posture report
+  - All steps run inside the security cage (sandbox, PII redaction, audit logging)
+  - Post-run: open data/output/run_*/security_posture_report.html in your browser
+
+  **USAGE:**
+    akios run compliance_demo.yml --report
+
+  **REQUIRES:** LLM provider configured (AKIOS_OPENAI_API_KEY or similar)
+  **OUTPUT:**
+    - data/output/run_*/security_posture_report.html  (security posture report)
+    - data/output/run_*/compliance_summary.txt        (text summary)
+
+steps:
+  # Step 1: List current workflow files (filesystem agent)
+  - step: 1
+    name: inventory_workflows
+    agent: filesystem
+    action: list
+    parameters:
+      path: "./src/akios/templates"
+      pattern: "*.yml"
+
+  # Step 2: Check the audit log exists (filesystem agent)
+  - step: 2
+    name: check_audit
+    agent: filesystem
+    action: exists
+    parameters:
+      path: "./audit/audit_events.jsonl"
+
+  # Step 3: LLM security posture analysis
+  - step: 3
+    name: analyze_security
+    agent: llm
+    action: complete
+    parameters:
+      prompt: |
+        You are a security analyst reviewing AKIOS, a military-grade AI security cage.
+
+        AKIOS provides:
+        - Process isolation via cgroups v2 + seccomp-bpf syscall filtering
+        - Real-time PII redaction (44 patterns, 6 categories)
+        - Cryptographic Merkle tamper-evident audit ledger
+        - Hard cost and infinite-loop kill-switches
+        - 6 core agents: LLM, HTTP, Filesystem, Tool Executor, Webhook, Database
+        - EU AI Act compliance tooling
+
+        Write a brief 3-sentence security posture summary for a compliance report.
+        Focus on key guarantees and what makes the cage trustworthy.
+      max_tokens: 200
+      temperature: 0.3
+
+  # Step 4: Write the summary to file
+  - step: 4
+    name: write_summary
+    agent: filesystem
+    config:
+      allowed_paths: ["./data/output"]
+      read_only: false
+    action: write
+    parameters:
+      path: "./data/output/compliance_summary.txt"
+      content: "{previous_output}"

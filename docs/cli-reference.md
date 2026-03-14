@@ -1,10 +1,10 @@
-# AKIOS v1.4.4 CLI Reference
-**Document Version:** 1.4.4  
-**Date:** 2026-03-12  
+# AKIOS v1.5.0 CLI Reference
+**Document Version:** 1.5.0  
+**Date:** 2026-03-14  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.4.4 supports three deployment methods:
+AKIOS v1.5.0 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -34,11 +34,11 @@ cd my-project
 
 ### Direct Docker (Emergency Fallback)
 ```bash
-docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.4 init my-project
+docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.5.0 init my-project
 cd my-project
 # Create wrapper script
 echo '#!/bin/bash
-exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.4.4 "$@"' > akios
+exec docker run --rm -v "$(pwd):/app" -w /app akiosai/akios:v1.5.0 "$@"' > akios
 chmod +x akios
 ```
 **Requirements**: Docker (works when wrapper download fails)
@@ -314,10 +314,14 @@ akios run workflow.yml --force
 
 # Emit structured JSON summary to stdout (for CI/CD pipelines)
 akios run workflow.yml --json-output
+
+# Generate HTML security posture report after execution (v1.5.0+)
+akios run workflow.yml --report
 ```
 
 **Options:**
 - `--json-output`: Emit structured JSON summary to stdout with status, token usage, cost, and PII metadata. Suppresses Rich UI output. Designed for CI/CD and automation.
+- `--report`: Generate a self-contained HTML security posture report after the workflow completes. Saved to `data/output/run_<timestamp>/security_posture_report.html`. Includes: compliance score, security checks, findings, recommendations, Merkle root, and execution metrics. (v1.5.0+)
 - `--verbose`: Enable detailed execution logging
 - `--quiet`: Suppress informational banners and non-error output
 - `--real-api`: Enable real API mode with interactive API key setup (sets AKIOS_MOCK_LLM=0, network_access_allowed=true, prompts for missing keys)
@@ -328,7 +332,7 @@ akios run workflow.yml --json-output
 **`--json-output` response format:**
 ```json
 {
-  "akios_version": "1.4.4",
+  "akios_version": "1.5.0",
   "status": "completed",
   "workflow_id": "abc-123",
   "steps_executed": 3,
@@ -410,6 +414,74 @@ akios audit stats --json
 - `--json`: Output statistics as JSON
 
 **Output includes:** current ledger events/size, total event count (all-time), rotation threshold (50,000), Merkle root hash, archive segment count/size.
+
+### `akios audit migrate` - Migrate Audit Log to Database (v1.5.0+)
+
+Migrate audit events from the primary JSONL ledger to a SQLite or PostgreSQL database. The migration is **additive** — the source JSONL file is preserved.
+
+```bash
+# Migrate to SQLite (built-in, no extra dependencies)
+akios audit migrate --backend sqlite
+
+# Migrate to SQLite with custom paths
+akios audit migrate --backend sqlite --source audit/audit_events.jsonl --target audit/audit.db
+
+# Migrate to PostgreSQL
+akios audit migrate --backend postgresql --target postgresql://user:pass@host:5432/dbname
+
+# Get JSON output
+akios audit migrate --backend sqlite --json
+```
+
+**Options:**
+- `--backend` (required): Target backend — `sqlite` or `postgresql`
+- `--source`: Source JSONL file (default: `audit/audit_events.jsonl`)
+- `--target`: Target path — SQLite file path or PostgreSQL DSN. Defaults to `audit/audit_events.db` for SQLite
+- `--json`: Output migration result as JSON
+
+**Notes:**
+- SQLite requires no extra dependencies (built-in Python)
+- PostgreSQL requires `pip install psycopg2-binary`
+- Schema: `id, timestamp, event_type, agent, action, workflow_id, step_name, data, merkle_hash, migrated_at`
+- The JSONL source is **never deleted** — migration is safe to run multiple times
+
+### `akios audit prune` - Enforce Retention Policies (v1.5.0+)
+
+Delete or archive audit events older than a configured threshold. Reads `audit_retention_days` / `audit_archive_days` from `config.yaml` if no CLI flags are provided.
+
+```bash
+# Delete events older than 90 days
+akios audit prune --days 90
+
+# Archive events older than 30 days to gzip (keep for compliance but remove from live log)
+akios audit prune --archive-days 30
+
+# Both: archive events 30–90 days old, delete events >90 days old
+akios audit prune --archive-days 30 --days 90
+
+# Preview what would be pruned (no changes made)
+akios audit prune --days 90 --dry-run
+
+# Get JSON output
+akios audit prune --days 90 --json
+```
+
+**Options:**
+- `--days N`: Delete events older than N days (overrides `audit_retention_days` from config). 0 = disabled
+- `--archive-days N`: Archive events older than N days to `audit/archive/pruned_YYYY-MM-DD.jsonl.gz` (overrides `audit_archive_days`). 0 = disabled
+- `--dry-run`: Show what would be pruned without making any changes
+- `--json`: Output result as JSON
+
+**Config-driven retention** (`config.yaml`):
+```yaml
+audit_retention_days: 90      # Auto-delete events older than 90 days (0 = disabled)
+audit_archive_days: 30        # Auto-archive events older than 30 days (0 = disabled)
+```
+
+**Safety guarantees:**
+- Atomic rewrite using temp-file swap — no partial state on disk
+- Events with unparseable timestamps are always kept (never silently lost)
+- Archived events go to compressed `.jsonl.gz` in `audit/archive/` before any deletion
 
 ### `akios workflow validate` - Validate Workflow YAML
 
@@ -595,7 +667,7 @@ The output includes:
 Example output:
 ```json
 {
-  "akios_version": "1.4.4",
+  "akios_version": "1.5.0",
   "workflow_name": "Hello World Workflow",
   "status": "completed",
   "steps_executed": 3,

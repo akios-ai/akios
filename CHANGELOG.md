@@ -1,11 +1,52 @@
 # Changelog
-**Document Version:** 1.4.4
-**Date:** 2026-03-12
+**Document Version:** 1.5.0
+**Date:** 2026-03-14
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.5.0] - 2026-03-14
+
+### Added — "Observability"
+
+#### `--report` flag — HTML Security Posture Report
+- **`akios run --report`** — generates a self-contained HTML security posture report after every workflow run, saved to `data/output/run_*/security_posture_report.html`
+- Report includes: overall compliance score (color-coded ring), status badge (compliant/partial/non-compliant), execution metrics grid (steps, duration, tokens, cost, PII count), component scores (security 50%, audit 30%, cost 20%), security checks table, findings list, recommendations, technical details (Merkle root, platform, security level)
+- No external dependencies — fully self-contained HTML with embedded CSS
+- New module: `src/akios/core/compliance/html_report.py`
+
+#### `akios audit migrate` — JSONL → Database Migration
+- **`akios audit migrate --backend sqlite --target audit/audit.db`** — migrates all audit events from the primary JSONL ledger to a SQLite database (additive, source preserved)
+- **`akios audit migrate --backend postgresql --target postgresql://...`** — same for PostgreSQL with JSONB data column (requires `psycopg2-binary`)
+- SQLite is built-in; no extra dependencies for the default backend
+- Outputs: events migrated count, source/target paths, timestamp
+
+#### `akios audit prune` — Retention Policy Enforcement
+- **`akios audit prune --days N`** — deletes events older than N days from the live JSONL ledger
+- **`akios audit prune --archive-days N`** — archives events older than N days to a compressed `audit/archive/pruned_YYYY-MM-DD.jsonl.gz` file
+- **`akios audit prune --dry-run`** — shows what would be pruned without making any changes
+- Reads `audit_retention_days` / `audit_archive_days` from `config.yaml` when no CLI flags provided
+- Atomic rewrite: uses temp-file swap, no partial state left on disk
+- Events with unparseable timestamps are always kept (safe default, no silent data loss)
+
+#### Config Settings (v1.5.0)
+- **`audit_retention_days`** (int, default: 0) — auto-delete events older than N days. 0 = disabled
+- **`audit_archive_days`** (int, default: 0) — auto-archive events older than N days. 0 = disabled
+
+#### Demo Workflow
+- **`src/akios/templates/compliance_demo.yml`** — showcases `--report` flag: filesystem + LLM steps with post-run HTML report generation
+
+### Tests
+- +56 new unit tests across two new test files:
+  - `tests/unit/test_core/test_html_report.py` — 35 tests for `generate_html_report`, `save_html_report`, XSS safety, self-contained HTML, edge cases
+  - `tests/unit/test_cli/test_audit_migrate_prune.py` — 21 tests for migrate (SQLite schema, data, idempotency, JSON output, error cases) and prune (dry-run safety, archive gzip, atomic write, unparseable timestamp handling)
+- **Total: 1,623 unit tests passing** (+56 vs v1.4.4), 9 skipped
+
+### Deferred to v1.6.0
+- OpenTelemetry tracing + Prometheus metrics (scope too large for clean patch)
+- Streaming LLM output with per-token PII filtering (needs provider-level work)
 
 ## [1.4.4] - 2026-03-12
 

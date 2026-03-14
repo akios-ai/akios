@@ -1,6 +1,6 @@
 # AKIOS Roadmap
-**Document Version:** 1.4.4  
-**Date:** 2026-03-11  
+**Document Version:** 1.5.0  
+**Date:** 2026-03-14  
 **License:** GPL-3.0-only  
 
 This roadmap covers the open-source AKIOS project — the security-cage runtime for AI agents.
@@ -231,21 +231,28 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Next: v1.5.0 — "Observability" (Target: Q2 2026)
+## Shipped: v1.5.0 — "Observability" (March 2026)
 
-**Theme:** Complete Ollama provider support and add production observability.
+**Theme:** Production observability: HTML security posture reports, audit migration, and retention policies.
+**Status:** ✅ Shipped
 
-### Ollama Provider
-- **Ollama provider runtime** — implement `ollama.py` provider module for local LLM inference
-- **Provider dispatch** — add Ollama to `allowed_providers`, default models, API key mapping, and provider factory
-- **Ollama tests** — unit + integration tests against local Ollama instance
+- ✅ **`--report` flag** — post-run self-contained HTML security posture report (`data/output/run_*/security_posture_report.html`)
+- ✅ **`akios audit migrate`** — JSONL → SQLite/PostgreSQL migration tool (additive, source preserved)
+- ✅ **`akios audit prune`** — retention policy enforcement: archive to gzip or delete by age, dry-run mode, atomic rewrite
+- ✅ **`audit_retention_days` / `audit_archive_days` settings** — config-driven retention with CLI overrides
+- ✅ **`compliance_demo.yml` template** — showcases `--report` flag end-to-end
+- ✅ **+56 new unit tests** (1,623 total, all passing)
+- ⏭️ **OpenTelemetry + streaming LLM** — deferred to v1.6.0 (scope too large)
 
-### Observability
-- **`--report` flag** — generate post-run security posture report
+---
+
+## Next: v1.6.0 — "Telemetry" (Target: Q2 2026)
+
+**Theme:** Full observability stack: tracing, metrics, and streaming output.
+
 - **OpenTelemetry** — tracing + Prometheus metrics (via EnforceCore telemetry)
 - **Streaming LLM output** — per-token PII filtering
-- **Audit retention policies** — auto-archive, auto-delete based on age
-- **`akios audit migrate`** — JSONL → SQLite/PG migration tool
+- Additional observability integrations
 
 ---
 
