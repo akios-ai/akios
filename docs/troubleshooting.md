@@ -1,10 +1,10 @@
 # Troubleshooting Guide
-**Document Version:** 1.5.1  
+**Document Version:** 1.5.2  
 **Date:** 2026-03-14  
 
 **Resolve common AKIOS issues and configuration problems**
 
-This guide covers frequently encountered issues, their causes, and step-by-step solutions for AKIOS v1.5.1.
+This guide covers frequently encountered issues, their causes, and step-by-step solutions for AKIOS v1.5.2.
 
 ## Quick Diagnosis
 

@@ -1,5 +1,5 @@
 # AKIOS Migration Guide
-**Document Version:** 1.5.1  
+**Document Version:** 1.5.2  
 **Date:** 2026-03-14  
 
 **Upgrading from Previous Versions**

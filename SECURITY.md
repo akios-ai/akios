@@ -1,10 +1,10 @@
 # AKIOS Security Policy
-**Document Version:** 1.5.1
+**Document Version:** 1.5.2
 **Date:** 2026-03-11
 
 ## 🔒 Security Overview
 
-AKIOS v1.5.1 is a **minimal, open-source security cage** for AI agents.  
+AKIOS v1.5.2 is a **minimal, open-source security cage** for AI agents.  
 We take security very seriously — the entire product is built around hard containment, real-time protection, and provable audit.
 
 This policy explains how we handle vulnerabilities in the open runtime.
@@ -38,7 +38,7 @@ Send private reports to: **security@akioud.ai**
 4. **Coordinated Disclosure**: We release fix + advisory together
 5. **Credit**: We publicly thank responsible reporters (Hall of Fame)
 
-## 🛡️ What We Protect In v1.5.0
+## 🛡️ What We Protect In v1.5.2
 - Security sandboxing (kernel-hard on native Linux, strong policy-based in Docker)
 - Syscall interception & resource quotas
 - Real-time PII redaction (44 patterns across 6 categories)
