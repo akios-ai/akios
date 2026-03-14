@@ -1,6 +1,6 @@
 # Developer API Reference
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
 **Programmatic integration with AKIOS workflows**
 
@@ -546,8 +546,8 @@ class CustomAgent(BaseAgent):
         else:
             raise AgentError(f"Unknown action: {action}")
 
-# Note: Custom agent registration is not supported in v1.0
-# Use built-in agents: filesystem, http, llm, tool_executor
+# Note: Custom agent registration is not yet supported
+# Use built-in agents: filesystem, http, llm, tool_executor, webhook, database
 ```
 
 ### Workflow Templates
@@ -603,7 +603,7 @@ result = engine.run(
 
 ## Migration Guide
 
-### From v0.x to v1.0
+### From v0.x to v1.x
 
 **Breaking Changes:**
 - `WorkflowEngine` renamed to `RuntimeEngine` (alias maintained)

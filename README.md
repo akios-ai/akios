@@ -234,6 +234,10 @@ Interpolated prompt (redacted):
 <tr><td><code>akios audit stats</code></td><td>Audit ledger statistics (event count, Merkle root)</td></tr>
 <tr><td><code>akios audit rotate</code></td><td>Rotate audit log with Merkle chain linkage</td></tr>
 <tr><td><code>akios audit export --format json</code></td><td>Export audit logs for compliance</td></tr>
+<tr><td><code>akios audit migrate --backend sqlite</code></td><td>Migrate audit logs to SQLite/PostgreSQL</td></tr>
+<tr><td><code>akios audit prune --days N</code></td><td>Enforce audit retention policy</td></tr>
+<tr><td><code>akios run --report</code></td><td>Generate HTML security posture report</td></tr>
+<tr><td><code>akios serve</code></td><td>Start REST API server (FastAPI)</td></tr>
 <tr><td><code>akios doctor</code></td><td>System health check</td></tr>
 <tr><td><code>akios templates list</code></td><td>Browse industry workflow templates</td></tr>
 <tr><td><code>akios http GET https://...</code></td><td>Secure HTTP request via agent</td></tr>

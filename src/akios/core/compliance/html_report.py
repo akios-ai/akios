@@ -19,7 +19,7 @@ HTML Security Posture Report Generator for AKIOS.
 Generates a self-contained HTML report from workflow execution results
 and security posture data. Used by `akios run --report`.
 
-This is THE bridge feature between AKIOS OSS and AKIOS Pro.
+This is a key feature for compliance reporting and security posture visibility.
 """
 
 import html

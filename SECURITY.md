@@ -1,20 +1,21 @@
 # AKIOS Security Policy
-**Document Version:** 1.5.0
+**Document Version:** 1.5.1
 **Date:** 2026-03-11
 
 ## 🔒 Security Overview
 
-AKIOS v1.5.0 is a **minimal, open-source security cage** for AI agents.  
+AKIOS v1.5.1 is a **minimal, open-source security cage** for AI agents.  
 We take security very seriously — the entire product is built around hard containment, real-time protection, and provable audit.
 
 This policy explains how we handle vulnerabilities in the open runtime.
 
 ## 📋 Supported Versions
 
-| Version | Supported     | Security Updates |
-|---------|---------------|------------------|
-| 1.0.x   | ✅ Active     | ✅ Full Support   |
-| <1.0    | ❌ End of Life| ❌ No Support    |
+| Version | Supported          | Security Updates    |
+|---------|--------------------|---------------------|
+| 1.5.x   | ✅ Active          | ✅ Full Support      |
+| 1.4.x   | ⚠️ Maintenance     | ✅ Security Only     |
+| < 1.4   | ❌ End of Life     | ❌ No Support       |
 
 ## 🚨 Reporting Vulnerabilities
 

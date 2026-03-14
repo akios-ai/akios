@@ -1,6 +1,6 @@
 # AKIOS Environment Detection System
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
 **Automatic detection of your runtime environment and intelligent defaults.**
 

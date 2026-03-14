@@ -1,6 +1,6 @@
-# AKIOS v1.5.0 – Configuration Reference
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+# AKIOS v1.5.1 – Configuration Reference
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
 **Complete configuration guide for the AKIOS security cage.**
 
@@ -335,14 +335,15 @@ cost_kill_enabled: true  # Recommended: always true
 
 ### `max_tokens_per_call`
 **Type:** `integer` (> 0)  
-**Default:** `1000`  
+**Default:** `500`  
 **Description:** Maximum tokens per LLM API call
 
 Limits individual LLM requests to prevent excessive API costs.
 
 ```yaml
-max_tokens_per_call: 500   # Conservative limit
-max_tokens_per_call: 1000  # Default limit for complex tasks
+max_tokens_per_call: 250   # Conservative limit
+max_tokens_per_call: 500   # Default limit
+max_tokens_per_call: 1000  # Higher limit for complex tasks
 ```
 
 ### `budget_limit_per_run`
@@ -395,6 +396,30 @@ audit_storage_path: "/var/log/akios/"  # Custom path
 audit_export_format: "json"   # JSON format with integrity verification
 ```
 
+### `audit_retention_days`
+**Type:** `integer` (> 0)  
+**Default:** `90`  
+**Description:** Number of days to retain audit log files before automatic cleanup
+
+Older audit logs are removed during `akios audit prune` or automatic maintenance.
+
+```yaml
+audit_retention_days: 90    # Default: 3 months
+audit_retention_days: 365   # 1 year for compliance
+```
+
+### `audit_archive_days`
+**Type:** `integer` (> 0)  
+**Default:** `30`  
+**Description:** Number of days after which audit logs are compressed for archival
+
+Logs older than this threshold are gzip-compressed to save disk space.
+
+```yaml
+audit_archive_days: 30    # Default: compress after 1 month
+audit_archive_days: 7     # Aggressive archival
+```
+
 ## ⚙️ General Settings
 
 ### `environment`
@@ -437,7 +462,7 @@ export AKIOS_LOG_LEVEL=DEBUG
 ## 📋 Complete Example Configuration
 
 ```yaml
-# AKIOS v1.5.0 Production Configuration
+# AKIOS v1.5.1 Production Configuration
 # Security-maximized settings for production workloads
 
 # Security cage - maximum protection

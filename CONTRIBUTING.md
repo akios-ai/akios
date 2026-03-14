@@ -1,5 +1,5 @@
 # Contributing to AKIOS
-**Document Version:** 1.5.0
+**Document Version:** 1.5.1
 **Date:** 2026-03-11
 
 Thank you for your interest in AKIOS!  
