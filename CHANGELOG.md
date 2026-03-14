@@ -1,11 +1,36 @@
 # Changelog
-**Document Version:** 1.5.0
+**Document Version:** 1.5.1
 **Date:** 2026-03-14
 
 All notable changes to AKIOS will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.5.1] - 2026-03-14
+
+### Removed — "PII Boundary Enforcement"
+- **5 healthcare-clinical PII patterns removed from OSS** to enforce Goldilocks boundary:
+  - `health_insurance_us` — US health insurance member IDs
+  - `medical_record` — medical/patient record references
+  - `medication_dosage` — medication dosages and frequencies
+  - `lab_results` — laboratory test results (cholesterol, HbA1c, etc.)
+  - `diagnosis_codes` — ICD-10, DSM-5, SNOMED codes
+- **OSS now ships 38 general-purpose PII patterns** (down from 43 in v1.5.0)
+- 4 general-purpose health patterns remain in OSS: `health_insurance_fr`, `blood_pressure`, `vital_signs`, `emergency_contact`
+
+### Fixed — "Documentation Integrity"
+- **SECURITY.md** — supported versions table now shows v1.5.x as active (was stuck on v1.0.x)
+- **docs/migration-guide.md** — rewritten from stale v0.x→v1.0 content to cover v1.x series, all 6 agents
+- **docs/deployment.md** — replaced 15+ stale "v1.0" body references with accurate version info
+- **docs/CONFIG.md** — added missing LLM providers (Bedrock, Ollama), `allowed_domains`, `audit_retention_days`, `audit_archive_days`
+- **docs/configuration.md** — fixed `max_tokens_per_call` default (1000→5000), added v1.5.0 config keys
+- **README.md** — CLI table now includes `audit migrate`, `audit prune`, `run --report`, `serve`
+- **docs/api-reference.md** — fixed stale v1.0 migration section
+- **CHANGELOG.md** — fixed stale [Unreleased] section listing already-shipped features
+- **docs/quickstart.md** — added v1.5.0 feature mentions
+- **GETTING_STARTED.md** — added v1.5.0 feature mentions
+- All doc headers updated to v1.5.1
 
 ## [1.5.0] - 2026-03-14
 
@@ -811,15 +836,13 @@ Addresses 11 confirmed bugs from external beta tester audit. 4 additional report
 
 ## [Unreleased]
 
-Future open-source releases (V1.x / V2.0) will focus on gradual usability improvements while preserving the security & governance-first cage.
+Future open-source releases will focus on gradual usability improvements while preserving the security & governance-first cage.
 
 Planned directions (non-binding, community-driven):
-- Parallel, conditional, loop, and fan-out execution patterns
-- Additional core agents (DB connectors, Email, Slack…)
-- Full CLI suite and basic REST API
+- OpenTelemetry tracing + Prometheus metrics (v1.6.0)
+- Streaming LLM output with per-token PII filtering (v1.6.0)
 - Enhanced state persistence and crash recovery
 - More high-quality example templates
-- Basic observability (Prometheus/Jaeger integration)
 
 **Legal/certified features** (FranceConnect, eIDAS, hard HDS blocks, official PDFs) are planned for a future licensed edition.
 
@@ -851,6 +874,3 @@ Planned directions (non-binding, community-driven):
 - See README.md for current scope & limits
 
 *For the complete history, see the [Git repository](https://github.com/akios-ai/akios/commits/main).*
-
-This changelog is **locked** for V1.0.  
-Future entries will reflect only scope-aligned changes.

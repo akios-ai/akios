@@ -1,6 +1,6 @@
-# 🚀 AKIOS v1.5.0 - Get Started in 3 Minutes
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+# 🚀 AKIOS v1.5.1 - Get Started in 3 Minutes
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
 **Secure AI workflows made simple.**
 
@@ -234,6 +234,15 @@ akios http GET https://api.example.com/data
 
 # Clean up old runs when disk space gets low
 akios clean
+
+# Generate a detailed run report (v1.5.0+)
+akios run templates/hello-workflow.yml --report
+
+# Migrate audit logs to SQLite for fast queries (v1.5.0+)
+akios audit migrate --backend sqlite
+
+# Prune old audit entries (v1.5.0+)
+akios audit prune --days 90
 ```
 
 ---
@@ -263,4 +272,4 @@ akios clean
 
 ---
 
-*AKIOS v1.5.0 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.5.1 - Where AI meets unbreakable security* 🛡️🤖

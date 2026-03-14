@@ -1,10 +1,10 @@
-# AKIOS v1.5.0 CLI Reference
-**Document Version:** 1.5.0  
+# AKIOS v1.5.1 CLI Reference
+**Document Version:** 1.5.1  
 **Date:** 2026-03-14  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.5.0 supports three deployment methods:
+AKIOS v1.5.1 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash

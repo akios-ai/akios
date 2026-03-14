@@ -1,6 +1,6 @@
-# AKIOS v1.5.0 – Configuration Reference
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+# AKIOS v1.5.1 – Configuration Reference
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
 **Complete configuration guide for the AKIOS security cage.**
 
@@ -13,7 +13,7 @@ AKIOS includes an interactive setup wizard that makes initial configuration effo
 ### Interactive Setup Wizard
 
 The setup wizard guides you through:
-- Provider selection (OpenAI, Anthropic, Grok, Mistral, or Gemini)
+- Provider selection (OpenAI, Anthropic, Grok, Mistral, Gemini, AWS Bedrock, or Ollama)
 - API key setup with format validation
 - Configuration generation and validation
 
@@ -114,6 +114,12 @@ budget_limit_per_run: 1.0
 audit_enabled: true
 audit_storage_path: "./audit/"
 audit_export_format: "json"
+audit_retention_days: 0
+audit_archive_days: 0
+
+# Network access
+network_access_allowed: false
+allowed_domains: []
 
 # General
 environment: "development"
@@ -303,6 +309,43 @@ audit_storage_path: "/var/log/akios/"  # Custom path
 audit_export_format: "json"  # Machine-readable audit data
 ```
 
+### `audit_retention_days`
+**Type:** `integer` (≥ 0)  
+**Default:** `0` (disabled)  
+**Description:** Auto-delete audit events older than N days. Set to `0` to keep all events indefinitely.
+
+```yaml
+audit_retention_days: 90  # Delete events older than 90 days
+audit_retention_days: 0   # Keep all events (default)
+```
+
+### `audit_archive_days`
+**Type:** `integer` (≥ 0)  
+**Default:** `0` (disabled)  
+**Description:** Auto-archive audit events older than N days to compressed `.jsonl.gz` files in `audit/archive/`.
+
+```yaml
+audit_archive_days: 30   # Archive events older than 30 days
+audit_archive_days: 0    # No archiving (default)
+```
+
+### `allowed_domains`
+**Type:** `list[string]`  
+**Default:** `[]` (all non-LLM domains blocked)  
+**Description:** Domain whitelist for the HTTP agent. LLM provider APIs always bypass this list.
+
+```yaml
+network_access_allowed: true
+allowed_domains:
+  - "api.example.com"
+  - "data.mycompany.com"
+```
+
+**Via environment variable:**
+```bash
+export AKIOS_ALLOWED_DOMAINS="api.example.com,data.mycompany.com"
+```
+
 ## 🧪 Ablation Flags (Benchmarking)
 
 AKIOS supports ablation flags for controlled performance benchmarking. These flags
@@ -391,7 +434,7 @@ export AKIOS_LOG_LEVEL=DEBUG
 ## 📋 Complete Example Configuration
 
 ```yaml
-# AKIOS v1.5.0 Production Configuration
+# AKIOS v1.5.1 Production Configuration
 # Security-maximized settings for production workloads
 
 # Security cage - maximum protection

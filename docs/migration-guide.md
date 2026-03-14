@@ -1,10 +1,10 @@
 # AKIOS Migration Guide
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
-**Upgrading from Previous Versions to v1.0 Hybrid Distribution**
+**Upgrading from Previous Versions**
 
-AKIOS v1.0 features **hybrid distribution** - standalone binaries + pip packages. This guide helps you migrate from older versions while maintaining your existing workflows and configurations.
+AKIOS supports **pip packages + Docker containers** as installation methods. This guide helps you migrate from older versions while maintaining your existing workflows and configurations.
 
 ---
 
@@ -155,7 +155,7 @@ pip install --upgrade akios  # Get latest v1.0 features
 akios run workflow.yml       # Same commands, enhanced security
 ```
 
-**What's Different in v1.0:**
+**What's Improved:**
 - ✅ **Better security**: Enhanced PII redaction, improved sandboxing
 - ✅ **Performance**: Faster startup, optimized resource usage
 - ✅ **Audit**: More detailed logging, better security posture reports
@@ -183,7 +183,7 @@ curl -O https://raw.githubusercontent.com/akios-ai/akios/main/src/akios/cli/data
 mv wrapper.sh akios
 chmod +x akios
 
-# Enhanced v1.0 features automatically available
+# Enhanced features automatically available
 ./akios run workflow.yml  # Better security, performance
 ```
 
@@ -212,7 +212,7 @@ pip install akios
 akios run workflow.yml
 ```
 
-**Docker Security in v1.0:**
+**Docker Security:**
 - ✅ **Enhanced isolation**: Better container policies
 - ✅ **Improved performance**: Optimized for containerized environments
 - ✅ **Cross-platform consistency**: Same security on macOS/Windows
@@ -235,7 +235,7 @@ AKIOS_MOCK_LLM=0
 
 ### Config.yaml Updates (Optional)
 
-v1.0 includes additional security and performance options. Your existing config continues to work, but you can add:
+v1.x includes additional security and performance options. Your existing config continues to work, but you can add:
 
 ```yaml
 # Enhanced security (optional additions)
@@ -250,15 +250,15 @@ memory_limit_mb: 256           # Memory limit (default: 256)
 network_access_allowed: true    # Allow external API calls
 ```
 
-### Security Defaults in v1.0
+### Security Defaults
 
-| Setting | V0.x Default | v1.0 Default | Change |
+| Setting | V0.x Default | v1.x Default | Change |
 |---------|--------------|--------------|--------|
 | `sandbox_enabled` | `true` | `true` | No change |
 | `pii_redaction_enabled` | `true` | `true` | No change |
 | `cost_kill_enabled` | `true` | `true` | No change |
 | `audit_enabled` | `true` | `true` | No change |
-| `pii_redaction_outputs` | N/A | `true` | Enhanced in v1.0 |
+| `pii_redaction_outputs` | N/A | `true` | Enhanced in v1.x |
 | `max_tokens_per_call` | `1000` | `500` | **More conservative** |
 | `budget_limit_per_run` | `1.0` | `1.0` | No change |
 
@@ -286,7 +286,7 @@ steps:
 
 ### ✅ **Enhanced Features Available**
 
-v1.0 provides additional capabilities you can optionally use:
+Additional capabilities you can optionally use:
 
 ```yaml
 # Optional v1.0 features
@@ -306,10 +306,12 @@ steps:
 
 | Agent | Status | Changes |
 |-------|--------|---------|
-| **LLM** | ✅ Compatible | Enhanced PII redaction, additional providers |
+| **LLM** | ✅ Compatible | Enhanced PII redaction, additional providers (Bedrock, Ollama) |
 | **Filesystem** | ✅ Compatible | Improved security validation |
-| **HTTP** | ✅ Compatible | Better network controls |
+| **HTTP** | ✅ Compatible | Better network controls, domain whitelisting |
 | **Tool Executor** | ✅ Compatible | Enhanced command validation |
+| **Webhook** | ✅ New in v1.5.0 | Slack/Discord/Teams notifications with PII redaction |
+| **Database** | ✅ New in v1.5.0 | PostgreSQL/SQLite with injection prevention |
 
 ---
 
@@ -453,8 +455,8 @@ akios audit export --format json | jq length  # Should show events
 - GitHub Issues: Bug reports and feature requests
 - GitHub Discussions: Questions and migration help
 
-**Migration verified?** Your AKIOS v1.0 hybrid deployment is ready for production! 🛡️🤖
+**Migration verified?** Your AKIOS deployment is ready for production! 🛡️🤖
 
 ---
 
-*AKIOS v1.0 Migration Guide - Zero-downtime upgrades, maximum compatibility*
+*AKIOS Migration Guide - Zero-downtime upgrades, maximum compatibility*

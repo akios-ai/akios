@@ -1,8 +1,8 @@
-# AKIOS v1.5.0 – Deployment Scope & Boundaries  
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+# AKIOS v1.5.1 – Deployment Scope & Boundaries  
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
-**Status: FINAL – Locked for v1.5.0 Release (March 2026)**
+**Status: Current as of v1.5.1 (March 2026)**
 
 This document **completely replaces and overrides** all previous deployment philosophy, methods, Docker Compose setups, systemd services, Nginx configs, monitoring integrations, security hardening scripts, backup strategies, scaling patterns, and troubleshooting guides from the old architecture.
 
@@ -10,7 +10,7 @@ We are now in a **security & governance-first, minimal cage** product.
 Deployment is **not** a multi-container, multi-service, production-hardened cluster setup.  
 It is **the simplest possible way** to run the single-process cage securely in staging or internal production.
 
-### 1. Philosophy for v1.0
+### 1. Deployment Philosophy
 
 Deployment must be **minimal, secure, and air-gapped capable** from day 1.  
 The cage is a **Python package or Docker container** — no database, no Redis, no API server, no monitoring dashboard, no reverse proxy, no Helm charts.
@@ -87,7 +87,7 @@ See [EC2 Performance Testing Guide](./ec2-performance-testing.md) for complete v
 - AKIOS cannot guarantee compliance with your regulations
 - AKIOS cannot prevent misconfiguration of your deployment
 
-### 2. In Scope – What MUST exist in v1.0 Deployment
+### 2. In Scope – Deployment Requirements
 
 **⚠️ LINUX REQUIREMENT: Install System Packages Before Pip Install**
 
@@ -152,18 +152,18 @@ docker run --rm -v $(pwd)/templates:/app/templates akios:latest
 - Backup scripts
 - Scaling instructions
 
-### 3. Out of Scope – What MUST NOT exist in v1.0 Deployment
+### 3. Out of Scope – Beyond Current Scope
 
-| Feature / Method                                      | Why forbidden in v1.0                              | Where it belongs (if ever)                  |
+| Feature / Method                                      | Why out of scope                                   | Where it belongs (if ever)                  |
 |-------------------------------------------------------|----------------------------------------------------|---------------------------------------------|
 | Multi-container setups (db, redis, monitoring)        | Single-process cage – no external deps             | Future open releases                        |
-| Docker Compose with volumes/networks/services         | Too complex for v1.0                               | Future open releases                        |
+| Docker Compose with volumes/networks/services         | Too complex for single-cage model                  | Future open releases                        |
 | Systemd/Init.d service files                          | Not needed for minimal usage                       | Future open releases                        |
-| Nginx/Apache reverse proxy                            | No API/web server in v1.0                          | Future open releases                        |
-| Prometheus/Grafana/Jaeger monitoring                  | No observability layer in v1.0                     | Future open releases                        |
+| Nginx/Apache reverse proxy                            | No API/web server in current releases              | Future open releases                        |
+| Prometheus/Grafana/Jaeger monitoring                  | No observability layer in current releases         | Future open releases                        |
 | Backup & recovery scripts (DB snapshots, logs)        | No DB, no persistence                              | Future open releases                        |
 | Scaling / horizontal load balancing                   | Single-process runtime                             | Future open releases                        |
-| Security hardening (ufw, fail2ban, SELinux profiles)  | Cage enforces security internally                  | Future or PRO                               |
+| Security hardening (ufw, fail2ban, SELinux profiles)  | Cage enforces security internally                  | Future releases                             |
 
 ### 4. Security & Safety Boundaries
 
@@ -174,7 +174,7 @@ docker run --rm -v $(pwd)/templates:/app/templates akios:latest
 - **Audit always on** — every run produces Merkle-proof export
 - **Fail-safe** — invalid config/workflow → immediate exit
 
-### 5. Size & Complexity Target for v1.0
+### 5. Size & Complexity Target
 
 - **Dockerfile**: <20 lines
 - **Deployment docs**: 1 page in README
@@ -182,14 +182,13 @@ docker run --rm -v $(pwd)/templates:/app/templates akios:latest
 
 ### Summary – deployment in one sentence
 
-**V1.0 deployment is a Python package or basic Docker container that runs the cage standalone with zero external dependencies — nothing more.**
+**AKIOS deployment is a Python package or basic Docker container that runs the cage standalone with zero external dependencies — nothing more.**
 
 **No multi-service setups. No monitoring. No scaling. No hardening scripts. Just the simplest secure run.**
 
-This boundary is **locked** for v1.0 Open Runtime.  
-Any addition of multi-container, monitoring, proxy, scaling, or hardening features requires explicit scope re-opening and justification against the minimal security-first philosophy.
+Any addition of multi-container, monitoring, proxy, scaling, or hardening features requires explicit scope discussion and justification against the minimal security-first philosophy.
 
-All previous comprehensive deployment docs (Docker Compose clusters, systemd, Nginx, monitoring, backups, scaling) are now **obsolete** for V1.0.
+All previous comprehensive deployment docs (Docker Compose clusters, systemd, Nginx, monitoring, backups, scaling) are now **obsolete**.
 
 ## 🛠️ Troubleshooting Deployment Issues
 

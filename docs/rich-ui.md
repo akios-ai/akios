@@ -1,10 +1,10 @@
 # Rich Terminal UI Guide
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
 
 ## Overview
 
-AKIOS v1.5.0 includes a **Semantic Rich-powered terminal UI** for professional, structured output. The system enforces a strict semantic color scheme to ensure consistency, accessibility, and security-focused aesthetics across all environments.
+AKIOS v1.5.1 includes a **Semantic Rich-powered terminal UI** for professional, structured output. The system enforces a strict semantic color scheme to ensure consistency, accessibility, and security-focused aesthetics across all environments.
 
 ## Features
 

@@ -551,37 +551,6 @@ class ComplianceRules:
                 examples=['123456789012345']
             ),
 
-            'health_insurance_us': PIIPattern(
-                name='health_insurance_us',
-                pattern=r'\b[A-Z]{2,3}\d{6,12}\b',
-                compiled_pattern=re.compile(r'\b[A-Z]{2,3}\d{6,12}\b'),
-                category='health',
-                sensitivity='high',
-                description='US health insurance member IDs (BCBS, Aetna, UHC, Cigna etc.)',
-                examples=['AB123456789', 'XY987654321', 'UHC12345678', 'AET123456'],
-                priority=55
-            ),
-
-            'medical_record': PIIPattern(
-                name='medical_record',
-                pattern=r'\b(medical|patient|record|diagnosis|treatment|prescription)\s+(number|id\b|record)[\s:]*[A-Z0-9\-]{4,}\b',
-                compiled_pattern=re.compile(r'\b(medical|patient|record|diagnosis|treatment|prescription)\s+(number|id\b|record)[\s:]*[A-Z0-9\-]{4,}\b', re.IGNORECASE),
-                category='health',
-                sensitivity='high',
-                description='Medical record references',
-                examples=['Medical Record: MRN-12345', 'Patient ID: PAT-67890']
-            ),
-
-            'medication_dosage': PIIPattern(
-                name='medication_dosage',
-                pattern=r'\b\d+\s*(mg|g|ml|mcg|iu|units?)\s+(daily|twice|three times|q\.?d\.?|b\.?i\.?d\.?|t\.?i\.?d\.?)\b',
-                compiled_pattern=re.compile(r'\b\d+\s*(mg|g|ml|mcg|iu|units?)\s+(daily|twice|three times|q\.?d\.?|b\.?i\.?d\.?|t\.?i\.?d\.?)\b', re.IGNORECASE),
-                category='health',
-                sensitivity='high',
-                description='Medication dosages and frequencies',
-                examples=['100mg twice daily', '50mg q.d.', '200IU b.i.d.']
-            ),
-
             'blood_pressure': PIIPattern(
                 name='blood_pressure',
                 pattern=r'\b\d{2,3}\/\d{2,3}\s*(mmHg|mm Hg)\b',
@@ -590,26 +559,6 @@ class ComplianceRules:
                 sensitivity='medium',
                 description='Blood pressure readings (requires mmHg unit to avoid date false positives)',
                 examples=['120/80 mmHg', '140/90 mmHg', '110/70 mm Hg']
-            ),
-
-            'lab_results': PIIPattern(
-                name='lab_results',
-                pattern=r'\b(cholesterol|hba1c|glucose|creatinine|bun|alt|ast|tsh|t3|t4)\s*[\:=]\s*\d+(\.\d+)?\s*(mg\/dl|mmol\/l|%|g\/dl)?\b',
-                compiled_pattern=re.compile(r'\b(cholesterol|hba1c|glucose|creatinine|bun|alt|ast|tsh|t3|t4)\s*[\:=]\s*\d+(\.\d+)?\s*(mg\/dl|mmol\/l|%|g\/dl)?\b', re.IGNORECASE),
-                category='health',
-                sensitivity='high',
-                description='Laboratory test results',
-                examples=['Cholesterol: 180 mg/dl', 'HbA1c = 7.2%', 'Glucose 95 mg/dl']
-            ),
-
-            'diagnosis_codes': PIIPattern(
-                name='diagnosis_codes',
-                pattern=r'\b(ICD-10|DSM-5|SNOMED)\s*[\:=]\s*[A-Z0-9\.\-]+',
-                compiled_pattern=re.compile(r'\b(ICD-10|DSM-5|SNOMED)\s*[\:=]\s*[A-Z0-9\.\-]+', re.IGNORECASE),
-                category='health',
-                sensitivity='high',
-                description='Medical diagnosis codes',
-                examples=['ICD-10: E11.9', 'DSM-5: 296.32', 'SNOMED: 73211009']
             ),
 
             'vital_signs': PIIPattern(
@@ -636,6 +585,11 @@ class ComplianceRules:
             # Healthcare-regulated patterns (NPI, DEA, MRN, insurance
             # policy/group/claim, prior authorization, Medicare MBI)
             # Removed in v1.4.0 — specialized healthcare patterns
+            #
+            # Healthcare-clinical patterns (health_insurance_us,
+            # medical_record, medication_dosage, lab_results,
+            # diagnosis_codes)
+            # Removed in v1.5.1 — enforce PII boundary
             # ────────────────────────────────────────────────────────────
         }
 
@@ -868,8 +822,7 @@ def get_eu_ai_act_patterns() -> List[str]:
     """
     return [
         'email', 'phone_fr', 'phone_us', 'ssn', 'france_id',
-        'passport_eu', 'credit_card', 'health_insurance_fr',
-        'medical_record'
+        'passport_eu', 'credit_card', 'health_insurance_fr'
     ]
 
 

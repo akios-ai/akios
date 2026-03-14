@@ -1,8 +1,8 @@
 # EC2 Performance Testing Guide – Complete Setup & Validation
 
-**Document Version:** 1.5.0  
-**Date:** 2026-03-12  
-**Scope:** AKIOS v1.5.0 native Linux performance & security validation on AWS EC2
+**Document Version:** 1.5.1  
+**Date:** 2026-03-14  
+**Scope:** AKIOS v1.5.1 native Linux performance & security validation on AWS EC2
 
 ---
 
@@ -154,7 +154,7 @@ Performance may vary by region due to:
 
 ### Performance Scaling Model
 
-**Based on AKIOS v1.5.0 validation on t4g.micro (ARM64, 1 GB RAM):**
+**Based on AKIOS v1.5.1 validation on t4g.micro (ARM64, 1 GB RAM):**
 
 ```
 Security Pipeline:  0.47 ms (full pipeline: PII + policy + audit + budget)
