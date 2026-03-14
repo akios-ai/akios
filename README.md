@@ -238,6 +238,7 @@ Interpolated prompt (redacted):
 <tr><td><code>akios audit prune --days N</code></td><td>Enforce audit retention policy</td></tr>
 <tr><td><code>akios run --report</code></td><td>Generate HTML security posture report</td></tr>
 <tr><td><code>akios serve</code></td><td>Start REST API server (FastAPI)</td></tr>
+<tr><td><code>akios dashboard</code></td><td>Launch local compliance dashboard (requires Pro)</td></tr>
 <tr><td><code>akios doctor</code></td><td>System health check</td></tr>
 <tr><td><code>akios templates list</code></td><td>Browse industry workflow templates</td></tr>
 <tr><td><code>akios http GET https://...</code></td><td>Secure HTTP request via agent</td></tr>
@@ -283,7 +284,7 @@ All benchmarks are reproducible. See [EC2 Performance Testing](docs/ec2-performa
 
 ```
 src/akios/
-├── cli/                        # 21 CLI commands (argparse)
+├── cli/                        # 22 CLI commands (argparse)
 │   └── commands/               # audit, compliance, doctor, http, protect, run, ...
 ├── config/                     # YAML + .env configuration, themes, detection
 ├── core/

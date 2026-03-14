@@ -1,8 +1,8 @@
 # AKIOS Comprehensive Quick Start Guide
-**Document Version:** 1.5.2  
+**Document Version:** 1.6.0  
 **Date:** 2026-03-14  
 
-**Master AKIOS v1.5.2 - From Beginner to Advanced User**
+**Master AKIOS v1.6.0 - From Beginner to Advanced User**
 
 *Complete tutorial: 15-30 minutes*
 
@@ -686,7 +686,7 @@ AKIOS_BUDGET_LIMIT_PER_RUN=5.0
 
 ### Security Cage
 
-AKIOS v1.5.2 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
+AKIOS v1.6.0 introduces the **Security Cage** — a controlled environment that activates all protections during workflow execution and destroys all data when deactivated.
 
 **Activate the cage:**
 ```bash
@@ -1033,6 +1033,6 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 
 ---
 
-*AKIOS v1.5.2 - Where AI meets unbreakable security*
+*AKIOS v1.6.0 - Where AI meets unbreakable security*
 
 **Need help?** Run `akios doctor`, check the audit logs, or create a GitHub issue.

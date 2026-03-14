@@ -1,10 +1,10 @@
-# AKIOS v1.5.2 CLI Reference
-**Document Version:** 1.5.2  
+# AKIOS v1.6.0 CLI Reference
+**Document Version:** 1.6.0  
 **Date:** 2026-03-14  
 
 ## 🚀 Three Ways to Run AKIOS
 
-AKIOS v1.5.2 supports three deployment methods:
+AKIOS v1.6.0 supports three deployment methods:
 
 ### Native Linux (Maximum Security)
 ```bash
@@ -959,6 +959,43 @@ akios testing log-issue "Description of the issue"
 - `log-issue` — Manually log a testing issue for tracking
 
 Displays mock mode status, API key availability, and testing recommendations.
+
+### `akios dashboard` - Launch Compliance Dashboard (v1.6.0+)
+
+Launch the local compliance dashboard.
+
+```bash
+# Launch dashboard (opens browser automatically)
+akios dashboard
+
+# Launch on a custom port
+akios dashboard --port 9090
+
+# Launch without opening browser
+akios dashboard --no-browser
+
+# Combine options
+akios dashboard --port 9090 --no-browser
+```
+
+**Options:**
+| Option | Default | Description |
+|--------|---------|-------------|
+| `--port N` | `8080` | Port for the dashboard server |
+| `--no-browser` | `false` | Do not open browser automatically |
+
+**Behavior:**
+- **If dashboard package is installed:** Starts the compliance dashboard on `localhost:8080` (or specified port) and opens your browser
+- **If dashboard package is NOT installed:** Prints installation guidance and exits cleanly
+
+**Dashboard Features:**
+- Real-time governance scoring (EU AI Act Art. 9)
+- Extended PII detection patterns
+- Kill switch / human oversight (Art. 14)
+- Compliance report generation (PDF)
+
+**Install:** `pip install akios-dashboard`  
+**Learn more:** [https://akioud.ai/dashboard](https://akioud.ai/dashboard)
 
 ## Quick Start Examples
 
