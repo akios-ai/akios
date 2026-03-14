@@ -1,5 +1,5 @@
-# AKIOS v1.5.1 – Core Agents Reference
-**Document Version:** 1.5.1  
+# AKIOS v1.5.2 – Core Agents Reference
+**Document Version:** 1.5.2  
 **Date:** 2026-03-14  
 
 **The 6 core agents that power AKIOS workflows with military-grade security.**

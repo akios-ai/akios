@@ -1,5 +1,5 @@
 # Changelog
-**Document Version:** 1.5.1
+**Document Version:** 1.5.2
 **Date:** 2026-03-14
 
 All notable changes to AKIOS will be documented in this file.
@@ -7,17 +7,30 @@ All notable changes to AKIOS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-03-14
+
+### Fixed — "Restore Goldilocks Boundary"
+- **Restored 5 general-purpose health PII patterns** that were incorrectly removed in v1.5.1:
+  - `health_insurance_us` — US health insurance member IDs (generic format, not regulated-industry-specific)
+  - `medical_record` — medical/patient record references (generic context matching)
+  - `medication_dosage` — medication dosages and frequencies (general health data)
+  - `lab_results` — laboratory test results (cholesterol, HbA1c, glucose, etc.)
+  - `diagnosis_codes` — ICD-10, DSM-5, SNOMED code formats (code standards, not patient identifiers)
+- **OSS now ships 44 general-purpose PII patterns** across 6 categories — the correct Goldilocks boundary per v5 strategy
+- **Restored `medical_record`** to `get_eu_ai_act_patterns()` list
+- The v1.5.1 removal was an over-correction: these are general-purpose health data patterns, not healthcare-regulated identifiers (NPI/DEA/MRN remain correctly removed)
+
 ## [1.5.1] - 2026-03-14
 
 ### Removed — "PII Boundary Enforcement"
-- **5 healthcare-clinical PII patterns removed from OSS** to enforce Goldilocks boundary:
+- **5 healthcare-clinical PII patterns removed from OSS** (later restored in v1.5.2 — see above):
   - `health_insurance_us` — US health insurance member IDs
   - `medical_record` — medical/patient record references
   - `medication_dosage` — medication dosages and frequencies
   - `lab_results` — laboratory test results (cholesterol, HbA1c, etc.)
   - `diagnosis_codes` — ICD-10, DSM-5, SNOMED codes
-- **OSS now ships 38 general-purpose PII patterns** (down from 43 in v1.5.0)
-- 4 general-purpose health patterns remain in OSS: `health_insurance_fr`, `blood_pressure`, `vital_signs`, `emergency_contact`
+- These patterns were incorrectly classified as regulated-industry-specific; they are general-purpose health data patterns per v5 strategy §1.3
+- 4 general-purpose health patterns remained unchanged: `health_insurance_fr`, `blood_pressure`, `vital_signs`, `emergency_contact`
 
 ### Fixed — "Documentation Integrity"
 - **SECURITY.md** — supported versions table now shows v1.5.x as active (was stuck on v1.0.x)

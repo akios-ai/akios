@@ -1,5 +1,5 @@
-# 🚀 AKIOS v1.5.1 - Get Started in 3 Minutes
-**Document Version:** 1.5.1  
+# 🚀 AKIOS v1.5.2 - Get Started in 3 Minutes
+**Document Version:** 1.5.2  
 **Date:** 2026-03-14  
 
 **Secure AI workflows made simple.**
@@ -272,4 +272,4 @@ akios audit prune --days 90
 
 ---
 
-*AKIOS v1.5.1 - Where AI meets unbreakable security* 🛡️🤖
+*AKIOS v1.5.2 - Where AI meets unbreakable security* 🛡️🤖
