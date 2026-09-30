@@ -194,7 +194,7 @@ the open-source engine on general-purpose detection:
 
 #### Migration Guide
 If your workflows depend on NPI, DEA, MRN, IBAN, BIC, routing number, wire transfer, or
-crypto wallet detection, reach out if you need continued coverage for these patterns. All other patterns
+crypto wallet detection, note that these patterns are no longer built in. All other patterns
 continue to work identically.
 
 ### Updated
@@ -309,8 +309,8 @@ All AKIOS bridge modules verified against real `enforcecore==1.11.1` (2,324 test
 
 This is the first release in the v1.2.0 "Foundation" series, which integrates
 [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) as an optional
-dependency. **AKIOS works fully without EnforceCore.** Install with:
-`pip install 'akios[enforcecore]'`
+dependency. **AKIOS works fully without EnforceCore.**
+The optional EnforceCore integration of AKIOS 1.x is discontinued together with EnforceCore. Do not enable it.
 
 #### Secret Detection (new — requires EnforceCore)
 - **`akios protect secrets <file>`** — Scan files and text for 11 categories of leaked
@@ -782,9 +782,9 @@ Addresses 11 confirmed bugs from external beta tester audit. 4 additional report
 - **🐳 Container detection false-positive on EC2**: Native EC2 instances no longer misidentified as Docker containers — tightened `/proc/1/cgroup` matching to path-based patterns and removed unreliable hostname/cgroup-write heuristics
 - **📁 Root cache directory creation**: `_save_security_cache()` now creates `/root/.akios/` directory automatically when running with sudo
 - **🔧 ctypes seccomp fallback**: `_alloc_buffer()` now raises `RuntimeError` with guidance instead of silently returning NULL pointer
-- **📧 Security contact email**: Standardized to `security@akioud.ai` across all documentation (was inconsistent between docs)
+- **📧 Security contact email**: Standardized the security contact across all documentation (was inconsistent between docs)
 - **📖 Documentation accuracy**: Removed overstated "100% accuracy" and "Non-Bypassable" claims from security README; qualified with actual behavior
-- **🧪 Test suite hardened**: Added 6 new kernel-hard security tests (Phase 5b) covering sudo execution, seccomp audit logs, and security mode differentiation (28→34 tests)
+- **🧪 Test suite hardened**: Added 6 new kernel-level security tests (Phase 5b) covering sudo execution, seccomp audit logs, and security mode differentiation (28→34 tests)
 - **🌐 Seccomp DNS resolution**: Added `sendmmsg` and `recvmmsg` to essential syscall allowlist — fixes DNS resolution failure when calling real LLM APIs (Grok, OpenAI, etc.) with sandbox enabled on Ubuntu 24.04 ARM64 (glibc uses these for DNS)
 - **🎨 Rich markup stripping in plain-text fallback**: All CLI output functions (`print_success`, `print_error`, `print_warning`, `print_info`, `print_panel`, `print_banner`, `output_with_mode`) now strip Rich markup tags (`[bold]`, `[dim]`, `[#04B1DC]`, etc.) when Rich is unavailable, preventing raw markup from appearing in terminal output
 - **🤖 LLM SDK validation expanded**: `validate_llm_sdk()` now checks all 5 supported providers (openai, anthropic, xai/grok, mistralai, google-generativeai) and automatically bypasses validation when `AKIOS_MOCK_LLM=1` is set
@@ -815,10 +815,10 @@ Addresses 11 confirmed bugs from external beta tester audit. 4 additional report
 
 ### Added
 - **🚀 Multi-Deployment Options**
-  - **Pip Package**: Maximum security with kernel-hard features on Linux
+  - **Pip Package**: Maximum security with kernel-level features on Linux
   - **Docker Container**: Cross-platform consistency with policy-based security
 - **🔒 Enhanced Security Architecture**: Defense-in-depth across all platforms
-  - **Native Linux**: seccomp-bpf + cgroups v2 kernel-hard isolation
+  - **Native Linux**: seccomp-bpf + cgroups v2 kernel-level isolation
   - **Docker**: Policy-based container security (allowlisting, PII redaction, audit)
   - **Unified PII Protection**: 50+ pattern detection, real-time redaction
   - **Cryptographic Audit Trails**: Merkle tree verification, tamper-evident logs
@@ -865,15 +865,7 @@ Addresses 11 confirmed bugs from external beta tester audit. 4 additional report
 
 ## [Unreleased]
 
-Future open-source releases will focus on gradual usability improvements while preserving the security & governance-first cage.
-
-Planned directions (non-binding, community-driven):
-- OpenTelemetry tracing + Prometheus metrics (v1.6.0)
-- Streaming LLM output with per-token PII filtering (v1.6.0)
-- Enhanced state persistence and crash recovery
-- More high-quality example templates
-
-**Legal/certified features** (FranceConnect, eIDAS, hard HDS blocks, official PDFs) are planned for a future licensed edition.
+AKIOS 1.x is no longer maintained. A redesigned AKIOS is in development.
 
 ## Types of Changes
 
@@ -898,8 +890,9 @@ Planned directions (non-binding, community-driven):
 
 ## Support & Community
 
+- AKIOS 1.x is no longer maintained.
 - GitHub Discussions & Issues
-- Security reports: security@akioud.ai (private only)
+- Report vulnerabilities through GitHub's private vulnerability reporting on the AKIOS repository (https://github.com/akios-ai/akios/security/advisories/new). If the form is unavailable, write to hello@akios.ai. Reports are handled on a best-effort basis, with no guaranteed response time.
 - See README.md for current scope & limits
 
 *For the complete history, see the [Git repository](https://github.com/akios-ai/akios/commits/main).*

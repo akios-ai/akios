@@ -5,23 +5,19 @@
 ## 🔒 Security Overview
 
 AKIOS v1.6.0 is a **minimal, open-source security cage** for AI agents.  
-We take security very seriously — the entire product is built around hard containment, real-time protection, and provable audit.
+The product is built around containment, real-time PII redaction, and a hashed audit log.
 
 This policy explains how we handle vulnerabilities in the open runtime.
 
 ## 📋 Supported Versions
 
-| Version | Supported          | Security Updates    |
-|---------|--------------------|---------------------|
-| 1.5.x   | ✅ Active          | ✅ Full Support      |
-| 1.4.x   | ⚠️ Maintenance     | ✅ Security Only     |
-| < 1.4   | ❌ End of Life     | ❌ No Support       |
+AKIOS 1.x is no longer maintained.
 
 ## 🚨 Reporting Vulnerabilities
 
 **DO NOT report security issues on public GitHub.**
 
-Send private reports to: **security@akioud.ai**
+Report vulnerabilities through GitHub's private vulnerability reporting on the AKIOS repository (https://github.com/akios-ai/akios/security/advisories/new). If the form is unavailable, write to hello@akios.ai. Reports are handled on a best-effort basis, with no guaranteed response time.
 
 ### What to Include
 - Clear description of the vulnerability
@@ -32,14 +28,11 @@ Send private reports to: **security@akioud.ai**
 - Your contact info
 
 ### Our Response Process
-1. **Acknowledgment**: Within 24 hours
-2. **Triage & Validation**: Within 72 hours
-3. **Fix Development**: 2–4 weeks (depending on severity)
-4. **Coordinated Disclosure**: We release fix + advisory together
-5. **Credit**: We publicly thank responsible reporters (Hall of Fame)
+1. **Coordinated Disclosure**: Disclosure is coordinated with the reporter
+2. **Credit**: We publicly thank responsible reporters (Hall of Fame)
 
 ## 🛡️ What We Protect In v1.5.2
-- Security sandboxing (kernel-hard on native Linux, strong policy-based in Docker)
+- Security sandboxing (kernel-level on native Linux, strong policy-based in Docker)
 - Syscall interception & resource quotas
 - Real-time PII redaction (44 patterns across 6 categories)
 - Enforced cost & infinite loop kill-switches
@@ -73,10 +66,9 @@ Users must secure their environment and validate outputs.
 
 ## 📞 Contact
 
-Security reports: **security@akioud.ai**  
+Security reports: GitHub private vulnerability reporting (https://github.com/akios-ai/akios/security/advisories/new); if the form is unavailable, **hello@akios.ai**  
 General questions: **hello@akios.ai**
 
 Thank you for helping keep the cage strong.
 
-*AKIOS — Where AI meets unbreakable security*  
 *Use responsibly. Your safety and compliance are your responsibility.* 🛡️

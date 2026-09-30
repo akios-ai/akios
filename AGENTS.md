@@ -2,11 +2,11 @@
 **Document Version:** 1.6.0  
 **Date:** 2026-03-14  
 
-**The 6 core agents that power AKIOS workflows with military-grade security.**
+**The 6 core agents that run AKIOS workflows inside the security cage.**
 
 AKIOS provides 6 specialized agents, each running inside the security cage with full audit logging, syscall sandboxing, and automatic PII redaction. These agents form the foundation of secure AI workflows.
 
-## 🔒 Security Guarantees (All Agents)
+## 🔒 Security Controls (All Agents)
 
 Every agent execution includes:
 - **Process isolation** via cgroups v2 + seccomp-bpf
@@ -517,5 +517,3 @@ max_output_size: 1048576      # 1MB
 - **Full audit trail** maintained for compliance
 - **Network access controlled** via domain whitelisting per agent capabilities
 - **Shell injection blocked** via `--exec` rejection trap
-
-**Agents cannot escape the security cage — guaranteed by kernel primitives.**

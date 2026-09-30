@@ -189,7 +189,7 @@ AKIOS may be subject to French and EU export control regulations. Users must com
 **AKIOS validates and documents:**
 - ✅ Security pipeline overhead on AWS EC2 t4g.micro (0.47 ms full pipeline)
 - ✅ Docker performance on all platforms (sub-2s startup, functional security)
-- ✅ Security overhead analysis (policy-based vs kernel-hard)
+- ✅ Security overhead analysis (policy-based vs kernel-level)
 
 **YOU must validate:**
 - ✅ Performance on YOUR instance type and region
@@ -269,5 +269,4 @@ AKIOS includes third-party software; see `THIRD_PARTY_LICENSES.md` for notices a
 
 ---
 
-*AKIOS — Where AI meets unbreakable security*  
 *Use responsibly. Your safety and compliance are your responsibility.* 🛡️

@@ -102,7 +102,7 @@ sudo apt-get install libseccomp-dev python3-seccomp
 sudo dnf install libseccomp-devel python3-seccomp
 ```
 
-**Why?** AKIOS uses kernel-hard security (seccomp-bpf) on Linux for process isolation and syscall filtering. These packages provide the necessary security library that `pip install akios` will use automatically.
+**Why?** AKIOS uses kernel-level security (seccomp-bpf) on Linux for process isolation and syscall filtering. These packages provide the necessary security library that `pip install akios` will use automatically.
 
 **If you skip this:**
 - ✅ AKIOS will still install and run
@@ -120,10 +120,10 @@ python3 -c "import seccomp; print('✅ seccomp available')"
 
 | Method                        | Description & How It Works                                      | Security Level | Best For |
 |-------------------------------|-----------------------------------------------------------------|----------------|----------|
-| **Pip Package** ⭐            | Python package installation with ecosystem integration         | Full kernel-hard (Linux) | Python developers, CI/CD |
+| **Pip Package** ⭐            | Python package installation with ecosystem integration         | Full kernel-level (Linux) | Python developers, CI/CD |
 | **Docker Container**          | Official minimal Docker image + containerized deployment       | Strong policy-based | Cross-platform teams, development |
 
-> **Linux deployment note:** `pip install akios` on Linux automatically includes the `seccomp>=1.0.0` module for kernel-hard security. Install OS development headers (`libseccomp-dev` on Ubuntu/Debian, `libseccomp-devel` on Fedora) before `pip install` for optimal compilation. For full kernel-hard protection, run with `sudo akios run workflow.yml`. Without sudo, AKIOS gracefully degrades to policy-based mode (same security as Docker) with clear warnings.
+> **Linux deployment note:** `pip install akios` on Linux automatically includes the `seccomp>=1.0.0` module for kernel-level security. Install OS development headers (`libseccomp-dev` on Ubuntu/Debian, `libseccomp-devel` on Fedora) before `pip install` for optimal compilation. For full kernel-level protection, run with `sudo akios run workflow.yml`. Without sudo, AKIOS gracefully degrades to policy-based mode (same security as Docker) with clear warnings.
 
 **Required Artifacts**:
 - `Dockerfile` (Alpine/scratch base + Python application)
@@ -154,16 +154,16 @@ docker run --rm -v $(pwd)/templates:/app/templates akios:latest
 
 ### 3. Out of Scope – Beyond Current Scope
 
-| Feature / Method                                      | Why out of scope                                   | Where it belongs (if ever)                  |
-|-------------------------------------------------------|----------------------------------------------------|---------------------------------------------|
-| Multi-container setups (db, redis, monitoring)        | Single-process cage – no external deps             | Future open releases                        |
-| Docker Compose with volumes/networks/services         | Too complex for single-cage model                  | Future open releases                        |
-| Systemd/Init.d service files                          | Not needed for minimal usage                       | Future open releases                        |
-| Nginx/Apache reverse proxy                            | No API/web server in current releases              | Future open releases                        |
-| Prometheus/Grafana/Jaeger monitoring                  | No observability layer in current releases         | Future open releases                        |
-| Backup & recovery scripts (DB snapshots, logs)        | No DB, no persistence                              | Future open releases                        |
-| Scaling / horizontal load balancing                   | Single-process runtime                             | Future open releases                        |
-| Security hardening (ufw, fail2ban, SELinux profiles)  | Cage enforces security internally                  | Future releases                             |
+| Feature / Method                                      | Why out of scope                                   |
+|-------------------------------------------------------|----------------------------------------------------|
+| Multi-container setups (db, redis, monitoring)        | Single-process cage – no external deps             |
+| Docker Compose with volumes/networks/services         | Too complex for single-cage model                  |
+| Systemd/Init.d service files                          | Not needed for minimal usage                       |
+| Nginx/Apache reverse proxy                            | No API/web server in current releases              |
+| Prometheus/Grafana/Jaeger monitoring                  | No observability layer in current releases         |
+| Backup & recovery scripts (DB snapshots, logs)        | No DB, no persistence                              |
+| Scaling / horizontal load balancing                   | Single-process runtime                             |
+| Security hardening (ufw, fail2ban, SELinux profiles)  | Cage enforces security internally                  |
 
 ### 4. Security & Safety Boundaries
 

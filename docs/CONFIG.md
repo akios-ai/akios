@@ -139,7 +139,7 @@ When enabled:
 - Filesystem access is restricted
 - Network access is controlled
 
-**Security Impact:** Critical - provides the core isolation guarantee
+**Security Impact:** Critical - provides the core isolation
 
 ```yaml
 sandbox_enabled: true  # Recommended: always true

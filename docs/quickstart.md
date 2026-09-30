@@ -29,7 +29,7 @@
 AKIOS (AI Knowledge & Intelligence Operating System) is a **security-first runtime** for AI agent workflows that provides:
 
 ### 🛡️ **Kernel-Level Security**
-- **Sandboxing**: Complete process isolation (kernel-hard on native Linux, strong policy-based in Docker)
+- **Sandboxing**: Process isolation (kernel-level on native Linux, strong policy-based in Docker)
 - **PII Protection**: Automatic sensitive data redaction
 - **Audit Trails**: Cryptographic logging of all operations
 - **Resource Controls**: CPU, memory, and cost limits
@@ -60,7 +60,7 @@ AKIOS supports three deployment methods - choose the best one for your use case:
 
 | Method | Best For | Setup Time | Security Level |
 |--------|----------|------------|----------------|
-| **Pip Package** ⭐ | Python developers | 2 minutes | Full kernel-hard security (with sudo on Linux) |
+| **Pip Package** ⭐ | Python developers | 2 minutes | Full kernel-level security (with sudo on Linux) |
 | **Docker** | Cross-platform teams | 1 minute | Strong policy-based security |
 | **Direct Docker** | Emergency fallback when wrapper fails | 1 minute | Strong policy-based security |
 
@@ -93,7 +93,7 @@ akios run templates/hello-workflow.yml
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.5.0).
 > For specific versions: `pip install akios==1.5.0`.
 
-**Benefits:** Full kernel-hard security, Python ecosystem integration.
+**Benefits:** Full kernel-level security, Python ecosystem integration.
 
 > *Note: The "Pip Package" section below provides equivalent instructions with additional detail.*
 
@@ -111,7 +111,7 @@ akios --version
 akios init my-project
 cd my-project
 
-# For maximum security on Linux, run with sudo for kernel-hard protection:
+# For maximum security on Linux, run with sudo for kernel-level protection:
 # sudo akios run templates/hello-workflow.yml
 # Without sudo, AKIOS gracefully falls back to policy-based mode with warnings
 
@@ -120,9 +120,9 @@ akios run templates/hello-workflow.yml
 
 > **📦 Version Note:** `pip install akios` installs the latest stable version (currently v1.5.0).
 > For specific versions: `pip install akios==1.5.0`.
-> **🛡️ Security Note:** On Linux, `pip install akios` includes the seccomp module for kernel-hard security. Run with `sudo` for full protection.
+> **🛡️ Security Note:** On Linux, `pip install akios` includes the seccomp module for kernel-level security. Run with `sudo` for full protection.
 
-**Benefits:** Full kernel-hard security (with sudo), Python ecosystem integration.
+**Benefits:** Full kernel-level security (with sudo), Python ecosystem integration.
 
 #### 🐳 **Docker** (Cross-Platform Teams)
 **Works on Linux, macOS, and Windows:**
@@ -312,7 +312,7 @@ AKIOS_LLM_MODEL=grok-3
 📄 Loading configuration from .env
 🐳 Using Docker for cross-platform security
 *** CRITICAL SECURITY DOWNGRADE ***
-Container detected - NO KERNEL-HARD SECCOMP-BPF available!
+Container detected - NO KERNEL-LEVEL SECCOMP-BPF available!
 Security: Policy-based isolation active
 ✓ PII detection available
 🤖 Step 1 LLM Output: "Greetings, human! I'm an AI running in AKIOS's secure cage..."
@@ -837,7 +837,7 @@ jq -r 'select(.metadata.cost_incurred) | .metadata.cost_incurred' audit/audit_ev
   - Ollama: Local models, fully offline, zero cost
 
 **Q: Is AKIOS secure for production use?**
-- **A:** Yes! AKIOS provides military-grade security with PII redaction, audit trails, and sandboxing. See the Security section for details.
+- **A:** AKIOS 1.x is no longer maintained. It is not intended for production use. See the Security section for details.
 
 **Q: How do I check if AKIOS security is working?**
 - **A:** Run `./akios status --security` to see a detailed security dashboard showing all active protections, or `./akios status` for a security summary.
@@ -881,7 +881,7 @@ sudo usermod -aG docker $USER
 **❌ "Container detected" message**
 - This is normal! It shows AKIOS detected Docker environment
 - You're getting policy-based security (strong protection)
-- For kernel-hard security, use native Linux installation
+- For kernel-level security, use native Linux installation
 
 **❌ Workflow fails with errors**
 ```bash
@@ -1033,6 +1033,5 @@ You've completed the comprehensive AKIOS tutorial! You now understand:
 
 ---
 
-*AKIOS v1.6.0 - Where AI meets unbreakable security*
 
 **Need help?** Run `akios doctor`, check the audit logs, or create a GitHub issue.

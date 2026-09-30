@@ -87,8 +87,6 @@ No GPL-incompatible licenses are used.
 
 - All dependencies are **actively maintained** with regular security updates
 - **Automated security scanning** via pip-audit in CI/CD pipeline
-- **Vulnerability patching** within 30 days for critical issues
-- **Dependency updates** reviewed quarterly for security and compatibility
 
 ## Attribution & Notices
 

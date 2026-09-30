@@ -33,20 +33,23 @@ AKIOS is an open-source project built by developers, for developers. Our communi
 
 ### 🔒 Security & Vulnerabilities
 **Security is our top priority** - report sensitive issues privately:
-- **Email**: security@akioud.ai
+- Report vulnerabilities through GitHub's private vulnerability reporting on the AKIOS repository (https://github.com/akios-ai/akios/security/advisories/new). If the form is unavailable, write to hello@akios.ai. Reports are handled on a best-effort basis, with no guaranteed response time.
 - **Private disclosure** only - never post security issues publicly
-- **24-hour response** guarantee for security reports
 
 ## 📋 Support Channels
 
-| Channel | Best For | Response Time | How to Access |
-|---------|----------|---------------|---------------|
-| **GitHub Discussions** | Questions, advice, sharing ideas | 24-72 hours | [Join the conversation](https://github.com/akios-ai/akios/discussions) |
-| **GitHub Issues** | Bugs, feature requests | 24-48 hours | [Create an issue](https://github.com/akios-ai/akios/issues) |
-| **Documentation** | Learning & self-help | Instant | [Browse docs](docs/) |
-| **Security Issues** | Vulnerabilities & security concerns | 24 hours | security@akioud.ai |
+| Channel | Best For | How to Access |
+|---------|----------|---------------|
+| **GitHub Discussions** | Questions, advice, sharing ideas | [Join the conversation](https://github.com/akios-ai/akios/discussions) |
+| **GitHub Issues** | Bugs, feature requests | [Create an issue](https://github.com/akios-ai/akios/issues) |
+| **Documentation** | Learning & self-help | [Browse docs](docs/) |
+| **Security Issues** | Vulnerabilities & security concerns | [Private vulnerability reporting](https://github.com/akios-ai/akios/security/advisories/new), or hello@akios.ai if the form is unavailable |
+
+All channels are handled on a best-effort basis, with no guaranteed response time.
 
 ## 🎯 What We Support
+
+AKIOS 1.x is no longer maintained.
 
 ### ✅ In Scope
 - **Installation & setup** questions
@@ -128,7 +131,7 @@ AKIOS is more than software - it's a community of developers building secure AI 
 
 - **General Support**: [GitHub Discussions](https://github.com/akios-ai/akios/discussions)
 - **Bug Reports**: [GitHub Issues](https://github.com/akios-ai/akios/issues)
-- **Security Issues**: security@akioud.ai
+- **Security Issues**: [private vulnerability reporting](https://github.com/akios-ai/akios/security/advisories/new); if the form is unavailable, hello@akios.ai
 - **Documentation**: [docs/](docs/) folder in this repository
 
 ## 🙏 Acknowledgments
@@ -140,5 +143,4 @@ Thank you to our amazing community contributors, early adopters, and users who h
 **Ready to build secure AI workflows?** Let's get started! 🚀🤖🛡️
 
 
-*AKIOS — Where AI meets unbreakable security*  
 *Use responsibly. Your safety and compliance are your responsibility.* 🛡️

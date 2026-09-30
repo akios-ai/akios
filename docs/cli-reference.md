@@ -45,7 +45,7 @@ chmod +x akios
 
 ## Overview
 
-AKIOS provides a simple, secure command-line interface for running AI agent workflows with military-grade security. The CLI focuses on essential operations: project management, workflow execution and management, templates, audit, logging, and cleanup.
+AKIOS provides a simple, secure command-line interface for running AI agent workflows inside the security cage. The CLI focuses on essential operations: project management, workflow execution and management, templates, audit, logging, and cleanup.
 
 **Philosophy**: Simple, secure, and cage-enforced — no bloat, just the gateway to the security cage.
 
@@ -478,7 +478,7 @@ audit_retention_days: 90      # Auto-delete events older than 90 days (0 = disab
 audit_archive_days: 30        # Auto-archive events older than 30 days (0 = disabled)
 ```
 
-**Safety guarantees:**
+**Safety behavior:**
 - Atomic rewrite using temp-file swap — no partial state on disk
 - Events with unparseable timestamps are always kept (never silently lost)
 - Archived events go to compressed `.jsonl.gz` in `audit/archive/` before any deletion
@@ -769,14 +769,14 @@ akios cage down --passes 3
 akios cage down --fast
 ```
 
-> **Security guarantee**: Default `cage down` ensures zero data residue. Use `--keep-data` only during active development when you need to inspect outputs.
+> **Note**: Default `cage down` overwrites and deletes session data. On SSDs, overwritten sectors may be remapped; use full-disk encryption as the underlying layer. Use `--keep-data` only during active development when you need to inspect outputs.
 
 #### `status`
 Show current cage posture (ACTIVE / RELAXED / CUSTOM) and protection table.
 
 **How it works:** `cage up/down` writes to your project's `.env` file. The AKIOS engine reads these values at workflow runtime via `dotenv.load_dotenv()`. In Docker, restart the container for changes to take effect.
 
-**Data lifecycle:** `cage up` → protections active → workflows generate data → `cage down` → all data destroyed. This guarantees no sensitive artifacts survive a cage session.
+**Data lifecycle:** `cage up` → protections active → workflows generate data → `cage down` → session data (audit/, data/output/) overwritten and deleted; input data preserved.
 
 ### `akios protect` - PII Protection Analysis
 

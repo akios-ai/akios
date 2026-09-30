@@ -101,7 +101,7 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 3. If approved, merged (no additional approval needed)
 4. If changes requested, contributor iterates
 
-**Timeline:** 24-48 hours for review
+**Timeline:** Reviews are handled on a best-effort basis, with no guaranteed response time.
 
 #### 2. Significant Decisions (Medium Impact)
 
@@ -117,8 +117,6 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 3. Core team member summarizes consensus
 4. If consensus reached, contributor implements
 5. Pull request reviewed and merged
-
-**Timeline:** 1-2 weeks from proposal to merge
 
 #### 3. Major Decisions (High Impact)
 
@@ -142,8 +140,6 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 6. Decision documented in RFC thread
 7. Implementation plan created
 
-**Timeline:** 3-4 weeks minimum
-
 #### 4. Governance Decisions
 
 **Examples:**
@@ -158,8 +154,6 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 3. Core team vote (unanimous approval required)
 4. Community veto possible (if 100+ contributors object, proposal rejected)
 5. Decision documented
-
-**Timeline:** 4+ weeks
 
 **Note on License Changes:**
 - AKIOS is committed to GPL-3.0
@@ -276,9 +270,7 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 - Core team triages (labels, milestones)
 - Community can upvote/comment
 
-**Response SLA:**
-- Triage: <48 hours (business days)
-- First response: <7 days
+**Response time:** Issues are handled on a best-effort basis, with no guaranteed response time.
 
 ### 2. GitHub Discussions
 
@@ -359,16 +351,15 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 **Example:** Code of Conduct violations
 
 **Resolution:**
-1. Report to core team (email: conduct@akios.ai)
+1. Report to core team (email: hello@akios.ai)
 2. Core team investigates privately
 3. Warning, temporary ban, or permanent ban (depending on severity)
 4. Decision communicated to involved parties
 5. Public announcement (if warranted)
 
 **Appeals Process:**
-- Email conduct@akios.ai with appeal reasoning
+- Email hello@akios.ai with appeal reasoning
 - Different core team member reviews
-- Final decision within 7 days
 
 #### 3. Governance Disputes
 
@@ -394,9 +385,7 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 
 ### Release Cadence
 
-- **Patch releases:** As needed (bug fixes, security)
-- **Minor releases:** Monthly (feature accumulation)
-- **Major releases:** Yearly (or when breaking changes accumulated)
+AKIOS 1.x is no longer maintained. A redesigned AKIOS is in development.
 
 ### Release Authority
 
@@ -429,14 +418,9 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 
 ### Reporting
 
-**Channel:** security@akios.ai (private)
+**Channel:** Report vulnerabilities through GitHub's private vulnerability reporting on the AKIOS repository (https://github.com/akios-ai/akios/security/advisories/new). If the form is unavailable, write to hello@akios.ai. Reports are handled on a best-effort basis, with no guaranteed response time.
 
 **Do NOT:** Open public GitHub Issue for security vulnerabilities
-
-**Response SLA:**
-- Acknowledgment: <24 hours
-- Initial assessment: <72 hours
-- Patch released: <7 days (critical), <30 days (high)
 
 ### Disclosure Process
 
@@ -448,7 +432,7 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 6. Public advisory published (GitHub Security Advisories)
 7. Credit to researcher (if desired)
 
-**Policy:** Responsible disclosure (90-day window for patching)
+**Policy:** Responsible disclosure
 
 ---
 
@@ -493,9 +477,8 @@ AKIOS is licensed under the **GNU General Public License v3.0 (GPL-3.0) ONLY**. 
 
 ### Private Channels
 
-- **Core team email:** team@akios.ai
-- **Security email:** security@akios.ai
-- **Code of Conduct email:** conduct@akios.ai
+- **Email:** hello@akios.ai
+- **Security reports:** GitHub private vulnerability reporting (https://github.com/akios-ai/akios/security/advisories/new)
 
 ---
 
@@ -531,6 +514,6 @@ We stand on the shoulders of giants. Thank you to these communities for sharing 
 
 - GitHub Discussions: https://github.com/akios-ai/akios/discussions
 - Discord #general: https://discord.gg/akios
-- Email: team@akios.ai
+- Email: hello@akios.ai
 
 **This governance document is a living document. Help us improve it.**

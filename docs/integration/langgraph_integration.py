@@ -1,4 +1,4 @@
-# Copyright (C) 2025-2026 AKIOUD AI, SAS <contact@akioud.ai>
+# Copyright (C) 2025-2026 AKIOUD AI, SAS <hello@akios.ai>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 """

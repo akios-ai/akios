@@ -5,8 +5,6 @@
 
 This roadmap covers the open-source AKIOS project — the security-cage runtime for AI agents.
 
-> **Two-project model:** AKIOS (GPL-3.0) is the complete production runtime. [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is the general-purpose enforcement library. Starting from v1.2.0, AKIOS will use EnforceCore as its enforcement foundation while keeping its unique value: kernel sandbox, PII redaction, workflow engine, 6 agents, CLI, and security posture scoring.
-
 > **Versioning note:** Releases v1.0.5 through v1.0.15 added significant new features (REST API, AWS Bedrock provider, `--json-output`, Rich UI, conditional execution, etc.) that per strict Semantic Versioning should have incremented the minor version. We are correcting this going forward: **v1.0.16 is the final patch release** in the v1.0.x series (bug fixes only), after which new features will ship under **v1.1.0+** with proper semver compliance.
 
 ---
@@ -183,38 +181,11 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 
 ---
 
-## Shipped: v1.2.0 — "Foundation" (February 2026)
+## Shipped: v1.2.0 and v1.3.0 — Optional EnforceCore integration
 
 **Status:** ✅ Shipped
 
-**Theme:** Begin EnforceCore integration — adopt the shared enforcement foundation without losing AKIOS identity.
-
-> **Context:** [EnforceCore](https://github.com/akios-ai/EnforceCore) (Apache-2.0) is AKIOUD AI's open enforcement library. AKIOS uses it as an OPTIONAL dependency while keeping its own unique value: kernel sandbox, PII redaction, workflow engine, 6 agents, CLI, and security posture scoring.
-
-- **EnforceCore as optional dependency** — `pip install akios[enforcecore]` for enhanced features
-- **Secret detection** — 11-category API key/token scanner via EnforceCore (`akios protect secrets`)
-- **Content rules** — shell injection, SQL injection, path traversal detection in Tool Executor and Database agents
-- **EU AI Act compliance** — generate Article 9, 13, 14, 52 assessments (`akios compliance eu-ai-act`, requires EnforceCore)
-- **PII bridge** — register AKIOS's PII patterns into EnforceCore's `PatternRegistry` for unified scanning
-- **Unicode hardening** — homoglyph/encoding evasion detection for PII
-- **SQLite + PostgreSQL audit backends** — optional storage alongside default JSONL
-- **Lifecycle hooks** — pre_workflow, post_workflow, step_complete events
-
-**What stays AKIOS-only:** Kernel sandbox (seccomp-bpf + cgroups v2), 44 PII patterns (GPL-3.0), workflow engine, 6 agents, CLI, security posture scoring. AKIOS works fully without EnforceCore.
-
----
-
-## Shipped: v1.3.0 — "Unified Audit" (March 2026)
-
-**Status:** ✅ Shipped  
-**Theme:** Merkle format bridge + production-grade audit backends.
-
-> **How the Merkle incompatibility was solved:** AKIOS and EnforceCore use different Merkle chain formats (AKIOS: binary tree SHA-256, EnforceCore: linear chain). Rather than changing either format, v1.3.0 uses EnforceCore v1.12.0's `external_hash` mode — AKIOS pre-computes its Merkle hashes and passes them to EC backends, which store them as-is. `verify_trail(skip_entry_hash=True)` enables format-agnostic chain verification.
-
-- **Merkle format bridge** — AKIOS pre-computes hashes, passes via `external_hash` to EC backends. Both systems keep their own format. No re-hashing, no format mismatch.
-- **EC backends promoted to production-ready** — SQLite stores `akios_merkle_hash` for cross-reference; PostgreSQL stores events with full JSONB metadata.
-- **EnforceCore v1.12.0 required** — updated dependency `enforcecore>=1.12.0`.
-- **1,554 tests passing** WITH enforcecore; 1,553 WITHOUT (cardinal rule maintained).
+The optional EnforceCore integration of AKIOS 1.x is discontinued together with EnforceCore. Do not enable it.
 
 ---
 
@@ -242,25 +213,12 @@ This roadmap covers the open-source AKIOS project — the security-cage runtime 
 - ✅ **`audit_retention_days` / `audit_archive_days` settings** — config-driven retention with CLI overrides
 - ✅ **`compliance_demo.yml` template** — showcases `--report` flag end-to-end
 - ✅ **+56 new unit tests** (1,623 total, all passing)
-- ⏭️ **OpenTelemetry + streaming LLM** — deferred to v1.6.0 (scope too large)
 
 ---
 
-## Next: v1.6.0 — "Telemetry" (Target: Q2 2026)
+## Status
 
-**Theme:** Full observability stack: tracing, metrics, and streaming output.
-
-- **OpenTelemetry** — tracing + Prometheus metrics (via EnforceCore telemetry)
-- **Streaming LLM output** — per-token PII filtering
-- Additional observability integrations
-
----
-
-## v2.0.0 — "Platform" (Future, only if breaking changes needed)
-
-**Theme:** Major version only if backward-incompatible changes required. Non-binding.
-
-Most features will ship as v1.x minor releases. v2.0.0 is reserved for genuine breaking changes that cannot be done backward-compatibly (e.g., workflow schema v2, Python 3.11+ minimum, deprecated CLI removal).
+AKIOS 1.x is no longer maintained and is not intended for production use. A redesigned AKIOS is in development.
 
 ---
 

@@ -26,7 +26,6 @@ When distributing forks or substantial modifications, include this notice in you
 “This project is not affiliated with or endorsed by AKIOUD AI, SAS. ‘AKIOS’ and related marks are used under the AKIOS Trademark Guidelines.”
 
 ## Contact
-Trademark inquiries: **legal@akioud.ai**
+Trademark inquiries: **hello@akios.ai**
 
-*AKIOS — Where AI meets unbreakable security*  
 *Use responsibly. Your safety and compliance are your responsibility.* 🛡️

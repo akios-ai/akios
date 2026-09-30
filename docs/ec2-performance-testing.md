@@ -12,12 +12,6 @@
 
 **Important:** AKIOS performance metrics are validated ONLY on specific AWS EC2 configurations. Your actual performance may differ based on instance type, region, load, and configuration choices.
 
-#### What AKIOS Guarantees
-✅ **Security of the AKIOS sandbox** (if you follow security best practices)  
-✅ **PII redaction works as documented**  
-✅ **Audit trails are cryptographically sound**  
-✅ **Performance on t4g.micro instances** (our validated baseline: 0.47 ms security pipeline)
-
 #### What AKIOS Does NOT Guarantee
 ❌ **AWS infrastructure performance** beyond our tested configuration  
 ❌ **AWS account security** (your responsibility to manage credentials)  
@@ -299,7 +293,7 @@ After running AKIOS on EC2, validate:
 - [ ] **Performance baseline documented** for your team
 
 ### Security Validation
-- [ ] **Security status shows** "Full (kernel-hard)" (run `akios status`)
+- [ ] **Security status shows** the full security level (run `akios status`)
 - [ ] **PII redaction works** (test with sensitive data)
 - [ ] **Audit logs generated** (`akios audit`)
 - [ ] **Budget controls active** (check cost in logs)
@@ -573,7 +567,7 @@ PERFORMANCE TESTING
 ☐ API latency measured (if using real API)
 
 SECURITY TESTING
-☐ Security status shows "Full (kernel-hard)"
+☐ Security status shows the full security level
 ☐ PII redaction verified with test data
 ☐ Audit logs generated
 ☐ Budget controls functional

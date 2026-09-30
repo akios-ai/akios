@@ -22,7 +22,7 @@ akios --version
 akios run workflow.yml
 ```
 
-**Benefits:** Full kernel-hard security (Linux), Python ecosystem integration, easiest upgrade path.
+**Benefits:** Full kernel-level security (Linux), Python ecosystem integration, easiest upgrade path.
 
 ### Option 2: Switch to Docker (Cross-Platform)
 ```bash
@@ -86,7 +86,7 @@ pip install akios
 akios init my-project
 ```
 
-**Benefits:** Full kernel-hard security, Python ecosystem integration.
+**Benefits:** Full kernel-level security, Python ecosystem integration.
 
 ### For **Python Developers**
 ```bash
@@ -356,7 +356,7 @@ akios init $(basename $(pwd))  # Reinitialize
 # Check your security level
 akios status
 
-# Linux (pip): Full kernel-hard security
+# Linux (pip): Full kernel-level security
 # macOS/Windows (docker): Strong policy-based security
 # Docker (all platforms): Strong container security
 ```

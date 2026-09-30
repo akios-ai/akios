@@ -8,16 +8,13 @@ AKIOS v1.6.0 provides **defense-in-depth security** for AI agent workflows. The 
 
 ## Supported Versions
 
-| Version | Supported     | Security Updates |
-|---------|---------------|------------------|
-| 1.0.x   | Active        | Full Support     |
-| <1.0    | End of Life   | No Support       |
+AKIOS 1.x is no longer maintained and is not intended for production use. A redesigned AKIOS is in development.
 
 ## Reporting Vulnerabilities
 
 **DO NOT report security issues on public GitHub.**
 
-Send private reports to: **security@akioud.ai**
+Report vulnerabilities through GitHub's private vulnerability reporting on the AKIOS repository (https://github.com/akios-ai/akios/security/advisories/new). If the form is unavailable, write to hello@akios.ai. Reports are handled on a best-effort basis, with no guaranteed response time.
 
 ### What to Include
 - Clear description of the vulnerability
@@ -27,11 +24,8 @@ Send private reports to: **security@akioud.ai**
 - Suggested fix (if any)
 
 ### Our Response Process
-1. **Acknowledgment**: Within 24 hours
-2. **Triage & Validation**: Within 72 hours
-3. **Fix Development**: 2–4 weeks (depending on severity)
-4. **Coordinated Disclosure**: Fix + advisory released together
-5. **Credit**: Responsible reporters acknowledged in Hall of Fame
+1. **Coordinated Disclosure**: Disclosure is coordinated with the reporter
+2. **Credit**: Responsible reporters acknowledged in Hall of Fame
 
 ---
 
@@ -201,7 +195,7 @@ cage down → audit/ destroyed → data/output/ destroyed → data/input/ PRESER
                                                 User input data retained
 ```
 
-This guarantees no session artifacts (audit logs, workflow outputs) survive a cage teardown. User input data (`data/input/`) is preserved to prevent accidental data loss.
+Session artifacts (audit logs, workflow outputs) are overwritten and deleted at cage teardown. User input data (`data/input/`) is preserved to prevent accidental data loss.
 
 ---
 
@@ -274,12 +268,12 @@ With sudo privileges on Linux kernel 5.4+:
 - **cgroups v2**: Real CPU, memory, and I/O resource quotas
 - **seccomp-bpf**: Syscall filtering with BPF bytecode enforcement
 - **Process isolation**: Each agent runs in isolated cgroup
-- **Kernel-hardened**: Direct kernel integration, minimal attack surface
+- **Kernel-level**: Direct kernel integration
 
 Requirements:
 - Linux kernel 5.4+ with seccomp support
 - System packages: `libseccomp-dev` and `python3-seccomp`
-- sudo privileges for full kernel-hard protection
+- sudo privileges for full kernel-level protection
 
 Without sudo, AKIOS gracefully degrades to policy-based mode (same protections as Docker).
 
@@ -390,7 +384,7 @@ akios cage status
 ```
 
 The dashboard shows:
-- Security level (Full kernel-hard vs Strong policy-based)
+- Security level (Full kernel-level vs Strong policy-based)
 - PII protection status (input and output redaction)
 - Network access (allowed/blocked)
 - Audit logging and chain integrity
@@ -401,5 +395,5 @@ The dashboard shows:
 
 ## Contact
 
-Security reports: **security@akioud.ai**  
+Security reports: GitHub private vulnerability reporting (https://github.com/akios-ai/akios/security/advisories/new); if the form is unavailable, **hello@akios.ai**  
 General questions: **hello@akios.ai**

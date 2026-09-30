@@ -572,12 +572,11 @@ akios audit export --format json
 
 ## 📞 Emergency Contacts
 
-**Security Issues:** security@akioud.ai (private disclosure only)  
+**Security Issues:** Report vulnerabilities through GitHub's private vulnerability reporting on the AKIOS repository (https://github.com/akios-ai/akios/security/advisories/new). If the form is unavailable, write to hello@akios.ai. Reports are handled on a best-effort basis, with no guaranteed response time.  
 **General Support:** GitHub Issues/Discussions  
 
 ---
 
 **Most issues are configuration-related or environment compatibility problems. The troubleshooting steps above resolve 90%+ of user issues.**
 
-*AKIOS — Where AI meets unbreakable security*  
 *Use responsibly. Your safety and compliance are your responsibility.* 🛡️

@@ -13,11 +13,11 @@
 
 ⚠️ **LINUX USERS: Pre-install system packages BEFORE `pip install`**
 ```bash
-# Ubuntu/Debian - REQUIRED for kernel-hard security
+# Ubuntu/Debian - REQUIRED for kernel-level security
 sudo apt-get update
 sudo apt-get install libseccomp-dev python3-seccomp
 
-# Fedora/RHEL - REQUIRED for kernel-hard security
+# Fedora/RHEL - REQUIRED for kernel-level security
 sudo dnf install libseccomp-devel python3-seccomp
 ```
 
@@ -272,4 +272,3 @@ akios audit prune --days 90
 
 ---
 
-*AKIOS v1.6.0 - Where AI meets unbreakable security* 🛡️🤖

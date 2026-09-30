@@ -85,9 +85,8 @@ AKIOS is part of the [AKIOUD AI](https://github.com/akios-ai) ecosystem:
 | Project | License | Description |
 |---------|---------|-------------|
 | **[AKIOS](https://github.com/akios-ai/akios)** | GPL-3.0-only | Production runtime for secure AI agents — kernel sandbox, workflow engine, 6 agents, CLI, security posture scoring |
-| **[EnforceCore](https://github.com/akios-ai/EnforceCore)** | Apache-2.0 | General-purpose enforcement library — policy engine, PII redaction, audit trails, framework integrations (LangChain, CrewAI, AutoGen) |
 
-EnforceCore is the enforcement foundation; AKIOS is the complete production runtime built on top of it.
+EnforceCore is discontinued. It is no longer maintained, receives no fixes, including security fixes, and is not suitable for production use.
 
 ## 📞 Support & Community
 
@@ -105,4 +104,3 @@ EnforceCore is the enforcement foundation; AKIOS is the complete production runt
 
 **Happy building with secure AI!** 🚀🤖🛡️
 
-*AKIOS v1.6.0 - Where AI meets unbreakable security*

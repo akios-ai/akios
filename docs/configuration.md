@@ -157,7 +157,7 @@ When enabled:
 - Filesystem access is restricted
 - Network access is controlled
 
-**Security Impact:** Critical - provides the core isolation guarantee
+**Security Impact:** Critical - provides the core isolation
 
 ```yaml
 sandbox_enabled: true  # Recommended: always true
@@ -554,7 +554,7 @@ The way you install AKIOS affects available security features and default config
 
 ### Pip Package Deployment
 **Platforms:** Linux only (recommended)
-**Security Level:** Full kernel-hard security
+**Security Level:** Full kernel-level security
 **Configuration Notes:**
 - Maximum security features available
 - Kernel-level sandboxing (seccomp-bpf, cgroups)
@@ -574,7 +574,7 @@ The way you install AKIOS affects available security features and default config
 
 | Use Case | Recommended Method | Why |
 |----------|-------------------|-----|
-| **Maximum security, Linux production** | Pip Package | Kernel-hard security features |
+| **Maximum security, Linux production** | Pip Package | Kernel-level security features |
 | **Cross-platform development team** | Docker | Consistent environment everywhere |
 | **Python ecosystem integration** | Pip Package | Full Python compatibility |
 
@@ -592,7 +592,7 @@ environment: "production"
 # Strong policy-based security
 sandbox_enabled: true  # Container policies + allowlisting
 environment: "production"
-# Note: No kernel-hard seccomp-bpf available
+# Note: No kernel-level seccomp-bpf available
 ```
 
 #### Docker (All Platforms)
@@ -609,7 +609,7 @@ AKIOS validates configuration compatibility with your deployment method:
 
 ```bash
 # Pip package - validates Linux kernel features
-akios status  # Shows kernel-hard security status
+akios status  # Shows kernel-level security status
 
 # Docker - validates container environment
 akios status  # Shows policy-based security status

@@ -818,9 +818,9 @@ If the container is **violently killed** (e.g. via Task Manager "End task" on Wi
 This requires forceful termination at a precise moment — it is **extremely unlikely** in normal use and almost impossible without someone deliberately attacking the Docker runtime itself.
 
 **Recommendation for maximum paranoia / compliance environments:**
-Use **native Linux installation** (kernel-level cgroups + seccomp + direct filesystem writes) for absolute audit durability with zero possibility of loss.
+Use **native Linux installation** (kernel-level cgroups + seccomp + direct filesystem writes) for stronger audit durability.
 
-All other security guarantees (PII redaction, sandboxing, path/command restrictions, network controls, cost/loop kill-switches) remain **fully active** in Docker on macOS and Windows.
+All other security controls (PII redaction, sandboxing, path/command restrictions, network controls, cost/loop kill-switches) remain active in Docker on macOS and Windows.
 
 ### Image Pull Failures
 

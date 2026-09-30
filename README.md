@@ -3,7 +3,7 @@
   <h1>AKIOS</h1>
   <h3>The open-source security cage for AI agents</h3>
   <p>
-    <strong>Kernel-hard sandbox</strong> · <strong>44 PII patterns</strong> · <strong>Merkle audit trail</strong> · <strong>Cost kill-switches</strong>
+    <strong>Kernel-level sandbox</strong> · <strong>44 PII patterns</strong> · <strong>Merkle audit trail</strong> · <strong>Cost kill-switches</strong>
   </p>
 
   <a href="https://pypi.org/project/akios/"><img src="https://img.shields.io/pypi/v/akios?color=%2334D058&label=PyPI" alt="PyPI"></a>
@@ -13,13 +13,15 @@
   <a href="https://github.com/akios-ai/akios/stargazers"><img src="https://img.shields.io/github/stars/akios-ai/akios?style=social" alt="Stars"></a>
 </div>
 
+> **Status:** AKIOS 1.x is no longer maintained and is not intended for production use. A redesigned AKIOS is in development.
+
 <br>
 
 <div align="center">
 
-**AKIOS wraps any AI agent in a hardened security cage** — kernel-level process isolation,<br>
-real-time PII redaction, cryptographic Merkle audit trails, and automatic cost kill-switches —<br>
-so you can deploy AI workflows in regulated environments without building security from scratch.
+**AKIOS runs AI agent workflows inside a security cage** — kernel-level process isolation,<br>
+real-time PII redaction, cryptographic Merkle audit trails, and automatic cost kill-switches.<br>
+It provides technical building blocks for AI workflows; regulatory compliance remains your responsibility.
 
 </div>
 
@@ -123,7 +125,7 @@ $ akios run workflow.yml
 
 AI agents can **leak PII** to LLM providers, **run up massive bills**, execute **dangerous code**, and leave **no audit trail**. Every team building with LLMs faces this security engineering burden.
 
-AKIOS provides **compliance-by-construction** — security guarantees that are architectural, not bolted on:
+AKIOS builds its security controls into the runtime rather than bolting them on. These are technical building blocks; compliance remains your responsibility:
 
 | | Without AKIOS | With AKIOS |
 |:---:|:---|:---|
@@ -131,7 +133,7 @@ AKIOS provides **compliance-by-construction** — security guarantees that are a
 | 💸 | Runaway API costs | **Hard budget limits** with kill-switches |
 | 📋 | No audit trail for compliance | **Cryptographic Merkle-chained** logs |
 | 🔓 | Manual security reviews | **Kernel-enforced** process isolation |
-| 🤞 | Hope-based security | **Proof-based** security |
+| 🤞 | Hope-based security | **Enforced, auditable** controls |
 
 ## 🛡️ Key Features
 
@@ -139,7 +141,7 @@ AKIOS provides **compliance-by-construction** — security guarantees that are a
 <tr>
 <td width="50%">
 
-### 🔒 Kernel-Hard Sandbox
+### 🔒 Kernel-Level Sandbox
 seccomp-bpf syscall filtering + cgroups v2 resource isolation on native Linux. Policy-based isolation on Docker (all platforms).
 
 ### 🚫 PII Redaction Engine
@@ -210,10 +212,10 @@ Interpolated prompt (redacted):
 
 | Environment | Isolation | PII | Audit | Budget | Best For |
 |:---|:---|:---:|:---:|:---:|:---|
-| **Native Linux** | seccomp-bpf + cgroups v2 | ✅ | ✅ | ✅ | Production, maximum guarantees |
+| **Native Linux** | seccomp-bpf + cgroups v2 | ✅ | ✅ | ✅ | Production, strongest isolation |
 | **Docker** (all platforms) | Container + policy-based | ✅ | ✅ | ✅ | Development, cross-platform |
 
-> **Native Linux** provides kernel-level guarantees where dangerous syscalls are physically blocked. **Docker** provides strong, reliable security across macOS, Linux, and Windows.
+> **Native Linux** adds kernel-level enforcement: seccomp-bpf filters dangerous syscalls and cgroups v2 limits resources. **Docker** provides container and policy-based isolation across macOS, Linux, and Windows.
 
 ## ⌨️ CLI Reference
 
@@ -309,9 +311,9 @@ src/akios/
 
 ## 🔬 Research
 
-AKIOS introduces **compliance-by-construction** — the idea that security guarantees should be architectural properties of the runtime, not features that can be misconfigured or bypassed.
+AKIOS explores **compliance-by-construction** — the idea that security controls should be architectural properties of the runtime rather than optional features. This is a research direction, not a compliance guarantee: using AKIOS does not make a system compliant, and compliance remains your responsibility.
 
-> Our NeurIPS 2026 submission formalizes this paradigm. Preprint coming soon on arXiv.
+> Our NeurIPS 2026 submission formalizes this paradigm.
 
 ## 🤝 Contributing
 
@@ -331,7 +333,7 @@ Good first issues are tagged with [`good first issue`](https://github.com/akios-
 - 📖 [Documentation](docs/README.md)
 - 💬 [GitHub Discussions](https://github.com/akios-ai/akios/discussions)
 - 🐛 [Issue Tracker](https://github.com/akios-ai/akios/issues)
-- 🔒 Security issues → [security@akioud.ai](mailto:security@akioud.ai) (private disclosure)
+- 🔒 Security issues → Report vulnerabilities through GitHub's private vulnerability reporting on the AKIOS repository (https://github.com/akios-ai/akios/security/advisories/new). If the form is unavailable, write to hello@akios.ai. Reports are handled on a best-effort basis, with no guaranteed response time.
 
 <details>
 <summary><b>⚖️ Legal & Disclaimers</b></summary>
@@ -344,19 +346,15 @@ Good first issues are tagged with [`good first issue`](https://github.com/akios-
 - **Docker mode** provides strong policy-based security but does **not** enforce host filesystem permissions or kernel-level seccomp-bpf isolation. For maximum security, use native Linux with sudo.
 - **Performance varies** by instance type, region, load, and configuration. Published benchmarks are measured on AWS EC2 t4g.micro (ARM64) in us-east-1 and may not match your environment.
 - **PII redaction** uses regex pattern matching (44 patterns, >95% accuracy) — it is not a substitute for professional data governance. Review output before sharing with external parties.
-- **Audit logs** in Docker may lose up to ~100 events if the container is forcefully killed (SIGKILL) during a flush window. Use native Linux for zero-loss audit durability.
+- **Audit logs** in Docker may lose up to ~100 events if the container is forcefully killed (SIGKILL) during a flush window. Use native Linux for stronger audit durability.
 
 AKIOS is **not responsible** for: cloud infrastructure charges, credential leaks, data breaches from misconfigured deployments, performance on untested platforms, or regulatory compliance decisions. See [LEGAL.md](LEGAL.md) and [SECURITY.md](SECURITY.md) for full details.
 
 </details>
 
-## 🏢 Need More?
-
-AKIOS covers 44 PII patterns, 6 agents, and full audit logging for most compliance workflows. If your organization needs **extended PII coverage** (50+ patterns including jurisdiction-specific identifiers), **governance dashboards**, or **dedicated support**, visit [akioud.ai](https://akioud.ai) to learn about our commercial offerings.
-
 ## 🔗 Related Projects
 
-**[EnforceCore](https://github.com/akios-ai/EnforceCore)** — The open-source enforcement library (Apache-2.0) for AI agents. EnforceCore provides general-purpose policy enforcement, PII redaction, and audit trails for any agent framework. AKIOS is the complete production runtime built on top of it, adding kernel-level sandboxing, comprehensive PII redaction, workflow orchestration, and compliance reporting.
+EnforceCore is discontinued. It is no longer maintained, receives no fixes, including security fixes, and is not suitable for production use.
 
 ## 📄 License
 
@@ -366,7 +364,7 @@ See [NOTICE](NOTICE), [LEGAL.md](LEGAL.md), and [THIRD_PARTY_LICENSES.md](THIRD_
 ---
 
 <div align="center">
-  <strong>Run AI agents safely — anywhere.</strong>
+  <strong>Run AI agent workflows inside a security cage.</strong>
   <br><br>
   <a href="GETTING_STARTED.md">Get Started</a> · <a href="docs/cli-reference.md">CLI Reference</a> · <a href="AGENTS.md">Agents</a> · <a href="CHANGELOG.md">Changelog</a>
   <br><br>
